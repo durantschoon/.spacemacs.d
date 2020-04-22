@@ -1,0 +1,220 @@
+#+TITLE: Spacemacs User Configuration
+#+AUTHOR: Durant Schoon
+
+* Orient yourself
+
+This file is compiled and used in [[file:init.el]]
+
+* Literate [[https://learnxinyminutes.com/docs/elisp/][elisp]], hooray!
+
+I'm very happy to see that using org-babel-load-file works with a user
+configuration. I searched to see if someone had set this up with spacemacs and
+found this [[https://github.com/syl20bnr/spacemacs/issues/7091][link]] to an issue. I tested the code and it worked out-of-the-box for
+me!
+
+I'll soon start porting over more things I'm missing my non-spacemacs [[https://github.com/durantschoon/.emacs.d/blob/master/config.org][config.org]] 
+
+#+begin_src emacs-lisp
+
+  ;;; todo: add this to Global Key Bindings (Alphabetical by description)
+  (smartparens-global-mode)
+  
+  ;;; Settings/Global Key/frames
+  (when (eq system-type 'darwin)          ; mac specific settings
+    (global-set-key "\M-`" 'other-frame)  ; act like other mac programs
+
+                                        ; was just f11, bad on Darwin
+                                        ; similar to M-<f10> which is toggle-frame-maximized
+    (global-set-key (kbd "M-<f11>") 'toggle-frame-fullscreen))
+
+
+
+  ;; python
+  (pyvenv-workon "default") ;; todo: define this for home vs. work
+  (add-hook 'live-py-mode-hook (lambda ()
+                                 (progn
+                                   (setq-default live-py-version (executable-find "python"))
+                                   (live-py-update-all))))
+
+
+#+end_src
+
+* Settings
+** Package management
+*** install use-package-chords first so other modes can use them
+
+#+BEGIN_SRC emacs-lisp
+  (use-package use-package-chords
+    :ensure t
+    :config
+    (key-chord-mode 1)
+    (key-chord-define-global "hh" 'win-swap-horizontal)
+    (key-chord-define-global "vv" 'win-swap-vertical)
+    (key-chord-define-global "ww" 'toggle-window-split))
+#+END_SRC
+** Global Key Bindings (Alphabetical by description)
+*** Completion
+    #+BEGIN_SRC emacs-lisp
+      (global-set-key (kbd "C-M-/") 'comint-dynamic-complete-filename)
+    #+END_SRC
+*** New lines
+    #+BEGIN_SRC emacs-lisp
+      (define-key global-map (kbd "RET") 'newline-and-indent)
+    #+END_SRC
+
+*** Darwin, OS X
+
+    ;; key bindings
+    ;; http://ergoemacs.org/emacs/emacs_hyper_super_keys.html
+
+    #+BEGIN_SRC emacs-lisp
+      (when (eq system-type 'darwin)          ; mac specific settings
+        ;; ---------- REMAP KEYS ----------
+        ;; (setq mac-option-modifier 'alt)    ; not needed, I think
+        (setq mac-command-modifier 'meta)
+        (setq mac-option-modifier 'super)     ; make opt key do Super
+        (setq mac-control-modifier 'control)  ; make Control key do Control
+        (setq ns-function-modifier 'hyper)    ; make Fn key do Hyper
+        ;; ---------- SCROLLING ----------    ; for trackpads
+        (global-set-key [wheel-right] 'scroll-left)
+        (global-set-key [wheel-left] 'scroll-right)
+        )
+      (global-set-key [kp-delete] 'delete-char) ;; sets fn-delete to be right-delete
+    #+END_SRC
+
+*** frames (really windows) and windows (really panes)
+
+    #+BEGIN_SRC emacs-lisp
+      (when (eq system-type 'darwin)          ; mac specific settings
+        (global-set-key "\M-`" 'other-frame)  ; act like other mac programs
+        )
+
+      (global-set-key [(meta down)] 'scroll-other-window)    ; C-M-v
+      (global-set-key [(meta up)] 'scroll-other-window-down) ; C-M-S-v
+
+      ; was just f11, bad on Darwin
+      ; similar to M-<f10> which is toggle-frame-maximized
+      (global-set-key (kbd "M-<f11>") 'toggle-frame-fullscreen)
+
+      (global-set-key (kbd "C-x 4 o") 'switch-to-buffer-other-window-return)
+      (global-set-key (kbd "C-x 4 k") 'kill-buffer-other-window)
+
+      (require 'windmove)
+
+      (defun win-swap-horizontal ()
+        "Swap windows left/right using buffer-move.el"
+        (interactive)
+        (if (null (windmove-find-other-window 'right))
+            (buf-move-left) (buf-move-right)))
+
+      (global-set-key (kbd "C-c h") 'win-swap-horizontal)
+
+      (defun win-swap-vertical ()
+        "Swap windows up/down using buffer-move.el"
+        (interactive)
+        (if (null (windmove-find-other-window 'above))
+            (buf-move-down) (buf-move-up)))
+
+      (global-set-key (kbd "C-c v") 'win-swap-vertical)
+
+      (defun switch-to-buffer-other-window-return ()
+        "Like `switch-to-buffer-other-window`, but return to original buffer."
+        (interactive)
+        (switch-to-buffer-other-window (other-buffer))
+        (other-window 1))
+
+      (defun kill-buffer-other-window ()
+        "Kill the buffer in the other window.
+      I usually work with 2 windows side by side so when I do anything
+      that opens a buffer in the other window (eg. looking at a function
+      definition), I'll want to kill it after when I'm done. That's when
+      I use kill-buffer-other-window."
+        (interactive)
+        (other-window 1)
+        (kill-buffer (current-buffer))
+        (other-window 1))
+
+      ;; toggle-window-split
+      ;; See https://www.emacswiki.org/emacs/ToggleWindowSplit
+      (defun toggle-window-split ()
+        (interactive)
+        (if (= (count-windows) 2)
+            (let* ((this-win-buffer (window-buffer))
+               (next-win-buffer (window-buffer (next-window)))
+               (this-win-edges (window-edges (selected-window)))
+               (next-win-edges (window-edges (next-window)))
+               (this-win-2nd (not (and (<= (car this-win-edges)
+                           (car next-win-edges))
+                           (<= (cadr this-win-edges)
+                           (cadr next-win-edges)))))
+               (splitter
+                (if (= (car this-win-edges)
+                   (car (window-edges (next-window))))
+                'split-window-horizontally
+              'split-window-vertically)))
+          (delete-other-windows)
+          (let ((first-win (selected-window)))
+            (funcall splitter)
+            (if this-win-2nd (other-window 1))
+            (set-window-buffer (selected-window) this-win-buffer)
+            (set-window-buffer (next-window) next-win-buffer)
+            (select-window first-win)
+            (if this-win-2nd (other-window 1))))))
+
+      (global-set-key (kbd "C-x |") 'toggle-window-split)
+        #+END_SRC
+
+*** Function Keys (f1-f4: defined by emacs f5-...: user customization)
+
+    #+BEGIN_SRC emacs-lisp
+      (global-set-key [f5] 'global-whitespace-mode)
+      (global-set-key [f6] 'toggle-truncate-lines)
+    #+END_SRC
+
+*** OFF search
+
+    Testing this. I'm not convinced I like everything about it.
+    phi-search works with multiple cursors.
+
+    #+BEGIN_SRC emacs-lisp :tangle no
+      (global-set-key (kbd "C-s") 'phi-search)
+      (global-set-key (kbd "C-r") 'phi-search-backward)
+    #+END_SRC
+
+*** web
+
+    #+BEGIN_SRC emacs-lisp
+      (global-set-key (kbd "C-c o") 'browse-url-at-point) ; like "o"pen
+    #+END_SRC
+
+*** web development
+
+    #+BEGIN_SRC emacs-lisp
+      (global-set-key (kbd "H-o") 'browse-url-of-buffer) ; like "o"pen
+    #+END_SRC
+
+*** zap-up-to-char
+    
+    From [[https://www.emacswiki.org/emacs/ZapUpToChar][ZapUpToChar]] (replaces zap-to-char so it doesn't zap the char itself)
+
+    #+BEGIN_SRC emacs-lisp
+      (defadvice zap-to-char (after my-zap-to-char-advice (arg char) activate)
+        "Kill up to the ARG'th occurence of CHAR, and leave CHAR. If
+        you are deleting forward, the CHAR is replaced and the point is
+        put before CHAR"
+        (insert char)
+        (if (< 0 arg) (forward-char -1)))
+    #+END_SRC
+
+* Modes (Alphabetical)
+** Buffer move
+
+#+BEGIN_SRC emacs-lisp
+  (use-package buffer-move
+    :ensure t
+    :bind (("<C-s-up>"    . buf-move-up) ; Control-super-up
+           ("<C-s-down>"  . buf-move-down)
+           ("<C-s-left>"  . buf-move-left)
+           ("<C-s-right>" . buf-move-right)))
+#+END_SRC
+
