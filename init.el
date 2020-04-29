@@ -39,6 +39,8 @@ values."
      ;; pip install flake8 autoflake isort yapf
      ;; pip install 'python-language-server[yapf]' pyls-mypy pyls-isort pyls-black
      (python :variables
+             python-formatter 'black
+             python-format-on-save t
              python-sort-imports-on-save t)
      lsp ;; only available in develop branch of spacemacs
      (treemacs :variables
