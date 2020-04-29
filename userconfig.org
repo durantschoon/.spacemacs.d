@@ -224,3 +224,21 @@ I'll soon start porting over more things I'm missing my non-spacemacs [[https://
            ("<C-s-right>" . buf-move-right)))
 #+END_SRC
 
+* Run Last
+
+  Open file work_init.el or home_init.el depending on which computer
+  I'm on. Since they don't belong in my repo they are listed in my
+  .gitignore file.
+
+  I use these files to open default files and set the initial window
+  size.
+
+  #+BEGIN_SRC emacs-lisp
+    (setq locations '("home" "work"))
+    (dolist (loc locations)
+      (let ((init-file (concat "~/.spacemacs.d/" (concat loc "_init.el"))))
+        (if (file-exists-p init-file)
+            (progn
+              (message (concat "loading " init-file))
+              (load init-file)))))
+  #+END_SRC

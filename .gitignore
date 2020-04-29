@@ -2,3 +2,5 @@
 /core/banners/img/EmacsIcon.svg
 /.spacemacs.env
 /userconfig.el
+/work_init.el
+/.DS_Store
