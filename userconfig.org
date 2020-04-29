@@ -22,12 +22,18 @@ I'll soon start porting over more things I'm missing my non-spacemacs [[https://
   ;;; enable easy-templates in org-mode
   (require 'org-tempo)
 
+  ;;; Spacemacs need frame titles (helps with viewing multiple frames)
+  (setq-default frame-title-format
+        '((:eval (if (buffer-file-name)
+                     (abbreviate-file-name (buffer-file-name))
+                   "%b"))))
+
   ;;; Settings/Global Key/frames
   (when (eq system-type 'darwin)          ; mac specific settings
     (global-set-key "\M-`" 'other-frame)  ; act like other mac programs
 
-                                        ; was just f11, bad on Darwin
-                                        ; similar to M-<f10> which is toggle-frame-maximized
+                                          ; was just f11, bad on Darwin
+                                          ; similar to M-<f10> which is toggle-frame-maximized
     (global-set-key (kbd "M-<f11>") 'toggle-frame-fullscreen))
 
 
