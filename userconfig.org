@@ -15,6 +15,17 @@ me!
 
 I'll soon start porting over more things I'm missing my non-spacemacs [[https://github.com/durantschoon/.emacs.d/blob/master/config.org][config.org]] 
 
+Any packages loaded here I also include (alphabetized) in
+dotspacemacs-additional-packages. An alternative listed [[https://github.com/syl20bnr/spacemacs/blob/master/doc/FAQ.org#why-are-packages-installed-with-package-install-automatically-deleted-by-spacemacs-when-it-boots][here]] would be to:
+
+#+begin_quote
+set the variable dotspacemacs-install-packages to used-but-keep-unused which
+will prevent Spacemacs from removing the packages you installed manually.
+#+end_quote
+
+but my personal choice is to double list them (then I can see them alphabetized
+as well) and keep automatical removal of unused packages.
+
 #+begin_src emacs-lisp
 
   ;;; todo: add this to Global Key Bindings (Alphabetical by description)
