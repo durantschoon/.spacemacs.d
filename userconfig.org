@@ -6,6 +6,9 @@
 This file contains literate elisp code which is loaded from
 dotspacemacs/user-config in [[file:init.el]].
 
+Although I'm beginning to think I should just make layers instead of having a
+file like this.
+
 * Literate [[https://learnxinyminutes.com/docs/elisp/][elisp]], hooray!
 
 I'm very happy to see that using org-babel-load-file works with a user
@@ -33,6 +36,8 @@ as well) and keep automatical removal of unused packages.
 
   ;;; enable easy-templates in org-mode
   (require 'org-tempo)
+
+  (setq org-hide-emphasis-markers t)
 
   ;;; Spacemacs need frame titles (helps with viewing multiple frames)
   (setq-default frame-title-format
