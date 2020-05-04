@@ -56,6 +56,9 @@ as well) and keep automatical removal of unused packages.
                                    (setq-default live-py-version (executable-find "python"))
                                    (live-py-update-all))))
 
+  ;; new!
+  (use-package unfill
+    :bind ([remap fill-paragraph] . unfill-toggle))
 
 #+end_src
 

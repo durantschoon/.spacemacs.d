@@ -81,6 +81,7 @@ values."
    dotspacemacs-additional-packages '(avy
                                       buffer-move
                                       multiple-cursors
+                                      unfill
                                       use-package-chords)
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
