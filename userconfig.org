@@ -268,6 +268,13 @@ see also chords with package avy
            ("<C-s-right>" . buf-move-right)))
 #+END_SRC
 
+** Expand Region
+
+#+BEGIN_SRC emacs-lisp
+  (use-package expand-region
+    :ensure t
+    :bind ("C-=" . er/expand-region))
+#+END_SRC
 ** Multiple Cursors
 
    For some reason I need to require 'cl. Some of the mc libraries

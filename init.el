@@ -80,6 +80,7 @@ values."
    ;; configuration in `dotspacemacs/user-config'.
    dotspacemacs-additional-packages '(avy
                                       buffer-move
+                                      expand-region
                                       multiple-cursors
                                       unfill
                                       use-package-chords)
