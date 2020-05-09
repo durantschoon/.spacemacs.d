@@ -35,6 +35,9 @@ as well) and keep automatical removal of unused packages.
   (global-set-key (kbd "M-s s") 'helm-swoop)
   (global-set-key (kbd "C-x b") 'helm-mini)
 
+  ;;; try these new ones
+  (global-set-key (kbd "TAB") 'hippie-expand) ; for yasnippets
+
   ;;; todo: add this to Global Key Bindings (Alphabetical by description)
   (smartparens-global-mode)
 
