@@ -59,7 +59,7 @@ values."
      ;; ----------------------------------------------------------------
      helm
      (auto-completion :variables
-                      auto-completion-tab-key-behavior nil)
+                      auto-completion-tab-key-behavior nil) ; for yasnippet with hippie-expand
      better-defaults
      emacs-lisp
      git
