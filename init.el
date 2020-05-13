@@ -58,8 +58,7 @@ values."
      ;; <M-m f e R> (Emacs style) to install them.
      ;; ----------------------------------------------------------------
      helm
-     (auto-completion :variables
-                      auto-completion-tab-key-behavior nil) ; for yasnippet with hippie-expand
+     auto-completion
      better-defaults
      emacs-lisp
      git

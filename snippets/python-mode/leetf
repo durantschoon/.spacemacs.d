@@ -1,0 +1,62 @@
+# -*- mode: snippet -*-
+# name: leetf create a pdb debugging file for testing leetcode problems
+# key: leetf
+# --
+#! /usr/bin/env python
+
+import traceback
+import pdb
+import sys
+
+from collections import namedtuple
+
+import pprint
+pp = pprint.PrettyPrinter(indent=4)
+
+class Solution:
+    def ${1:method}(self, args): pass
+
+def main():
+    Example = namedtuple("Example", ['input_', 'expected'])
+
+    input1 = 1
+    expected1 = 1
+
+    input2 = 2
+    expected2 = 2
+
+    examples = [Example(input_=input1, expected=expected1),
+                Example(input_=input2, expected=expected2)
+                ]
+
+    example_count = 1
+    for example in examples:
+        print('-'*60)
+        print('Test', example_count)
+        print(f"Testing $1 with:")
+        pp.pprint(example.input_)
+        solution = Solution().$1(example.input_)
+        try:
+            assert solution == example.expected
+        except Exception:
+            print()
+            print("<!> Solution did not match")
+            print(f"--> solution={solution}")
+            print(f"--> expected={example.expected}")
+            print()
+            raise Exception
+        print(f"Solution matched {example.expected}.")
+
+        example_count += 1
+        # if example_count >= 1:
+        #    break
+
+    return 0
+
+if __name__ == "__main__":
+    try:
+        ret = main()
+    except:
+        traceback.print_exc()
+        pdb.post_mortem()
+        sys.exit(ret)
