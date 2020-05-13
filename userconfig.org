@@ -67,6 +67,22 @@ as well) and keep automatical removal of unused packages.
   (use-package unfill
     :bind ([remap fill-paragraph] . unfill-toggle))
 
+  (defun my-after-save-actions ()
+    "Used in `after-save-hook'."
+    (if (string= "py" (file-name-extension (buffer-name)))
+        (if (member "Makefile" (projectile-current-project-files))
+              (let ((default-directory (projectile-project-root))
+                    (can-lint-p
+                     (not (string= "" (shell-command-to-string "grep lint: Makefile"))))
+                    (can-test-p
+                     (not (string= "" (shell-command-to-string "grep test: Makefile")))))
+                (if can-lint-p
+                    (comint-send-string (get-buffer-process (shell)) "make lint\n"))
+                (if can-test-p
+                    (comint-send-string (get-buffer-process (shell)) "make test\n"))))))
+
+  (add-hook 'after-save-hook 'my-after-save-actions)
+
 #+end_src
 
 * Settings
