@@ -34,6 +34,8 @@ as well) and keep automatical removal of unused packages.
   ;;; key-bindings I immediately miss
   (global-set-key (kbd "M-s s") 'helm-swoop)
   (global-set-key (kbd "C-x b") 'helm-mini)
+  (global-set-key (kbd "M-y") 'helm-show-kill-ring)
+
 
   ;;; try these new ones
   (global-set-key (kbd "C-c f") 'select-frame-by-name)
