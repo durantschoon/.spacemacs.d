@@ -83,7 +83,7 @@ as well) and keep automatical removal of unused packages.
                 (if can-test-p
                     (comint-send-string (get-buffer-process (shell)) "make test\n"))))))
 
-  (add-hook 'after-save-hook 'my-after-save-actions)
+  ;; (add-hook 'after-save-hook 'my-after-save-actions)
 
 #+end_src
 
