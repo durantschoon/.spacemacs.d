@@ -83,6 +83,7 @@ values."
    dotspacemacs-additional-packages '(avy
                                       buffer-move
                                       expand-region
+                                      jsonnet-mode
                                       multiple-cursors
                                       unfill
                                       use-package-chords)

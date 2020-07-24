@@ -69,6 +69,9 @@ as well) and keep automatical removal of unused packages.
   (use-package unfill
     :bind ([remap fill-paragraph] . unfill-toggle))
 
+
+  (add-to-list 'auto-mode-alist '("\\.libsonnet\\'" . jsonnet-mode))
+
   (defun my-after-save-actions ()
     "Used in `after-save-hook'."
     (if (string= "py" (file-name-extension (buffer-name)))
