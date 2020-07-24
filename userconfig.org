@@ -82,12 +82,16 @@ as well) and keep automatical removal of unused packages.
                     (can-test-p
                      (not (string= "" (shell-command-to-string "grep test: Makefile")))))
                 (if can-lint-p
-                    (comint-send-string (get-buffer-process (shell)) "make lint\n"))
-                (if can-test-p
-                    (comint-send-string (get-buffer-process (shell)) "make test\n"))))))
+                    (comint-send-string (get-buffer-process (shell)) "make lint\n")))
+                ;; (if can-test-p
+                ;;     (comint-send-string (get-buffer-process (shell)) "make test\n"))
+                )))
 
-  ;; (add-hook 'after-save-hook 'my-after-save-actions)
+  (add-hook 'after-save-hook 'my-after-save-actions)
 
+  ;; test popwin
+
+  (push '("*shell*" :height 10 :position bottom) popwin:special-display-config)
 #+end_src
 
 * Settings
