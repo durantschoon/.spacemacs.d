@@ -49,14 +49,16 @@ as well) and keep automatical removal of unused packages.
 
   ;;; enable easy-templates in org-mode
   (require 'org-tempo)
+  ;;; need to recompile all elc files to get org-archive-subtree to work
+  ;;; https://github.com/syl20bnr/spacemacs/issues/11801
 
   (setq org-hide-emphasis-markers t)
 
   ;;; Spacemacs need frame titles (helps with viewing multiple frames)
   (setq-default frame-title-format
-        '((:eval (if (buffer-file-name)
-                     (abbreviate-file-name (buffer-file-name))
-                   "%b"))))
+                '((:eval (if (buffer-file-name)
+                             (abbreviate-file-name (buffer-file-name))
+                           "%b"))))
 
   ;; python
   (pyvenv-workon "default") ;; todo: define this for home vs. work
@@ -76,22 +78,27 @@ as well) and keep automatical removal of unused packages.
     "Used in `after-save-hook'."
     (if (string= "py" (file-name-extension (buffer-name)))
         (if (member "Makefile" (projectile-current-project-files))
-              (let ((default-directory (projectile-project-root))
-                    (can-lint-p
-                     (not (string= "" (shell-command-to-string "grep lint: Makefile"))))
-                    (can-test-p
-                     (not (string= "" (shell-command-to-string "grep test: Makefile")))))
-                (if can-lint-p
-                    (comint-send-string (get-buffer-process (shell)) "make lint\n")))
-                ;; (if can-test-p
-                ;;     (comint-send-string (get-buffer-process (shell)) "make test\n"))
-                )))
+            (let ((default-directory (projectile-project-root))
+                  (can-lint-p
+                   (not (string= "" (shell-command-to-string "grep lint: Makefile"))))
+                  (can-test-p
+                   (not (string= "" (shell-command-to-string "grep test: Makefile")))))
+              (if can-lint-p
+                  (comint-send-string (get-buffer-process (shell)) "make lint\n")))
+          ;; (if can-test-p
+          ;;     (comint-send-string (get-buffer-process (shell)) "make test\n"))
+          )))
 
   (add-hook 'after-save-hook 'my-after-save-actions)
 
-  ;; test popwin
-
   (push '("*shell*" :height 10 :position bottom) popwin:special-display-config)
+
+  ;; to use org-link-jira-from-middle:
+  ;; paste into a new line: PTS-XYZ-link title text here
+  ;; place cursor between link and title, then run the macro
+  (fset 'org-link-jira-from-middle
+        [?\C-  ?\C-a ?\M-\\ ?\C-x ?\C-x ?\C-w ?\[ ?\[ ?\C-f ?\C-f backspace ?\C-b ?\C-y ?\C-  ?\M-b ?\M-b ?\C-w ?\C-y ?\C-f ?\[ ?\C-y ?\C-f ?\] ?\C-a tab])
+
 #+end_src
 
 * Settings
