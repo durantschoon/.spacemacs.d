@@ -40,10 +40,6 @@ as well) and keep automatical removal of unused packages.
   ;;; try these new ones
   (global-set-key (kbd "C-c f") 'select-frame-by-name)
 
-  ;;; yasnippets
-  (setq yas-snippet-dirs (append yas-snippet-dirs
-                                 '("~/.spacemacs.d/snippets")))
-
   ;;; todo: add this to Global Key Bindings (Alphabetical by description)
   (smartparens-global-mode)
 
