@@ -87,6 +87,7 @@ values."
                                       expand-region
                                       jsonnet-mode
                                       multiple-cursors
+                                      smartparens-global-mode
                                       unfill
                                       use-package-chords)
    ;; A list of packages that cannot be updated.

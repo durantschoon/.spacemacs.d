@@ -39,10 +39,7 @@ as well) and keep automatical removal of unused packages.
 
   ;;; try these new ones
   (global-set-key (kbd "C-c f") 'select-frame-by-name)
-
-  ;;; todo: add this to Global Key Bindings (Alphabetical by description)
-  (smartparens-global-mode)
-
+  
   ;;; enable easy-templates in org-mode
   (require 'org-tempo)
   ;;; need to recompile all elc files to get org-archive-subtree to work
