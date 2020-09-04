@@ -45,8 +45,6 @@ as well) and keep automatical removal of unused packages.
   ;;; need to recompile all elc files to get org-archive-subtree to work
   ;;; https://github.com/syl20bnr/spacemacs/issues/11801
 
-  (setq org-hide-emphasis-markers t)
-
   ;;; Spacemacs need frame titles (helps with viewing multiple frames)
   (setq-default frame-title-format
                 '((:eval (if (buffer-file-name)

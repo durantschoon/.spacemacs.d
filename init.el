@@ -53,7 +53,8 @@ values."
      javascript
      lsp ;; only available in develop branch of spacemacs
      markdown
-     org
+     (org :variables
+          org-hide-emphasis-markers t)
      osx
      ;; python packages installed into "default" virtual environment
      ;; pip install flake8 autoflake isort yapf
