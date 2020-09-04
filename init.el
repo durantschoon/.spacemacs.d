@@ -30,9 +30,13 @@ values."
    dotspacemacs-configuration-layer-path '()
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
-   '(sql
-     terraform
-     rust
+   '(;; ----------------------------------------------------------------
+     ;; Uncomment some layer names and press <SPC f e R> (Vim style) or
+     ;; <M-m f e R> (Emacs style) to install them.
+     ;; ----------------------------------------------------------------
+     (auto-completion :variables
+                      auto-completion-private-snippets-directory "~/.spacemacs.d/snippets")
+     better-defaults
      csv
      ;; docker installs
      ;; for lsp
@@ -41,11 +45,15 @@ values."
      ;; brew install hadolint
      (docker :variables
              docker-dockerfile-backend 'lsp)
-     yaml
+     emacs-lisp
+     git
      haskell
+     helm
      javascript
-     react
+     lsp ;; only available in develop branch of spacemacs
      markdown
+     org
+     osx
      ;; python packages installed into "default" virtual environment
      ;; pip install flake8 autoflake isort yapf
      ;; pip install 'python-language-server[yapf]' pyls-mypy pyls-isort pyls-black
@@ -53,31 +61,19 @@ values."
              python-formatter 'black
              python-format-on-save t
              python-sort-imports-on-save t)
-     lsp ;; only available in develop branch of spacemacs
-     (treemacs :variables
-               treemacs-use-git-mode 'deferred)
-     ;; ----------------------------------------------------------------
-     ;; Example of useful layers you may want to use right away.
-     ;; Uncomment some layer names and press <SPC f e R> (Vim style) or
-     ;; <M-m f e R> (Emacs style) to install them.
-     ;; ----------------------------------------------------------------
-     helm
-     (auto-completion :variables
-                      auto-completion-private-snippets-directory "~/.spacemacs.d/snippets")
-     better-defaults
-     emacs-lisp
-     git
-     markdown
-     org
-     osx
+     react
+     rust
      (shell :variables
             shell-default-height 30
             shell-default-position 'bottom)
      spell-checking
+     sql
      syntax-checking
+     terraform
      (treemacs :variables
                treemacs-use-git-mode 'deferred)
-     version-control)
+     version-control
+     yaml)
    ;; List of additional packages that will be installed without being
    ;; wrapped in a layer. If you need some configuration for these
    ;; packages, then consider creating a layer. You can also put the
