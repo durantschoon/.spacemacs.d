@@ -65,6 +65,7 @@ values."
              python-sort-imports-on-save t)
      react
      rust
+     ;; user `M-m '` like vscode to open/hide a shell
      (shell :variables
             shell-default-height 30
             shell-default-position 'bottom)
@@ -85,8 +86,7 @@ values."
                                       expand-region
                                       jsonnet-mode
                                       multiple-cursors
-                                      smartparens-global-mode
-                                      unfill
+                                      ;; unfill already part of better-defaults
                                       use-package-chords)
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
