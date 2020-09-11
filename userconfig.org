@@ -11,6 +11,12 @@ file like this.
 
 * Literate [[https://learnxinyminutes.com/docs/elisp/][elisp]], hooray!
 
+UPDATE: After discovering spacemacs and reading a bit more about it, I now
+realize I should move all these to layers and get rid of this file -- so I'm in
+the process of doing that.
+
+//Previous notes//: 
+
 I'm very happy to see that using org-babel-load-file works with a user
 configuration. I searched to see if someone had set this up with spacemacs and
 found this [[https://github.com/syl20bnr/spacemacs/issues/7091][link]] to an issue. I tested the code and it worked out-of-the-box for
@@ -31,6 +37,8 @@ as well) and keep automatical removal of unused packages.
 
 #+begin_src emacs-lisp
 
+  ;;; TODO move key bindings back to dotspacemacs/user-config
+
   ;;; key-bindings I immediately miss
   (global-set-key (kbd "M-s s") 'helm-swoop)
   (global-set-key (kbd "C-x b") 'helm-mini)
@@ -39,8 +47,10 @@ as well) and keep automatical removal of unused packages.
 
   ;;; try these new ones
   (global-set-key (kbd "C-c f") 'select-frame-by-name)
-  
+
   ;;; enable easy-templates in org-mode
+  ;;; I might want
+  ;;; (with-eval-after-load 'org (require 'org-tempo))
   (require 'org-tempo)
   ;;; need to recompile all elc files to get org-archive-subtree to work
   ;;; https://github.com/syl20bnr/spacemacs/issues/11801
@@ -51,16 +61,16 @@ as well) and keep automatical removal of unused packages.
                              (abbreviate-file-name (buffer-file-name))
                            "%b"))))
 
-  ;; python
+  ;; python layer
   (pyvenv-workon "default") ;; todo: define this for home vs. work
   (add-hook 'live-py-mode-hook (lambda ()
                                  (progn
                                    (setq-default live-py-version (executable-find "python"))
                                    (live-py-update-all))))
 
-  ;; new!
-  (use-package unfill
-    :bind ([remap fill-paragraph] . unfill-toggle))
+  ;; this should already be a part of the better-defaults layer
+  ;; (use-package unfill
+  ;;   :bind ([remap fill-paragraph] . unfill-toggle))
 
 
   (add-to-list 'auto-mode-alist '("\\.libsonnet\\'" . jsonnet-mode))
