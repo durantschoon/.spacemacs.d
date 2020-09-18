@@ -159,11 +159,11 @@ values."
    ;; directory. A string value must be a path to an image format supported
    ;; by your Emacs build.
    ;; If the value is nil then no banner is displayed. (default 'official)
-   dotspacemacs-startup-banner (let ((favorite-banner "~/.spacemacs.d/core/banners/img/EmacsIcon.png"))
-                                 (if (file-exists-p favorite-banner)
-                                     favorite-banner
-                                   'official))
-   ;; List of items to show in startup buffer or an association list of
+   ;; dotspacemacs-startup-banner (let ((favorite "~/.spacemacs.d/core/banners/img/EmacsIcon.png"))
+   ;;                               (if (file-exists-p favorite)
+   ;;                                   favorite
+   ;;                                 'official))
+   dotspacemacs-startup-banner 'official
    ;; the form `(list-type . list-size)`. If nil then it is disabled.
    ;; Possible values for list-type are:
    ;; `recents' `bookmarks' `projects' `agenda' `todos'."
