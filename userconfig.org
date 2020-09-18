@@ -15,92 +15,114 @@ UPDATE: After discovering spacemacs and reading a bit more about it, I now
 realize I should move all these to layers and get rid of this file -- so I'm in
 the process of doing that.
 
-//Previous notes//: 
+** /Current notes/ 
 
-I'm very happy to see that using org-babel-load-file works with a user
-configuration. I searched to see if someone had set this up with spacemacs and
-found this [[https://github.com/syl20bnr/spacemacs/issues/7091][link]] to an issue. I tested the code and it worked out-of-the-box for
-me!
+*** Emacs Plus
 
-I'll soon start porting over more things I'm missing my non-spacemacs [[https://github.com/durantschoon/.emacs.d/blob/master/config.org][config.org]] 
+  On darwin, trying [[https://github.com/d12frosted/homebrew-emacs-plus][emacs plus]]:
 
-Any packages loaded here I also include (alphabetized) in
-dotspacemacs-additional-packages. An alternative listed [[https://github.com/syl20bnr/spacemacs/blob/master/doc/FAQ.org#why-are-packages-installed-with-package-install-automatically-deleted-by-spacemacs-when-it-boots][here]] would be to:
+  Part of the reason is to learn about/try this emacs27 dumper thing:
 
-#+begin_quote
-set the variable dotspacemacs-install-packages to used-but-keep-unused which
-will prevent Spacemacs from removing the packages you installed manually.
-#+end_quote
+  https://github.com/syl20bnr/spacemacs/blob/develop/EXPERIMENTAL.org
 
-but my personal choice is to double list them (then I can see them alphabetized
-as well) and keep automatical removal of unused packages.
+  From the spacemacs instructions: `--HEAD`
+  Let's see if I don't need this: `--with-ctags`
+  Might not need this, I'll throw it in `--with-debug`
 
-#+begin_src emacs-lisp
+  #+begin_src shell
+  brew tap d12frosted/emacs-plus
+  brew install emacs-plus --HEAD --with-xwidgets --with-EmacsIcon4-icon --with-debug
+  #+end_src
 
-  ;;; TODO move key bindings back to dotspacemacs/user-config
+*** Ubuntu
+*** Windows
 
-  ;;; key-bindings I immediately miss
-  (global-set-key (kbd "M-s s") 'helm-swoop)
-  (global-set-key (kbd "C-x b") 'helm-mini)
-  (global-set-key (kbd "M-y") 'helm-show-kill-ring)
+** Previous notes
 
+ I'm very happy to see that using org-babel-load-file works with a user
+ configuration. I searched to see if someone had set this up with spacemacs and
+ found this [[https://github.com/syl20bnr/spacemacs/issues/7091][link]] to an issue. I tested the code and it worked out-of-the-box for
+ me!
 
-  ;;; try these new ones
-  (global-set-key (kbd "C-c f") 'select-frame-by-name)
+ I'll soon start porting over more things I'm missing my non-spacemacs [[https://github.com/durantschoon/.emacs.d/blob/master/config.org][config.org]] 
 
-  ;;; enable easy-templates in org-mode
-  ;;; I might want
-  ;;; (with-eval-after-load 'org (require 'org-tempo))
-  (require 'org-tempo)
-  ;;; need to recompile all elc files to get org-archive-subtree to work
-  ;;; https://github.com/syl20bnr/spacemacs/issues/11801
+ Any packages loaded here I also include (alphabetized) in
+ dotspacemacs-additional-packages. An alternative listed [[https://github.com/syl20bnr/spacemacs/blob/master/doc/FAQ.org#why-are-packages-installed-with-package-install-automatically-deleted-by-spacemacs-when-it-boots][here]] would be to:
 
-  ;;; Spacemacs need frame titles (helps with viewing multiple frames)
-  (setq-default frame-title-format
-                '((:eval (if (buffer-file-name)
-                             (abbreviate-file-name (buffer-file-name))
-                           "%b"))))
+ #+begin_quote
+ set the variable dotspacemacs-install-packages to used-but-keep-unused which
+ will prevent Spacemacs from removing the packages you installed manually.
+ #+end_quote
 
-  ;; python layer
-  (pyvenv-workon "default") ;; todo: define this for home vs. work
-  (add-hook 'live-py-mode-hook (lambda ()
-                                 (progn
-                                   (setq-default live-py-version (executable-find "python"))
-                                   (live-py-update-all))))
+ but my personal choice is to double list them (then I can see them alphabetized
+ as well) and keep automatical removal of unused packages.
 
-  ;; this should already be a part of the better-defaults layer
-  ;; (use-package unfill
-  ;;   :bind ([remap fill-paragraph] . unfill-toggle))
+ #+begin_src emacs-lisp
+
+   ;;; TODO move key bindings back to dotspacemacs/user-config
+
+   ;;; key-bindings I immediately miss
+   (global-set-key (kbd "M-s s") 'helm-swoop)
+   (global-set-key (kbd "C-x b") 'helm-mini)
+   (global-set-key (kbd "M-y") 'helm-show-kill-ring)
 
 
-  (add-to-list 'auto-mode-alist '("\\.libsonnet\\'" . jsonnet-mode))
+   ;;; try these new ones
+   (global-set-key (kbd "C-c f") 'select-frame-by-name)
 
-  (defun my-after-save-actions ()
-    "Used in `after-save-hook'."
-    (if (string= "py" (file-name-extension (buffer-name)))
-        (if (member "Makefile" (projectile-current-project-files))
-            (let ((default-directory (projectile-project-root))
-                  (can-lint-p
-                   (not (string= "" (shell-command-to-string "grep lint: Makefile"))))
-                  (can-test-p
-                   (not (string= "" (shell-command-to-string "grep test: Makefile")))))
-              (if can-lint-p
-                  (comint-send-string (get-buffer-process (shell)) "make lint\n")))
-          ;; (if can-test-p
-          ;;     (comint-send-string (get-buffer-process (shell)) "make test\n"))
-          )))
+   ;;; enable easy-templates in org-mode
+   ;;; I might want
+   ;;; (with-eval-after-load 'org (require 'org-tempo))
+   (require 'org-tempo)
+   ;;; need to recompile all elc files to get org-archive-subtree to work
+   ;;; https://github.com/syl20bnr/spacemacs/issues/11801
 
-  (add-hook 'after-save-hook 'my-after-save-actions)
+   ;;; Spacemacs need frame titles (helps with viewing multiple frames)
+   (setq-default frame-title-format
+                 '((:eval (if (buffer-file-name)
+                              (abbreviate-file-name (buffer-file-name))
+                            "%b"))))
 
-  (push '("*shell*" :height 10 :position bottom) popwin:special-display-config)
+   ;; python layer
+   ;; (pyvenv-workon "default") ;; todo: define this for home vs. work
+   (add-hook 'live-py-mode-hook (lambda ()
+                                  (progn
+                                    (setq-default live-py-version (executable-find "python3"))
+                                    (live-py-update-all))))
 
-  ;; to use org-link-jira-from-middle:
-  ;; paste into a new line: PTS-XYZ-link title text here
-  ;; place cursor between link and title, then run the macro
-  (fset 'org-link-jira-from-middle
-        [?\C-  ?\C-a ?\M-\\ ?\C-x ?\C-x ?\C-w ?\[ ?\[ ?\C-f ?\C-f backspace ?\C-b ?\C-y ?\C-  ?\M-b ?\M-b ?\C-w ?\C-y ?\C-f ?\[ ?\C-y ?\C-f ?\] ?\C-a tab])
+   ;; this should already be a part of the better-defaults layer
+   ;; (use-package unfill
+   ;;   :bind ([remap fill-paragraph] . unfill-toggle))
 
-#+end_src
+
+   (add-to-list 'auto-mode-alist '("\\.libsonnet\\'" . jsonnet-mode))
+
+   (defun my-after-save-actions ()
+     "Used in `after-save-hook'."
+     (if (string= "py" (file-name-extension (buffer-name)))
+         (if (member "Makefile" (projectile-current-project-files))
+             (let ((default-directory (projectile-project-root))
+                   (can-lint-p
+                    (not (string= "" (shell-command-to-string "grep lint: Makefile"))))
+                   (can-test-p
+                    (not (string= "" (shell-command-to-string "grep test: Makefile")))))
+               (if can-lint-p
+                   (comint-send-string (get-buffer-process (shell)) "make lint\n")))
+           ;; (if can-test-p
+           ;;     (comint-send-string (get-buffer-process (shell)) "make test\n"))
+           )))
+
+   (add-hook 'after-save-hook 'my-after-save-actions)
+
+   (push '("*shell*" :height 10 :position bottom) popwin:special-display-config)
+
+   ;; to use org-link-jira-from-middle:
+   ;; paste into a new line: PTS-XYZ-link title text here
+   ;; place cursor between link and title, then run the macro
+   (fset 'org-link-jira-from-middle
+         [?\C-  ?\C-a ?\M-\\ ?\C-x ?\C-x ?\C-w ?\[ ?\[ ?\C-f ?\C-f backspace ?\C-b ?\C-y ?\C-  ?\M-b ?\M-b ?\C-w ?\C-y ?\C-f ?\[ ?\C-y ?\C-f ?\] ?\C-a tab])
+
+ #+end_src
 
 * Settings
 ** Package management
