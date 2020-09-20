@@ -55,7 +55,7 @@ values."
      markdown
      (org :variables
           org-hide-emphasis-markers t)
-     osx
+     osx ;; hopefully this only activates on osx
      ;; python packages installed into "default" virtual environment
      ;; pip install flake8 autoflake isort yapf
      ;; pip install 'python-language-server[yapf]' pyls-mypy pyls-isort pyls-black
@@ -86,7 +86,6 @@ values."
                                       expand-region
                                       jsonnet-mode
                                       multiple-cursors
-                                      ;; unfill already part of better-defaults
                                       use-package-chords)
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
@@ -362,7 +361,7 @@ before packages are loaded. If you are unsure, you should try in setting them in
 `dotspacemacs/user-config' first."
   )
 
-(defun dotspacemacs/user-config ()
+(defun dotspacemacs/user-config-OLD ()
   "Configuration function for user code.
 This function is called at the very end of Spacemacs initialization after
 layers configuration.
@@ -372,7 +371,261 @@ you should place your code here.
 
 
 I'm using literate elisp from an org-mode file with org-babel-load-file."
-  (org-babel-load-file (expand-file-name "~/.spacemacs.d/userconfig.org")))
+  ;; (org-babel-load-file (expand-file-name "~/.spacemacs.d/userconfig.org")
+  )
+
+
+  (defun dotspacemacs/user-config ()
+    "Configuration function for user code.
+This function is called at the very end of Spacemacs initialization after
+layers configuration.
+This is the place where most of your configurations should be done. Unless it is
+explicitly specified that a variable should be set before a package is loaded,
+you should place your code here.
+
+
+I'm using literate elisp from an org-mode file with org-babel-load-file."
+    ;; (org-babel-load-file (expand-file-name "~/.spacemacs.d/userconfig.org"))
+
+    ;; suppress warning from emacs27
+    (setq byte-compile-warnings '(cl-functions))
+
+
+;;; TODO move key bindings back to dotspacemacs/user-config
+
+;;; key-bindings I immediately miss
+(global-set-key (kbd "M-s s") 'helm-swoop)
+(global-set-key (kbd "C-x b") 'helm-mini)
+(global-set-key (kbd "M-y") 'helm-show-kill-ring)
+
+
+;;; try these new ones
+(global-set-key (kbd "C-c f") 'select-frame-by-name)
+
+;;; enable easy-templates in org-mode
+;;; I might want
+;;; (with-eval-after-load 'org (require 'org-tempo))
+(require 'org-tempo)
+(setq-default org-hide-leading-stars t)
+;;; need to recompile all elc files to get org-archive-subtree to work
+;;; https://github.com/syl20bnr/spacemacs/issues/11801
+
+;;; Spacemacs need frame titles (helps with viewing multiple frames)
+(setq-default frame-title-format
+              '((:eval (if (buffer-file-name)
+                           (abbreviate-file-name (buffer-file-name))
+                         "%b"))))
+
+;; python layer
+(pyvenv-workon "default") ;; todo: define this for home vs. work
+(add-hook 'live-py-mode-hook (lambda ()
+                               (progn
+                                 (setq-default live-py-version (executable-find "python"))
+                                 (live-py-update-all))))
+
+;; this should already be a part of the better-defaults layer
+;; (use-package unfill
+;;   :bind ([remap fill-paragraph] . unfill-toggle))
+
+
+(add-to-list 'auto-mode-alist '("\\.libsonnet\\'" . jsonnet-mode))
+
+(defun my-after-save-actions ()
+  "Used in `after-save-hook'."
+  (if (string= "py" (file-name-extension (buffer-name)))
+      (if (member "Makefile" (projectile-current-project-files))
+          (let ((default-directory (projectile-project-root))
+                (can-lint-p
+                 (not (string= "" (shell-command-to-string "grep lint: Makefile"))))
+                (can-test-p
+                 (not (string= "" (shell-command-to-string "grep test: Makefile")))))
+            (if can-lint-p
+                (comint-send-string (get-buffer-process (shell)) "make lint\n")))
+        ;; (if can-test-p
+        ;;     (Comint-send-string (get-buffer-process (shell)) "make test\n"))
+        )))
+
+(add-hook 'after-save-hook 'my-after-save-actions)
+
+(push '("*shell*" :height 10 :position bottom) popwin:special-display-config)
+
+;; to use org-link-jira-from-middle:
+;; paste into a new line: PTS-XYZ-link title text here
+;; place cursor between link and title, then run the macro
+(fset 'org-link-jira-from-middle
+      [?\C-  ?\C-a ?\M-\\ ?\C-x ?\C-x ?\C-w ?\[ ?\[ ?\C-f ?\C-f backspace ?\C-b ?\C-y ?\C-  ?\M-b ?\M-b ?\C-w ?\C-y ?\C-f ?\[ ?\C-y ?\C-f ?\] ?\C-a tab])
+
+;; Settings
+
+
+(use-package use-package-chords
+  :ensure t
+  :config
+  (key-chord-mode 1)
+  (key-chord-define-global "hh" 'win-swap-horizontal)
+  (key-chord-define-global "vv" 'win-swap-vertical)
+  (key-chord-define-global "ww" 'toggle-window-split))
+
+(global-set-key (kbd "C-M-/") 'comint-dynamic-complete-filename)
+
+
+(define-key global-map (kbd "RET") 'newline-and-indent)
+
+(when (eq system-type 'darwin)          ; mac specific settings
+  ;; ---------- REMAP KEYS ----------
+  ;; (setq mac-option-modifier 'alt)    ; not needed, I think
+  (setq mac-command-modifier 'meta)
+  (setq mac-option-modifier 'super)     ; make opt key do Super
+  (setq mac-control-modifier 'control)  ; make Control key do Control
+  (setq ns-function-modifier 'hyper)    ; make Fn key do Hyper
+  ;; ---------- SCROLLING ----------    ; for trackpads
+  (global-set-key [wheel-right] 'scroll-left)
+  (global-set-key [wheel-left] 'scroll-right)
+  )
+(global-set-key [kp-delete] 'delete-char) ;; sets fn-delete to be right-delete
+
+
+      (when (eq system-type 'darwin)          ; mac specific settings
+        (global-set-key "\M-`" 'other-frame)  ; act like other mac programs
+        )
+
+      (global-set-key [(meta down)] 'scroll-other-window)    ; C-M-v
+      (global-set-key [(meta up)] 'scroll-other-window-down) ; C-M-S-v
+
+      ; was just f11, bad on Darwin
+      ; similar to M-<f10> which is toggle-frame-maximized
+      (global-set-key (kbd "M-<f11>") 'toggle-frame-fullscreen)
+
+      (global-set-key (kbd "C-x 4 o") 'switch-to-buffer-other-window-return)
+      (global-set-key (kbd "C-x 4 k") 'kill-buffer-other-window)
+
+      (require 'windmove)
+
+      (defun win-swap-horizontal ()
+        "Swap windows left/right using buffer-move.el"
+        (interactive)
+        (if (null (windmove-find-other-window 'right))
+            (buf-move-left) (buf-move-right)))
+
+      (global-set-key (kbd "C-c h") 'win-swap-horizontal)
+
+      (defun win-swap-vertical ()
+        "Swap windows up/down using buffer-move.el"
+        (interactive)
+        (if (null (windmove-find-other-window 'above))
+            (buf-move-down) (buf-move-up)))
+
+      (global-set-key (kbd "C-c v") 'win-swap-vertical)
+
+      (defun switch-to-buffer-other-window-return ()
+        "Like `switch-to-buffer-other-window`, but return to original buffer."
+        (interactive)
+        (switch-to-buffer-other-window (other-buffer))
+        (other-window 1))
+
+      (defun kill-buffer-other-window ()
+        "Kill the buffer in the other window.
+      I usually work with 2 windows side by side so when I do anything
+      that opens a buffer in the other window (eg. looking at a function
+      definition), I'll want to kill it after when I'm done. That's when
+      I use kill-buffer-other-window."
+        (interactive)
+        (other-window 1)
+        (kill-buffer (current-buffer))
+        (other-window 1))
+
+      ;; toggle-window-split
+      ;; See https://www.emacswiki.org/emacs/ToggleWindowSplit
+      (defun toggle-window-split ()
+        (interactive)
+        (if (= (count-windows) 2)
+            (let* ((this-win-buffer (window-buffer))
+               (next-win-buffer (window-buffer (next-window)))
+               (this-win-edges (window-edges (selected-window)))
+               (next-win-edges (window-edges (next-window)))
+               (this-win-2nd (not (and (<= (car this-win-edges)
+                           (car next-win-edges))
+                           (<= (cadr this-win-edges)
+                           (cadr next-win-edges)))))
+               (splitter
+                (if (= (car this-win-edges)
+                   (car (window-edges (next-window))))
+                'split-window-horizontally
+              'split-window-vertically)))
+          (delete-other-windows)
+          (let ((first-win (selected-window)))
+            (funcall splitter)
+            (if this-win-2nd (other-window 1))
+            (set-window-buffer (selected-window) this-win-buffer)
+            (set-window-buffer (next-window) next-win-buffer)
+            (select-window first-win)
+            (if this-win-2nd (other-window 1))))))
+
+      (global-set-key (kbd "C-x |") 'toggle-window-split)
+
+
+      (global-set-key [f5] 'global-whitespace-mode)
+      (global-set-key [f6] 'toggle-truncate-lines)
+
+      (global-set-key (kbd "C-c o") 'browse-url-at-point) ; like "o"pen
+
+
+      (defadvice zap-to-char (after my-zap-to-char-advice (arg char) activate)
+        "Kill up to the ARG'th occurence of CHAR, and leave CHAR. If
+        you are deleting forward, the CHAR is replaced and the point is
+        put before CHAR"
+        (insert char)
+        (if (< 0 arg) (forward-char -1)))
+
+
+      (use-package avy
+        :ensure t
+        :chords (("jj" . avy-goto-char)   ; type the character rapidly
+                 ("jk" . avy-goto-char-2) ; type the first 2 characters rapidly
+                 ("jl" . avy-goto-line)
+                 ("jw" . avy-goto-word-1) ; type 1st char for beginnings of words
+                 ))
+
+
+      (use-package buffer-move
+        :ensure t
+        :bind (("<C-s-up>"    . buf-move-up) ; Control-super-up
+               ("<C-s-down>"  . buf-move-down)
+               ("<C-s-left>"  . buf-move-left)
+               ("<C-s-right>" . buf-move-right)))
+
+
+      (use-package expand-region
+        :ensure t
+        :bind ("C-=" . er/expand-region))
+
+
+      (use-package multiple-cursors
+        :ensure t
+        :init
+        (require 'cl)
+        :bind (("C-S-c C-S-c" . mc/edit-lines)
+               ("C->"         . mc/mark-next-like-this)
+               ("C-<"         . mc/mark-previous-like-this)
+               ("C-c C-<"     . mc/mark-all-like-this)
+               ("C-!"         . mc/mark-next-symbol-like-this)
+               ("s-r"         . mc/mark-all-in-region)
+               ("s-d"         . mc/mark-all-dwim)))
+
+      ;; Run Last
+
+      (setq locations '("home" "work"))
+      (dolist (loc locations)
+        (let ((init-file (concat "~/.spacemacs.d/" (concat loc "_init.el"))))
+          (if (file-exists-p init-file)
+              (progn
+                (message (concat "loading " init-file))
+                (load init-file)))))
+
+      ;; END
+      )
+
+
 
 (defun dotspacemacs/user-load ()
   "Library to load while dumping.
