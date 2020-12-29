@@ -11,7 +11,7 @@ I use a different (arbitrary) icon for each version, so I can tell at a
 glance at startup which version I'm using:
 
 | Version       | Icon                             |
-|---------------+----------------------------------|
+|---------------|----------------------------------|
 | emacs-plus@27 | --with-EmacsIcon4-icon           |
 | emacs-plus@28 | --with-emacs-card-blue-deep-icon |
 
