@@ -55,7 +55,7 @@ git clone https://github.com/syl20bnr/spacemacs ~/.emacs.d
 
 Launch emacs
 
-## switch_spacemacs alias
+## switch_spacemacs command
 
 I did this in zsh to switch back and forth easily (handy for migrating from original emacs to spacemacs over time):
 
@@ -67,7 +67,7 @@ mv .emacs.d .emacs.d_ORIG_EMACS # move over your original dot files
 git clone https://github.com/syl20bnr/spacemacs ~/.emacs.d_SPACEMACS
 ```
 
-Then make an alias (in your ~/.aliases file), source that file and run `switch_spacemacs` to toggle while emacs is not running. Next time you run emacs, it will be the other version.
+Then write a function (in your ~/.aliases file), source that file (eg. `source ~/.aliases`) and run `switch_spacemacs` to toggle while emacs is not running. Next time you run emacs, it will be the other version.
 
 ```zsh
     function switch_spacemacs() {
