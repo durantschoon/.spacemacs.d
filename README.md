@@ -7,8 +7,9 @@ These days, I use emacs mostly on a mac (but also windows and linux).
 
 On a mac:
 
-I use a different (arbitrary) icon for each version, so I can tell at a
-glance at startup which version I'm using:
+I use a different (arbitrary) icon for each version, so I can tell at a glance
+at startup which version I'm using (helpful when I run emacs on multiple
+machines, e.g. home vs. work):
 
 | Version       | Icon                             |
 |---------------|----------------------------------|
