@@ -26,13 +26,13 @@ brew install emacs-plus@28 --with-xwidgets --with-emacs-card-blue-deep-icon
 ln -si /usr/local/opt/emacs-plus@28/Emacs.app /Applications/
 ```
 
-Or:
+Or (linux/windows):
 
 [Download emacs](https://www.gnu.org/software/emacs/download.html) for your operating system. Test that it works. Try the tutorial.
 
-Make sure you don't already have ~/.spacemacs.d before running this (but you should get a warning if you do):
-
 ## Set up Spacemacs
+
+Make sure you don't already have ~/.spacemacs.d before running this (but you should get a warning if you do):
 
 ```
 cd
