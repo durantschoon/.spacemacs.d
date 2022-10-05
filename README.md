@@ -47,7 +47,7 @@ git clone https://github.com/syl20bnr/spacemacs.git ~/spacemacs/.emacs.d
 HOME=~/spacemacs emacs
 ```
 
-Or just install it to your ~/.emacs.d folder. Refer to the [origina repo](https://github.com/syl20bnr/spacemacs).
+Or just install it to your ~/.emacs.d folder. Refer to the [original repo](https://github.com/syl20bnr/spacemacs).
 
 ```
 git clone https://github.com/syl20bnr/spacemacs ~/.emacs.d
