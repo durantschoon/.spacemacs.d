@@ -6,7 +6,7 @@ These days, I use emacs mostly on a mac (but also windows and linux). I have upd
 Just as a quick reminder to myself, the way this generally works is that
 
 * **syl20bnr/spacemacs** repo is cloned into ~/.emacs.d
-* **durantschoon/.spacemacs.d.git** repo is cloned into ~/.spacemacs.d
+* **durantschoon/.spacemacs.d** repo is cloned into ~/.spacemacs.d
 * The environment variable `SPACEMACSDIR` is set to tell spacemacs where to find my customizations (ie. ~/.spacemacs.d)
 
 ## Install Emacs
