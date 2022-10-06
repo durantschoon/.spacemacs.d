@@ -1,9 +1,15 @@
 # .spacemacs.d
 spacemacs dot file(s)
 
-## Install Emacs
+These days, I use emacs mostly on a mac (but also windows and linux). I have updated my [dot_files repo](https://github.com/durantschoon/dot_files/) so that when I make there on a new machine, it should install emacs/spacemacs with this custom directory so I don't have to manually run the commands listed below under "Install Emacs"
 
-These days, I use emacs mostly on a mac (but also windows and linux).
+Just as a quick reminder to myself, the way this generally works is that
+
+* **syl20bnr/spacemacs** repo is cloned into ~/.emacs.d
+* **durantschoon/.spacemacs.d.git** repo is cloned into ~/.spacemacs.d
+* The environment variable `SPACEMACSDIR` is set to tell spacemacs where to find my customizations (ie. ~/.spacemacs.d)
+
+## Install Emacs
 
 On a mac:
 
