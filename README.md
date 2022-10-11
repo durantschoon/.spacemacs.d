@@ -1,7 +1,7 @@
 # .spacemacs.d
 spacemacs dot file(s)
 
-These days, I use emacs mostly on a mac (but also windows and linux). I have updated my [dot_files repo](https://github.com/durantschoon/dot_files/) so that when I make there on a new machine, it should install emacs/spacemacs with this custom directory so I don't have to manually run the commands listed below under "Install Emacs"
+These days, I use emacs mostly on a mac (but also windows and linux). I have updated my [dot_files repo](https://github.com/durantschoon/dot_files/) so that when I run `make` on a new machine from that repo, it should install emacs/spacemacs with this custom directory so I don't have to manually run the commands listed below under "Install Emacs"
 
 Just as a quick reminder to myself, the way this generally works is that
 
