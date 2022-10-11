@@ -604,7 +604,8 @@ It should only modify the values of Spacemacs settings."
    dotspacemacs-byte-compile nil
 
    ;; seem to need this to suppress a warning though I don't use evil-mode 
-   evil-want-keybinding nil))
+   ;; evil-want-keybinding nil
+   ))
 
 (defun dotspacemacs/user-env ()
   "Environment variables setup.
