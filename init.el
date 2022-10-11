@@ -55,6 +55,7 @@ This function should only modify configuration layer settings."
      helm
      helpful
      (javascript :variables
+                 js2-mode-show-strict-warnings nil
                  node-add-modules-path t)
      lsp ;; only available in develop branch of spacemacs
      markdown
@@ -92,6 +93,7 @@ This function should only modify configuration layer settings."
                                       expand-region
                                       jsonnet-mode
                                       multiple-cursors
+                                      prettier-js
                                       use-package-chords)
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
@@ -688,10 +690,12 @@ I'm using literate elisp from an org-mode file with org-babel-load-file."
                                      (setq-default live-py-version (executable-find "python"))
                                      (live-py-update-all))))
 
-    ;; react layer
+    ;; react layer and relevant to web
+    ;; hard-coding this seems terrible, but until I think of something better...
+    (add-to-list 'exec-path "/Users/durantschoon/.nvm/versions/node/v16.17.0/bin" t)
     (setq-default
      ;; js2-mode
-     js2-basic-offset 2
+     ;; js2-basic-offset 2 ;; this is elsewhere aliased to js-indent-level
      ;; web-mode
      css-indent-offset 2
      web-mode-markup-indent-offset 2
@@ -702,7 +706,7 @@ I'm using literate elisp from an org-mode file with org-babel-load-file."
       '(progn
          (add-hook 'web-mode-hook #'add-node-modules-path)))
     (require 'prettier-js)
-    (setq prettier-js-command "prettier-eslint_d")
+    (setq prettier-js-ommand "prettier-eslint_d")
 
     ;; this should already be a part of the better-defaults layer
     ;; (use-package unfill
