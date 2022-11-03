@@ -32,7 +32,7 @@ This function should only modify configuration layer settings."
 
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
-   '(
+   '(html
      ;; ----------------------------------------------------------------
      ;; Example of useful layers you may want to use right away.
      ;; Uncomment some layer names and press `SPC f e R' (Vim style) or
@@ -56,9 +56,14 @@ This function should only modify configuration layer settings."
      helpful
      (javascript :variables
                  js2-mode-show-strict-warnings nil
-                 node-add-modules-path t)
+                 javascript-import-tool 'import-js
+                 javascript-fmt-tool 'prettier
+                 javascript-fmt-on-save t
+                 node-add-modules-path t ; instead of adding node binaries to exec-path 
+                 javascript-backend 'lsp)
      lsp ;; only available in develop branch of spacemacs
      markdown
+     multiple-cursors
      (org :variables
           org-hide-emphasis-markers t)
      osx ;; hopefully this only activates on osx
@@ -79,15 +84,21 @@ This function should only modify configuration layer settings."
      sql
      syntax-checking
      terraform
+     (tern :variables
+           tern-command '("node" ""))
      (treemacs :variables
                treemacs-use-git-mode 'deferred
                treemacs-lock-width t)
      version-control
      yaml)
-   ;; List of additional packages that will be installed without being
-   ;; wrapped in a layer. If you need some configuration for these
-   ;; packages, then consider creating a layer. You can also put the
-   ;; configuration in `dotspacemacs/user-config'.
+   ;; List of additional packages that will be installed without being wrapped
+   ;; in a layer (generally the packages are installed only and should still be
+   ;; loaded using load/require/use-package in the user-config section below in
+   ;; this file). If you need some configuration for these packages, then
+   ;; consider creating a layer. You can also put the configuration in
+   ;; `dotspacemacs/user-config'. To use a local version of a package, use the
+   ;; `:location' property: '(your-package :location "~/path/to/your-package/")
+   ;; Also include the dependencies as they will not be resolved automatically.
    dotspacemacs-additional-packages '(avy
                                       buffer-move
                                       expand-region
@@ -692,8 +703,6 @@ I'm using literate elisp from an org-mode file with org-babel-load-file."
                                      (live-py-update-all))))
 
     ;; react layer and relevant to web
-    ;; hard-coding this seems terrible, but until I think of something better...
-    (add-to-list 'exec-path "/Users/durantschoon/.nvm/versions/node/v16.17.0/bin" t)
     (setq-default
      ;; js2-mode
      ;; js2-basic-offset 2 ;; this is elsewhere aliased to js-indent-level
