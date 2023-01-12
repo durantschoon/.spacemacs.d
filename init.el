@@ -715,59 +715,49 @@ I'm using literate elisp from an org-mode file with org-babel-load-file."
 
     (add-to-list 'auto-mode-alist '("\\.libsonnet\\'" . jsonnet-mode))
 
-(defun my-after-save-actions ()
-  "Used in `after-save-hook'."
-  (if (string= "py" (file-name-extension (buffer-name)))
-      (if (member "Makefile" (projectile-current-project-files))
-          (let ((default-directory (projectile-project-root))
-                (can-lint-p
-                 (not (string= "" (shell-command-to-string "grep lint: Makefile"))))
-                (can-test-p
-                 (not (string= "" (shell-command-to-string "grep test: Makefile")))))
-            (if can-lint-p
-                (comint-send-string (get-buffer-process (shell)) "make lint\n")))
-        ;; (if can-test-p
-        ;;     (Comint-send-string (get-buffer-process (shell)) "make test\n"))
-        )))
+    (defun my-after-save-actions ()
+      "Used in `after-save-hook'."
+      (if (string= "py" (file-name-extension (buffer-name)))
+          (if (member "Makefile" (projectile-current-project-files))
+              (let ((default-directory (projectile-project-root))
+                    (can-lint-p
+                     (not (string= "" (shell-command-to-string "grep lint: Makefile"))))
+                    (can-test-p
+                     (not (string= "" (shell-command-to-string "grep test: Makefile")))))
+                (if can-lint-p
+                    (comint-send-string (get-buffer-process (shell)) "make lint\n")))
+            ;; (if can-test-p
+            ;;     (Comint-send-string (get-buffer-process (shell)) "make test\n"))
+            )))
 
-(add-hook 'after-save-hook 'my-after-save-actions)
+    (add-hook 'after-save-hook 'my-after-save-actions)
 
-(push '("*shell*" :height 10 :position bottom) popwin:special-display-config)
+    (push '("*shell*" :height 10 :position bottom) popwin:special-display-config)
 
-;; to use org-link-jira-from-middle:
-;; paste into a new line: PTS-XYZ-link title text here
-;; place cursor between link and title, then run the macro
-(fset 'org-link-jira-from-middle
-      [?\C-  ?\C-a ?\M-\\ ?\C-x ?\C-x ?\C-w ?\[ ?\[ ?\C-f ?\C-f backspace ?\C-b ?\C-y ?\C-  ?\M-b ?\M-b ?\C-w ?\C-y ?\C-f ?\[ ?\C-y ?\C-f ?\] ?\C-a tab])
+    ;; to use org-link-jira-from-middle:
+    ;; paste into a new line: PTS-XYZ-link title text here
+    ;; place cursor between link and title, then run the macro
+    (fset 'org-link-jira-from-middle
+          [?\C-  ?\C-a ?\M-\\ ?\C-x ?\C-x ?\C-w ?\[ ?\[ ?\C-f ?\C-f backspace ?\C-b ?\C-y ?\C-  ?\M-b ?\M-b ?\C-w ?\C-y ?\C-f ?\[ ?\C-y ?\C-f ?\] ?\C-a tab])
 
-;; Settings
+    ;; Settings
 
+    (global-set-key (kbd "C-M-/") 'comint-dynamic-complete-filename)
 
-(use-package use-package-chords
-  :ensure t
-  :config
-  (key-chord-mode 1)
-  (key-chord-define-global "hh" 'win-swap-horizontal)
-  (key-chord-define-global "vv" 'win-swap-vertical)
-  (key-chord-define-global "ww" 'toggle-window-split))
+    (define-key global-map (kbd "RET") 'newline-and-indent)
 
-(global-set-key (kbd "C-M-/") 'comint-dynamic-complete-filename)
-
-
-(define-key global-map (kbd "RET") 'newline-and-indent)
-
-(when (eq system-type 'darwin)          ; mac specific settings
-  ;; ---------- REMAP KEYS ----------
-  ;; (setq mac-option-modifier 'alt)    ; not needed, I think
-  (setq mac-command-modifier 'meta)
-  (setq mac-option-modifier 'super)     ; make opt key do Super
-  (setq mac-control-modifier 'control)  ; make Control key do Control
-  (setq ns-function-modifier 'hyper)    ; make Fn key do Hyper
-  ;; ---------- SCROLLING ----------    ; for trackpads
-  (global-set-key [wheel-right] 'scroll-left)
-  (global-set-key [wheel-left] 'scroll-right)
-  )
-(global-set-key [kp-delete] 'delete-char) ;; sets fn-delete to be right-delete
+    (when (eq system-type 'darwin)          ; mac specific settings
+      ;; ---------- REMAP KEYS ----------
+      ;; (setq mac-option-modifier 'alt)    ; not needed, I think
+      (setq mac-command-modifier 'meta)
+      (setq mac-option-modifier 'super)     ; make opt key do Super
+      (setq mac-control-modifier 'control)  ; make Control key do Control
+      (setq ns-function-modifier 'hyper)    ; make Fn key do Hyper
+      ;; ---------- SCROLLING ----------    ; for trackpads
+      (global-set-key [wheel-right] 'scroll-left)
+      (global-set-key [wheel-left] 'scroll-right)
+      )
+    (global-set-key [kp-delete] 'delete-char) ;; sets fn-delete to be right-delete
 
 
       (when (eq system-type 'darwin)          ; mac specific settings
@@ -862,6 +852,13 @@ I'm using literate elisp from an org-mode file with org-babel-load-file."
         (insert char)
         (if (< 0 arg) (forward-char -1)))
 
+      (use-package use-package-chords
+        :ensure t
+        :config
+        (key-chord-mode 1)
+        (key-chord-define-global "hh" 'win-swap-horizontal)
+        (key-chord-define-global "vv" 'win-swap-vertical)
+        (key-chord-define-global "ww" 'toggle-window-split))
 
       (use-package avy
         :ensure t
