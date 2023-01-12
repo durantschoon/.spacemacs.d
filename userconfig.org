@@ -339,6 +339,8 @@ see also chords with package avy
 #+END_SRC
 ** Multiple Cursors
 
+   NOTE: January 2023 cl-lib should replace cl everywhere
+
    For some reason I need to require 'cl. Some of the mc libraries
    require 'cl-lib, but that doesn't seem to be enough.
 
