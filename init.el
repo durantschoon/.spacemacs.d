@@ -32,13 +32,15 @@ This function should only modify configuration layer settings."
 
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
-   '(html
+   '(typescript
+     html
      ;; ----------------------------------------------------------------
      ;; Example of useful layers you may want to use right away.
      ;; Uncomment some layer names and press `SPC f e R' (Vim style) or
      ;; `M-m f e R' (Emacs style) to install them.
      ;; ----------------------------------------------------------------
      (auto-completion :variables
+                      auto-completion-enable-help-tooltip t
                       auto-completion-private-snippets-directory "~/.spacemacs.d/snippets")
      better-defaults
      csv
@@ -70,6 +72,8 @@ This function should only modify configuration layer settings."
      ;; python packages installed into "default" virtual environment
      ;; pip install flake8 autoflake isort yapf
      ;; pip install 'python-language-server[yapf]' pyls-mypy pyls-isort pyls-black
+     ;; try later:
+     ;; python-backend 'lsp
      (python :variables
              python-formatter 'black
              python-format-on-save t
@@ -353,17 +357,7 @@ It should only modify the values of Spacemacs settings."
    ;; In the terminal, these pairs are generally indistinguishable, so this only
    ;; works in the GUI. (default nil)
    dotspacemacs-distinguish-gui-tab nil
-   ;; If non nil `Y' is remapped to `y$' in Evil states. (default nil)
-   dotspacemacs-remap-Y-to-y$ nil
-   ;; If non-nil, the shift mappings `<' and `>' retain visual state if used
-   ;; there. (default t)
-   dotspacemacs-retain-visual-state-on-shift t
-   ;; If non-nil, J and K move lines up and down when in visual mode.
-   ;; (default nil)
-   dotspacemacs-visual-line-move-text nil
-   ;; If non nil, inverse the meaning of `g' in `:substitute' Evil ex-command.
-   ;; (default nil)
-   dotspacemacs-ex-substitute-global nil
+
    ;; Name of the default layout (default "Default")
    dotspacemacs-default-layout-name "Default"
 
@@ -442,23 +436,23 @@ It should only modify the values of Spacemacs settings."
 
    ;; If non-nil the frame is maximized when Emacs starts up.
    ;; Takes effect only if `dotspacemacs-fullscreen-at-startup' is nil.
-   ;; (default nil) (Emacs 24.4+ only)
+   ;; (default t) (Emacs 24.4+ only)
    dotspacemacs-maximized-at-startup t
 
    ;; If non-nil the frame is undecorated when Emacs starts up. Combine this
-   ;; variable with `dotspacemacs-maximized-at-startup' in OSX to obtain
-   ;; borderless fullscreen. (default nil)
-   dotspacemacs-undecorated-at-startup nil
+   ;; variable with `dotspacemacs-maximized-at-startup' to obtain fullscreen
+   ;; without external boxes. Also disables the internal border. (default nil)
+   dotspacemacs-undecorated-at-startup t
 
    ;; A value from the range (0..100), in increasing opacity, which describes
    ;; the transparency level of a frame when it's active or selected.
    ;; Transparency can be toggled through `toggle-transparency'. (default 90)
    dotspacemacs-active-transparency 90
 
-   ;; A value from the range (0..100), in increasing opacity, which describes
-   ;; the transparency level of a frame when it's inactive or deselected.
-   ;; Transparency can be toggled through `toggle-transparency'. (default 90)
-   dotspacemacs-inactive-transparency 90
+   ;; A value from the range (0..100), in increasing opacity, which describes the
+   ;; transparency level of a frame background when it's active or selected. Transparency
+   ;; can be toggled through `toggle-background-transparency'. (default 90)
+   dotspacemacs-background-transparency 90
 
    ;; If non-nil show the titles of transient states. (default t)
    dotspacemacs-show-transient-state-title t
@@ -612,11 +606,7 @@ It should only modify the values of Spacemacs settings."
    dotspacemacs-home-shorten-agenda-source nil
 
    ;; If non-nil then byte-compile some of Spacemacs files.
-   dotspacemacs-byte-compile nil
-
-   ;; seem to need this to suppress a warning though I don't use evil-mode 
-   ;; evil-want-keybinding nil
-   ))
+   dotspacemacs-byte-compile nil))
 
 (defun dotspacemacs/user-env ()
   "Environment variables setup.
@@ -654,7 +644,8 @@ I'm using literate elisp from an org-mode file with org-babel-load-file."
 This function is called only while dumping Spacemacs configuration. You can
 `require' or `load' the libraries of your choice that will be included in the
 dump."
-  )
+)
+
 
 (defun dotspacemacs/user-config ()
   "Configuration for user code:
@@ -880,7 +871,6 @@ I'm using literate elisp from an org-mode file with org-babel-load-file."
                  ("jw" . avy-goto-word-1) ; type 1st char for beginnings of words
                  ))
 
-
       (use-package buffer-move
         :ensure t
         :bind (("<C-s-up>"    . buf-move-up) ; Control-super-up
@@ -888,16 +878,14 @@ I'm using literate elisp from an org-mode file with org-babel-load-file."
                ("<C-s-left>"  . buf-move-left)
                ("<C-s-right>" . buf-move-right)))
 
-
       (use-package expand-region
         :ensure t
         :bind ("C-=" . er/expand-region))
 
-
       (use-package multiple-cursors
         :ensure t
         :init
-        (require 'cl)
+        ;; (require 'cl) -- testing this commented out
         :bind (("C-S-c C-S-c" . mc/edit-lines)
                ("C->"         . mc/mark-next-like-this)
                ("C-<"         . mc/mark-previous-like-this)
