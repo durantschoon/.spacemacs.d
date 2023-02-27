@@ -692,7 +692,8 @@ I'm using literate elisp from an org-mode file with org-babel-load-file."
                              "%b"))))
 
     ;; python layer
-    (pyvenv-workon "default") ;; todo: define this for home vs. work
+    ;; debug comment this out
+    ;; (pyvenv-workon "default") ;; todo: define this for home vs. work
     (add-hook 'live-py-mode-hook (lambda ()
                                    (progn
                                      (setq-default live-py-version (executable-find "python"))
@@ -763,7 +764,6 @@ I'm using literate elisp from an org-mode file with org-babel-load-file."
       (global-set-key [wheel-left] 'scroll-right)
       )
     (global-set-key [kp-delete] 'delete-char) ;; sets fn-delete to be right-delete
-
 
       (when (eq system-type 'darwin)          ; mac specific settings
         (global-set-key "\M-`" 'other-frame)  ; act like other mac programs
