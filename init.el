@@ -667,6 +667,9 @@ I'm using literate elisp from an org-mode file with org-babel-load-file."
     ;; suppress warning from emacs27
     (setq byte-compile-warnings '(cl-functions))
 
+    (defun insert-current-date () (interactive)
+           (insert (shell-command-to-string "echo -n $(date +%Y-%m-%d)")))
+
     ;;; TODO move key bindings back to dotspacemacs/user-config
 
     ;;; key-bindings I immediately miss
