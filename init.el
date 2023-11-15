@@ -108,8 +108,7 @@ This function should only modify configuration layer settings."
                                       expand-region
                                       jsonnet-mode
                                       multiple-cursors
-                                      prettier-js
-                                      use-package-chords)
+                                      prettier-js)
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
 
@@ -860,7 +859,7 @@ I'm using literate elisp from an org-mode file with org-babel-load-file."
     (insert char)
     (if (< 0 arg) (forward-char -1)))
 
-  (use-package use-package-chords
+  (use-package key-chord
     :ensure t
     :config
     (key-chord-mode 1)
