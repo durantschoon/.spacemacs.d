@@ -859,21 +859,22 @@ I'm using literate elisp from an org-mode file with org-babel-load-file."
     (insert char)
     (if (< 0 arg) (forward-char -1)))
 
+  (use-package avy
+    :ensure t)
+
   (use-package key-chord
     :ensure t
+    :requires avy
     :config
     (key-chord-mode 1)
     (key-chord-define-global "hh" 'win-swap-horizontal)
     (key-chord-define-global "vv" 'win-swap-vertical)
-    (key-chord-define-global "ww" 'toggle-window-split))
-
-  (use-package avy
-    :ensure t
-    :chords (("jj" . avy-goto-char)   ; type the character rapidly
-             ("jk" . avy-goto-char-2) ; type the first 2 characters rapidly
-             ("jl" . avy-goto-line)
-             ("jw" . avy-goto-word-1) ; type 1st char for beginnings of words
-             ))
+    (key-chord-define-global "ww" 'toggle-window-split)
+    (key-chord-define-global "jj" 'avy-goto-char)   ; type the character rapidly
+    (key-chord-define-global "jk" 'avy-goto-char-2) ; type the first 2 characters rapidly
+    (key-chord-define-global "jl" 'avy-goto-line)
+    (key-chord-define-global "jw" 'avy-goto-word-1) ; type 1st char for beginnings of words
+    )
 
   (use-package buffer-move
     :ensure t
