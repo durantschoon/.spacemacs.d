@@ -27,7 +27,7 @@ This function should only modify configuration layer settings."
    dotspacemacs-ask-for-lazy-installation t
 
    ;; List of additional paths where to look for configuration layers.
-   ;; Paths must have a trailing slash (i.e. `~/.mycontribs/')
+   ;; Paths must have a trailing slash (i.e. "~/.mycontribs/")
    dotspacemacs-configuration-layer-path '()
 
    ;; List of configuration layers to load.
@@ -41,8 +41,16 @@ This function should only modify configuration layer settings."
      ;; ----------------------------------------------------------------
      (auto-completion :variables
                       auto-completion-enable-help-tooltip t
-                      auto-completion-private-snippets-directory "~/.spacemacs.d/snippets")
+                      auto-completion-enable-snippets-in-popup t
+                      auto-completion-private-snippets-directory "~/.spacemacs.d/snippets"
+                      auto-completion-enable-sort-by-usage t)
      better-defaults
+     (clojure :variables
+              clojure-enable-clj-refactor t
+              clojure-enable-linters 'joker)
+     (colors :variables
+             colors-enable-nyan-cat-progress-bar t)
+     command-log
      csv
      ;; docker installs
      ;; for lsp
@@ -52,6 +60,7 @@ This function should only modify configuration layer settings."
      (docker :variables
              docker-dockerfile-backend 'lsp)
      emacs-lisp
+     emoji
      git
      haskell
      helm
@@ -61,7 +70,7 @@ This function should only modify configuration layer settings."
                  javascript-import-tool 'import-js
                  javascript-fmt-tool 'prettier
                  javascript-fmt-on-save t
-                 node-add-modules-path t ; instead of adding node binaries to exec-path 
+                 node-add-modules-path t ; instead of adding node binaries to exec-path
                  javascript-backend 'lsp)
      lsp ;; only available in develop branch of spacemacs
      markdown
@@ -70,13 +79,12 @@ This function should only modify configuration layer settings."
           org-hide-emphasis-markers t)
      osx ;; hopefully this only activates on osx
      ;; python packages installed into "default" virtual environment
-     ;; pip install flake8 autoflake isort yapf
-     ;; pip install 'python-language-server[yapf]' pyls-mypy pyls-isort pyls-black
-     ;; try later:
-     ;; python-backend 'lsp
+     ;; NEW see https://gist.github.com/durantschoon/f20657f038400859329303dded831c86
      (python :variables
              python-formatter 'black
+             tab-width 2
              python-format-on-save t
+             python-backend 'lsp ;; new trying this
              python-sort-imports-on-save t)
      react
      rust
@@ -93,6 +101,9 @@ This function should only modify configuration layer settings."
      (treemacs :variables
                treemacs-use-git-mode 'deferred
                treemacs-lock-width t)
+     (unicode-fonts :variables
+                    unicode-fonts-force-multi-color-on-mac t
+                    unicode-fonts-ligature-modes '(js-mode))
      version-control
      yaml)
    ;; List of additional packages that will be installed without being wrapped
@@ -140,7 +151,7 @@ It should only modify the values of Spacemacs settings."
    ;; regardless of the following setting when native compilation is in effect.
    ;;
    ;; (default nil)
-   dotspacemacs-enable-emacs-pdumper nil
+   dotspacemacs-enable-emacs-pdumper t
 
    ;; Name of executable file pointing to emacs 27+. This executable must be
    ;; in your PATH.
@@ -311,6 +322,8 @@ It should only modify the values of Spacemacs settings."
    ;; refer to the DOCUMENTATION.org for more info on how to create your own
    ;; spaceline theme. Value can be a symbol or list with additional properties.
    ;; (default '(spacemacs :separator wave :separator-scale 1.5))
+   ;; Note 'all-the-icons requires fonts to be installed, use
+   ;; M-x all-the-icons-install-fonts
    dotspacemacs-mode-line-theme 'all-the-icons
 
    ;; If non-nil the cursor color matches the state color in GUI Emacs.
@@ -663,6 +676,8 @@ What follows is from my old emacs configuration:
 I'm using literate elisp from an org-mode file with org-babel-load-file."
   ;; (org-babel-load-file (expand-file-name "~/.spacemacs.d/userconfig.org"))
 
+  (setq clojure-enable-fancify-symbols t)
+
   ;; suppress warning from emacs27
   (setq byte-compile-warnings '(cl-functions))
 
@@ -862,19 +877,19 @@ I'm using literate elisp from an org-mode file with org-babel-load-file."
   (use-package avy
     :ensure t)
 
-  (use-package key-chord
-    :ensure t
-    :requires avy
-    :config
-    (key-chord-mode 1)
-    (key-chord-define-global "hh" 'win-swap-horizontal)
-    (key-chord-define-global "vv" 'win-swap-vertical)
-    (key-chord-define-global "ww" 'toggle-window-split)
-    (key-chord-define-global "jj" 'avy-goto-char)   ; type the character rapidly
-    (key-chord-define-global "jk" 'avy-goto-char-2) ; type the first 2 characters rapidly
-    (key-chord-define-global "jl" 'avy-goto-line)
-    (key-chord-define-global "jw" 'avy-goto-word-1) ; type 1st char for beginnings of words
-    )
+  ;; (use-package key-chord
+  ;;   :ensure t
+  ;;   :requires avy
+  ;;   :config
+  ;;   (key-chord-mode 1)
+  ;;   (key-chord-define-global "hh" 'win-swap-horizontal)
+  ;;   (key-chord-define-global "vv" 'win-swap-vertical)
+  ;;   (key-chord-define-global "ww" 'toggle-window-split)
+  ;;   (key-chord-define-global "jj" 'avy-goto-char)   ; type the character rapidly
+  ;;   (key-chord-define-global "jk" 'avy-goto-char-2) ; type the first 2 characters rapidly
+  ;;   (key-chord-define-global "jl" 'avy-goto-line)
+  ;;   (key-chord-define-global "jw" 'avy-goto-word-1) ; type 1st char for beginnings of words
+  ;;   )
 
   (use-package buffer-move
     :ensure t
@@ -942,7 +957,7 @@ This function is called at the very end of Spacemacs initialization."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(dap-mode lsp-docker bui company-anaconda yapfify pyvenv pytest pyenv-mode py-isort pip-requirements live-py-mode hy-mode dash-functional helm-pydoc cython-mode anaconda-mode pythonic reveal-in-osx-finder pbcopy osx-trash osx-dictionary launchctl xterm-color unfill smeargle shell-pop orgit org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download mwim multi-term mmm-mode markdown-toc markdown-mode magit-gitflow magit-popup htmlize helm-gitignore helm-company helm-c-yasnippet gnuplot gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ git-gutter-fringe fringe-helper git-gutter+ git-gutter gh-md fuzzy flyspell-correct-helm flyspell-correct flycheck-pos-tip pos-tip flycheck evil-magit magit git-commit with-editor transient eshell-z eshell-prompt-extras esh-help diff-hl company-statistics company auto-yasnippet yasnippet auto-dictionary ac-ispell auto-complete ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra lv hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile projectile pkg-info epl helm-mode-manager helm-make helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async)))
+   '(color-identifiers-mode rainbow-identifiers rainbow-mode company-anaconda yapfify pyvenv pytest pyenv-mode py-isort pip-requirements live-py-mode hy-mode dash-functional helm-pydoc cython-mode anaconda-mode pythonic reveal-in-osx-finder pbcopy osx-trash osx-dictionary launchctl xterm-color unfill smeargle shell-pop orgit org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download mwim multi-term mmm-mode markdown-toc markdown-mode magit-gitflow magit-popup htmlize helm-gitignore helm-company helm-c-yasnippet gnuplot gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ git-gutter-fringe fringe-helper git-gutter+ git-gutter gh-md fuzzy flyspell-correct-helm flyspell-correct flycheck-pos-tip pos-tip flycheck evil-magit magit git-commit with-editor transient eshell-z eshell-prompt-extras esh-help diff-hl company-statistics company auto-yasnippet yasnippet auto-dictionary ac-ispell auto-complete ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra lv hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile projectile pkg-info epl helm-mode-manager helm-make helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
