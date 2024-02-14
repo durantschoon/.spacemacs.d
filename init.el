@@ -45,9 +45,11 @@ This function should only modify configuration layer settings."
                       auto-completion-private-snippets-directory "~/.spacemacs.d/snippets"
                       auto-completion-enable-sort-by-usage t)
      better-defaults
+     ;; need to install clojure for your system
      (clojure :variables
               clojure-enable-clj-refactor t
-              clojure-enable-linters 'joker)
+              clojure-enable-linters 'joker
+              cider-prompt-for-symbol nil)
      (colors :variables
              colors-enable-nyan-cat-progress-bar t)
      command-log
