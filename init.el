@@ -678,6 +678,9 @@ What follows is from my old emacs configuration:
 I'm using literate elisp from an org-mode file with org-babel-load-file."
   ;; (org-babel-load-file (expand-file-name "~/.spacemacs.d/userconfig.org"))
 
+  (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1)
+  (setq projectile-switch-project-action 'magit-status)
+
   (setq clojure-enable-fancify-symbols t)
 
   ;; suppress warning from emacs27
