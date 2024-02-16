@@ -78,7 +78,9 @@ This function should only modify configuration layer settings."
      markdown
      multiple-cursors
      (org :variables
-          org-hide-emphasis-markers t)
+          ;; org-hide-emphasis-markers t
+          org-enable-valign t
+          org-enable-modern-support t)
      osx ;; hopefully this only activates on osx
      ;; python packages installed into "default" virtual environment
      ;; NEW see https://gist.github.com/durantschoon/f20657f038400859329303dded831c86
