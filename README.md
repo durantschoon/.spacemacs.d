@@ -30,7 +30,7 @@ brew uninstall emacs-plus
 brew install emacs-plus@29 --with-xwidgets --with-retro-sink-icon
 # update link in /Applications in a zsh shell
 [[ -L /Applications/Emacs.app ]] && =rm /Applications/Emacs.app
-ln -si /usr/local/opt/emacs-plus@28/Emacs.app /Applications/
+ln -si /usr/local/opt/emacs-plus/Emacs.app /Applications/
 ```
 
 Or (linux/windows):
