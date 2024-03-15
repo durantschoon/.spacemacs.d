@@ -762,8 +762,10 @@ I'm using literate elisp from an org-mode file with org-babel-load-file."
   (eval-after-load 'web-mode
     '(progn
        (add-hook 'web-mode-hook #'add-node-modules-path)))
-  (require 'prettier-js)
-  (setq prettier-js-ommand "prettier-eslint_d")
+
+  (add-hook 'web-mode-hook
+            (lambda ()
+              (add-hook 'before-save-hook 'prettier nil 'make-it-local)))
 
   ;; this should already be a part of the better-defaults layer
   ;; (use-package unfill
