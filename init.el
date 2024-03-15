@@ -120,7 +120,6 @@ This function should only modify configuration layer settings."
    ;; Also include the dependencies as they will not be resolved automatically.
    dotspacemacs-additional-packages '(avy
                                       buffer-move
-                                      exec-path-from-shell
                                       (copilot :location (recipe
                                                           :fetcher github
                                                           :repo "copilot-emacs/copilot.el"
@@ -824,8 +823,10 @@ I'm using literate elisp from an org-mode file with org-babel-load-file."
   ;; this breaks my binding of command to Meta on mac
   ;; (when (memq window-system '(mac ns x))
   ;; (trying to get this to work for (executable-find ""))
-  (when (eq system-type 'darwin)
-    (exec-path-from-shell-initialize))
+
+  ;; this shouldn't be necessary since spacemacs uses exec-path by default
+  ;; (when (eq system-type 'darwin)
+  ;;   (exec-path-from-shell-initialize))
 
   (global-set-key [(meta down)] 'scroll-other-window)    ; C-M-v
   (global-set-key [(meta up)] 'scroll-other-window-down) ; C-M-S-v
