@@ -123,21 +123,12 @@ This function should only modify configuration layer settings."
                                       (copilot :location (recipe
                                                           :fetcher github
                                                           :repo "copilot-emacs/copilot.el"
-                                                          :files ("*.el" "dist"))
-                                               :custom ((copilot-node-executable (executable-find "node"))))
+                                                          :files ("*.el" "dist")))
                                       editorconfig
                                       expand-region
                                       jsonnet-mode
                                       jsonrpc
-                                      (key-chord :custom ((key-chord-mode 1)
-                                                          (key-chord-define-global "hh" 'win-swap-horizontal)
-                                                          (key-chord-define-global "vv" 'win-swap-vertical)
-                                                          (key-chord-define-global "ww" 'toggle-window-split)
-                                                          (key-chord-define-global "jj" 'avy-goto-char)   ; type the character rapidly
-                                                          (key-chord-define-global "jk" 'avy-goto-char-2) ; type the first 2 characters rapidly
-                                                          (key-chord-define-global "jl" 'avy-goto-line)
-                                                          (key-chord-define-global "jw" 'avy-goto-word-1) ; type 1st char for beginnings of words
-                                                          ))
+                                      key-chord
                                       multiple-cursors
                                       prettier-js
                                       rg)
@@ -707,9 +698,20 @@ I'm using literate elisp from an org-mode file with org-babel-load-file."
   ;;   (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
   ;;   (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion)
   ;;   (define-key copilot-completion-map (kbd "C-TAB") 'copilot-accept-completion-by-word)
-  ;;   (define-key copilot-completion-map (kbd "C-<tab>") 'copilot-accept-completion-by-word))
-
+  ;;   (define-key copilot-completion-map (kbd "C-<tab>") 'copilot-accept-completion-by-word)
+  ;;   (copilot-node-executable (executable-find "node")))
   ;; (add-hook 'prog-mode-hook 'copilot-mode)
+
+  (with-eval-after-load 'key-chord
+    (key-chord-mode 1)
+    (key-chord-define-global "hh" 'win-swap-horizontal)
+    (key-chord-define-global "vv" 'win-swap-vertical)
+    (key-chord-define-global "ww" 'toggle-window-split)
+    (key-chord-define-global "jj" 'avy-goto-char)   ; type the character rapidly
+    (key-chord-define-global "jk" 'avy-goto-char-2) ; type the first 2 characters rapidly
+    (key-chord-define-global "jl" 'avy-goto-line)
+    (key-chord-define-global "jw" 'avy-goto-word-1) ; type 1st char for beginnings of words
+    )
 
   (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1)
   (setq projectile-switch-project-action 'magit-status)
