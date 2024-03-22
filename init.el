@@ -703,7 +703,6 @@ I'm using literate elisp from an org-mode file with org-babel-load-file."
   ;; (add-hook 'prog-mode-hook 'copilot-mode)
 
   (with-eval-after-load 'key-chord
-    (key-chord-mode 1)
     (key-chord-define-global "hh" 'win-swap-horizontal)
     (key-chord-define-global "vv" 'win-swap-vertical)
     (key-chord-define-global "ww" 'toggle-window-split)
@@ -712,6 +711,7 @@ I'm using literate elisp from an org-mode file with org-babel-load-file."
     (key-chord-define-global "jl" 'avy-goto-line)
     (key-chord-define-global "jw" 'avy-goto-word-1) ; type 1st char for beginnings of words
     )
+  (key-chord-mode 1)
 
   (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1)
   (setq projectile-switch-project-action 'magit-status)
