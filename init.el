@@ -702,7 +702,7 @@ I'm using literate elisp from an org-mode file with org-babel-load-file."
 
   ;; on mac anyway
   (setq ob-mermaid-cli-path "/usr/local/bin/mmdc")
-  
+
   ;; accept completion from copilot and fallback to company
 
   (with-eval-after-load 'company
@@ -765,7 +765,7 @@ I'm using literate elisp from an org-mode file with org-babel-load-file."
 
   ;; python layer
   ;; debug comment this out
-  ;; (pyvenv-workon "default") ;; todo: define this for home vs. work
+
   (add-hook 'live-py-mode-hook (lambda ()
                                  (progn
                                    (setq-default live-py-version (executable-find "python"))
