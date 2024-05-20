@@ -63,7 +63,9 @@ This function should only modify configuration layer settings."
      emoji
      git
      haskell
-     (helm :variables spacemacs-helm-rg-max-column-number 1024)
+     (helm :variables
+           spacemacs-helm-rg-max-column-number 1024
+           helm-follow-mode-persistent t)
      helpful
      html
      (javascript :variables
