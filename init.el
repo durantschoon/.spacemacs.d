@@ -658,20 +658,6 @@ It is mostly for variables that should be set before packages are loaded.
 If you are unsure, try setting them in `dotspacemacs/user-config' first."
 )
 
-(defun dotspacemacs/user-config-OLD ()
-  "Configuration function for user code.
-This function is called at the very end of Spacemacs initialization after
-layers configuration.
-This is the place where most of your configurations should be done. Unless it is
-explicitly specified that a variable should be set before a package is loaded,
-you should place your code here.
-
-
-I'm using literate elisp from an org-mode file with org-babel-load-file."
-  ;; (org-babel-load-file (expand-file-name "~/.spacemacs.d/userconfig.org")
-  )
-
-
 (defun dotspacemacs/user-load ()
   "Library to load while dumping.
 This function is called only while dumping Spacemacs configuration. You can
@@ -685,13 +671,8 @@ dump."
 This function is called at the very end of Spacemacs startup, after layer
 configuration.
 Put your configuration code here, except for variables that should be set
-before packages are loaded.
-
-What follows is from my old emacs configuration:
-
-I'm using literate elisp from an org-mode file with org-babel-load-file."
-  ;; (org-babel-load-file (expand-file-name "~/.spacemacs.d/userconfig.org"))
-
+before packages are loaded."
+  
   (keychain-refresh-environment)
 
   (org-babel-do-load-languages
