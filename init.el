@@ -713,7 +713,19 @@ before packages are loaded."
   (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1)
   (setq projectile-switch-project-action 'magit-status)
 
+  ;; clojure
   (setq clojure-enable-fancify-symbols t)
+
+  (defalias 'u/pretty
+    (kmacro "C-w ( u / p r e t t y SPC C-y \)"))
+  
+  ;; (defun jack-in-universal-cider-this-buffer ()
+  ;;   "NOT WORKING YET
+  ;;    The same commands I always seem to have to run to start up cider with the current buffer"
+  ;;   (interactive)
+  ;;   (cider-jack-in-universal 2) ;; 2 is for leiningen
+  ;;   (cider-load-buffer)
+  ;;   (cider-switch-to-repl-buffer))
 
   ;; suppress warning from emacs27
   (setq byte-compile-warnings '(cl-functions))
