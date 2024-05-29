@@ -129,6 +129,7 @@ This function should only modify configuration layer settings."
                                                           :files ("*.el" "dist")))
                                       editorconfig
                                       expand-region
+                                      helm-rg
                                       jsonnet-mode
                                       jsonrpc
                                       key-chord
