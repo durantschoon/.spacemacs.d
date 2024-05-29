@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: def pretty
+# group: clojure
+# key: dpretty
+# --
+(defn pretty [obj]
+  "return the string of the pretty printed obj"
+  (with-out-str (p/pprint obj)))
