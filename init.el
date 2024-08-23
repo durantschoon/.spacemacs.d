@@ -94,6 +94,7 @@ This function should only modify configuration layer settings."
              python-sort-imports-on-save t)
      react
      rust
+     search-engine
      ;; user `M-m '` like vscode to open/hide a shell
      (shell :variables
             shell-default-height 30
