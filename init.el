@@ -699,7 +699,7 @@ before packages are loaded."
 
   (defalias 'u/pretty
     (kmacro "C-w ( u / p r e t t y SPC C-y \)"))
-  
+
   ;; (defun jack-in-universal-cider-this-buffer ()
   ;;   "NOT WORKING YET
   ;;    The same commands I always seem to have to run to start up cider with the current buffer"
