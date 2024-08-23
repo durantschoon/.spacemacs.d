@@ -16,7 +16,6 @@ realize I should move all these to layers and get rid of this file -- so I'm in
 the process of doing that.
 
 ** /Current notes/ 
-
 *** Emacs Plus
 
   On darwin, trying [[https://github.com/d12frosted/homebrew-emacs-plus][emacs plus]]:
@@ -44,7 +43,7 @@ the process of doing that.
  found this [[https://github.com/syl20bnr/spacemacs/issues/7091][link]] to an issue. I tested the code and it worked out-of-the-box for
  me!
 
- I'll soon start porting over more things I'm missing my non-spacemacs [[https://github.com/durantschoon/.emacs.d/blob/master/config.org][config.org]] 
+ I'll soon start porting over more things I'm missing my non-spacemacs [[https://github.com/durantschoon/.emacs.d/blob/master/config.org][config.org]]
 
  Any packages loaded here I also include (alphabetized) in
  dotspacemacs-additional-packages. An alternative listed [[https://github.com/syl20bnr/spacemacs/blob/master/doc/FAQ.org#why-are-packages-installed-with-package-install-automatically-deleted-by-spacemacs-when-it-boots][here]] would be to:
@@ -281,16 +280,18 @@ see also chords with package avy
     #+END_SRC
 
 *** zap-up-to-char
-    
+
     From [[https://www.emacswiki.org/emacs/ZapUpToChar][ZapUpToChar]] (replaces zap-to-char so it doesn't zap the char itself)
 
     #+BEGIN_SRC emacs-lisp
-      (defadvice zap-to-char (after my-zap-to-char-advice (arg char) activate)
+      (defun my-zap-to-char ()
         "Kill up to the ARG'th occurence of CHAR, and leave CHAR. If
-        you are deleting forward, the CHAR is replaced and the point is
-        put before CHAR"
+         you are deleting forward, the CHAR is replaced and the point is
+         put before CHAR"
         (insert char)
         (if (< 0 arg) (forward-char -1)))
+
+      (advice-add 'zap-to-char :after #'my-zap-to-char)
     #+END_SRC
 
 * Modes (Alphabetical)
