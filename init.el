@@ -77,7 +77,7 @@ This function should only modify configuration layer settings."
                  javascript-backend 'lsp)
      lsp ;; only available in develop branch of spacemacs
      markdown
-     mermaid
+     ;; mermaid
      multiple-cursors
      (org :variables
           ;; org-hide-emphasis-markers t
