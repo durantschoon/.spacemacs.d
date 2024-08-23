@@ -676,15 +676,6 @@ Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
 
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((mermaid . t)
-     (python . t)
-     (clojure . t)))
-
-  ;; on mac anyway
-  (setq ob-mermaid-cli-path "/usr/local/bin/mmdc")
-
   ;; accept completion from copilot and fallback to company
 
   (with-eval-after-load 'company
