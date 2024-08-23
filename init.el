@@ -908,12 +908,13 @@ before packages are loaded."
   (global-set-key (kbd "C-c o") 'browse-url-at-point) ; like "o"pen
 
 
-  (defadvice zap-to-char (after my-zap-to-char-advice (arg char) activate)
+  (defun my-zap-to-char ()
     "Kill up to the ARG'th occurence of CHAR, and leave CHAR. If
-        you are deleting forward, the CHAR is replaced and the point is
-        put before CHAR"
+     you are deleting forward, the CHAR is replaced and the point is
+     put before CHAR"
     (insert char)
     (if (< 0 arg) (forward-char -1)))
+  (advice-add 'zap-to-char :after #'my-zap-to-char)
 
   (use-package avy
     :ensure t)
