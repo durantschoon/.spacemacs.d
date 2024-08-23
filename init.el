@@ -986,7 +986,43 @@ This function is called at the very end of Spacemacs initialization."
  '(cider-enrich-classpath t)
  '(ignored-local-variable-values '((cider-preferred-build-tool . "clojure-cli")))
  '(package-selected-packages
-   '(helm-rg company-anaconda yapfify pyvenv pytest pyenv-mode py-isort pip-requirements live-py-mode hy-mode dash-functional helm-pydoc cython-mode anaconda-mode pythonic reveal-in-osx-finder pbcopy osx-trash osx-dictionary launchctl xterm-color unfill smeargle shell-pop orgit org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download mwim multi-term mmm-mode markdown-toc markdown-mode magit-gitflow magit-popup htmlize helm-gitignore helm-company helm-c-yasnippet gnuplot gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ git-gutter-fringe fringe-helper git-gutter+ git-gutter gh-md fuzzy flyspell-correct-helm flyspell-correct flycheck-pos-tip pos-tip flycheck evil-magit magit git-commit with-editor transient eshell-z eshell-prompt-extras esh-help diff-hl company-statistics company auto-yasnippet yasnippet auto-dictionary ac-ispell auto-complete ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra lv hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile projectile pkg-info epl helm-mode-manager helm-make helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async)))
+   '(ac-ispell ace-jump-helm-line ace-link ace-window adaptive-wrap
+               aggressive-indent alert anaconda-mode anzu async auto-compile
+               auto-complete auto-dictionary auto-highlight-symbol
+               auto-yasnippet avy bind-key bind-map clean-aindent-mode
+               column-enforce-mode company company-anaconda company-statistics
+               cython-mode dash dash-functional define-word diff-hl diminish
+               dumb-jump elisp-slime-nav engine-mode epl esh-help
+               eshell-prompt-extras eshell-z eval-sexp-fu evil evil-anzu
+               evil-args evil-ediff evil-escape evil-exchange evil-iedit-state
+               evil-indent-plus evil-lisp-state evil-magit evil-matchit evil-mc
+               evil-nerd-commenter evil-numbers evil-search-highlight-persist
+               evil-surround evil-tutor evil-unimpaired evil-visual-mark-mode
+               evil-visualstar exec-path-from-shell expand-region eyebrowse f
+               fancy-battery fill-column-indicator flx flx-ido flycheck
+               flycheck-pos-tip flyspell-correct flyspell-correct-helm
+               fringe-helper fuzzy gh-md git-commit git-gutter git-gutter+
+               git-gutter-fringe git-gutter-fringe+ git-link git-messenger
+               git-timemachine gitattributes-mode gitconfig-mode gitignore-mode
+               gntp gnuplot golden-ratio google-translate goto-chg helm helm-ag
+               helm-c-yasnippet helm-company helm-core helm-descbinds helm-flx
+               helm-gitignore helm-make helm-mode-manager helm-projectile
+               helm-pydoc helm-swoop helm-themes highlight highlight-indentation
+               highlight-numbers highlight-parentheses hl-todo htmlize
+               hungry-delete hy-mode hydra iedit indent-guide launchctl
+               link-hint linum-relative live-py-mode log4e lorem-ipsum lv
+               macrostep magit magit-gitflow magit-popup markdown-mode
+               markdown-toc mmm-mode move-text multi-term mwim neotree
+               open-junk-file org-bullets org-category-capture org-download
+               org-mime org-plus-contrib org-pomodoro org-present org-projectile
+               orgit osx-dictionary osx-trash packed paradox parent-mode pbcopy
+               pcre2el persp-mode pip-requirements pkg-info popup popwin pos-tip
+               powerline projectile py-isort pyenv-mode pytest pythonic pyvenv
+               rainbow-delimiters request restart-emacs reveal-in-osx-finder s
+               shell-pop smartparens smeargle spaceline spinner toc-org
+               transient undo-tree unfill use-package uuidgen vi-tilde-fringe
+               volatile-highlights which-key winum with-editor ws-butler
+               xterm-color yapfify yasnippet)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
