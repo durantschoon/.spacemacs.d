@@ -89,6 +89,7 @@ This function should only modify configuration layer settings."
      (python :variables
              python-formatter 'black
              tab-width 2
+             python-indent-offset 2
              python-format-on-save t
              python-backend 'lsp ;; new trying this
              python-sort-imports-on-save t)
