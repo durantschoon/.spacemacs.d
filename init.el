@@ -840,7 +840,7 @@ before packages are loaded."
     )
   (global-set-key [kp-delete] 'delete-char) ;; sets fn-delete to be right-delete
 
-  (when (eq system-type 'darwin)          ; mac specific settings
+  (when (eq system-type 'darwin) ; mac specific settings
     (global-set-key "\M-`" 'other-frame)  ; act like other mac programs
     )
 
