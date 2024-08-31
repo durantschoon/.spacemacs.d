@@ -131,6 +131,7 @@ This function should only modify configuration layer settings."
                                                           :files ("*.el" "dist")))
                                       editorconfig
                                       expand-region
+                                      emacs-cody
                                       helm-rg
                                       jsonnet-mode
                                       jsonrpc
@@ -676,6 +677,30 @@ configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
+
+  ;; use ~/.authinfo.gpg with emacs
+  (require 'epa-file)
+  ;; (epa-file-enable) ;; already enabled by spacemacs?
+  (setq epa-file-select-keys nil)
+
+  (let ((repo-path (expand-file-name "~/.emacs.d/private/local/emacs-cody")))
+    (when (file-directory-p repo-path)
+      (add-to-list 'load-path repo-path)
+      (use-package cody
+        :commands (cody-login cody-restart cody-chat cody-mode)
+        ;; Some common key bindings.
+        :bind (("C-M-n" . cody-completion-cycle-next-key-dispatch)
+               ("C-M-p" . cody-completion-cycle-prev-key-dispatch)
+               ("M-TAB" . cody-completion-accept-key-dispatch)
+               ("C-M-g" . cody-quit-key-dispatch))
+        :init
+        (setq cody--sourcegraph-host "sourcegraph.com") ; for clarity; this is the default.
+        (setopt cody-workspace-root "~/Repos/others/Tallyfor/balance") ; optional
+        ;; for now cody seems to want this version of node
+        (customize-set-variable 'cody-node-executable
+                                (expand-file-name "~/.nvm/versions/node/v20.4.0/bin/node"))
+        :config
+        (defalias 'cody-start 'cody-login))))
 
   ;;   (define-key copilot-completion-map (kbd "C-<tab>") 'copilot-accept-completion-by-word)
   ;;   (copilot-node-executable (executable-find "node")))
