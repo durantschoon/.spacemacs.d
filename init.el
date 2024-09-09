@@ -46,7 +46,7 @@ This function should only modify configuration layer settings."
      ;; need to install clojure for your system
      (clojure :variables
               clojure-enable-clj-refactor t
-              clojure-enable-linters 'joker
+              clojure-enable-linters 'clj-kondo
               cider-prompt-for-symbol nil)
      (colors :variables
              colors-enable-nyan-cat-progress-bar t)
@@ -1039,32 +1039,33 @@ This function is called at the very end of Spacemacs initialization."
                auto-yasnippet avy bind-key bind-map clean-aindent-mode
                column-enforce-mode company company-anaconda company-statistics
                cython-mode dash dash-functional define-word diff-hl diminish
-               dumb-jump elisp-slime-nav engine-mode epl esh-help
-               eshell-prompt-extras eshell-z eval-sexp-fu evil evil-anzu
-               evil-args evil-ediff evil-escape evil-exchange evil-iedit-state
-               evil-indent-plus evil-lisp-state evil-magit evil-matchit evil-mc
+               dumb-jump elisp-slime-nav epl esh-help eshell-prompt-extras
+               eshell-z eval-sexp-fu evil evil-anzu evil-args evil-ediff
+               evil-escape evil-exchange evil-iedit-state evil-indent-plus
+               evil-lisp-state evil-magit evil-matchit evil-mc
                evil-nerd-commenter evil-numbers evil-search-highlight-persist
                evil-surround evil-tutor evil-unimpaired evil-visual-mark-mode
                evil-visualstar exec-path-from-shell expand-region eyebrowse f
                fancy-battery fill-column-indicator flx flx-ido flycheck
-               flycheck-pos-tip flyspell-correct flyspell-correct-helm
-               fringe-helper fuzzy gh-md git-commit git-gutter git-gutter+
-               git-gutter-fringe git-gutter-fringe+ git-link git-messenger
-               git-timemachine gitattributes-mode gitconfig-mode gitignore-mode
-               gntp gnuplot golden-ratio google-translate goto-chg helm helm-ag
-               helm-c-yasnippet helm-company helm-core helm-descbinds helm-flx
-               helm-gitignore helm-make helm-mode-manager helm-projectile
-               helm-pydoc helm-swoop helm-themes highlight highlight-indentation
-               highlight-numbers highlight-parentheses hl-todo htmlize
-               hungry-delete hy-mode hydra iedit indent-guide launchctl
-               link-hint linum-relative live-py-mode log4e lorem-ipsum lv
-               macrostep magit magit-gitflow magit-popup markdown-mode
-               markdown-toc mmm-mode move-text multi-term mwim neotree
-               open-junk-file org-bullets org-category-capture org-download
-               org-mime org-plus-contrib org-pomodoro org-present org-projectile
-               orgit osx-dictionary osx-trash packed paradox parent-mode pbcopy
-               pcre2el persp-mode pip-requirements pkg-info popup popwin pos-tip
-               powerline projectile py-isort pyenv-mode pytest pythonic pyvenv
+               flycheck-clj-kondo flycheck-pos-tip flyspell-correct
+               flyspell-correct-helm fringe-helper fuzzy gh-md git-commit
+               git-gutter git-gutter+ git-gutter-fringe git-gutter-fringe+
+               git-link git-messenger git-timemachine gitattributes-mode
+               gitconfig-mode gitignore-mode gntp gnuplot golden-ratio
+               google-translate goto-chg helm helm-ag helm-c-yasnippet
+               helm-company helm-core helm-descbinds helm-flx helm-gitignore
+               helm-make helm-mode-manager helm-projectile helm-pydoc helm-swoop
+               helm-themes highlight highlight-indentation highlight-numbers
+               highlight-parentheses hl-todo htmlize hungry-delete hy-mode hydra
+               iedit indent-guide launchctl link-hint linum-relative
+               live-py-mode log4e lorem-ipsum lv macrostep magit magit-gitflow
+               magit-popup markdown-mode markdown-toc mmm-mode move-text
+               multi-term mwim neotree open-junk-file org-bullets
+               org-category-capture org-download org-mime org-plus-contrib
+               org-pomodoro org-present org-projectile orgit osx-dictionary
+               osx-trash packed paradox parent-mode pbcopy pcre2el persp-mode
+               pip-requirements pkg-info popup popwin pos-tip powerline
+               projectile py-isort pyenv-mode pytest pythonic pyvenv
                rainbow-delimiters request restart-emacs reveal-in-osx-finder s
                shell-pop smartparens smeargle spaceline spinner toc-org
                transient undo-tree unfill use-package uuidgen vi-tilde-fringe
