@@ -125,10 +125,11 @@ This function should only modify configuration layer settings."
    ;; Also include the dependencies as they will not be resolved automatically.
    dotspacemacs-additional-packages '(avy
                                       buffer-move
-                                      (copilot :location (recipe
-                                                          :fetcher github
-                                                          :repo "copilot-emacs/copilot.el"
-                                                          :files ("*.el" "dist")))
+                                      ;; copilot off, trying to use cody instead
+                                      ;; (copilot :location (recipe
+                                      ;;                     :fetcher github
+                                      ;;                     :repo "copilot-emacs/copilot.el"
+                                      ;;                     :files ("*.el" "dist")))
                                       editorconfig
                                       expand-region
                                       emacs-cody
@@ -715,6 +716,7 @@ before packages are loaded."
                ("C-M-g" . cody-quit-key-dispatch))
         :init
         (setq cody--sourcegraph-host "sourcegraph.com") ; for clarity; this is the default.
+        ;; cody--access-token is set in my ~/.authinfo.gpg
         (setopt cody-workspace-root "~/Repos/others/Tallyfor/balance") ; optional
         ;; for now cody seems to want this version of node
         (customize-set-variable 'cody-node-executable
