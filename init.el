@@ -796,9 +796,6 @@ before packages are loaded."
                              (abbreviate-file-name (buffer-file-name))
                            "%b"))))
 
-  ;; python layer
-  ;; debug comment this out
-
   (add-hook 'live-py-mode-hook (lambda ()
                                  (progn
                                    (setq-default live-py-version (executable-find "python"))
