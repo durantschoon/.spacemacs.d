@@ -45,6 +45,7 @@ This function should only modify configuration layer settings."
      better-defaults
      ;; need to install clojure for your system
      (clojure :variables
+              clojure-enable-sayid t
               clojure-enable-clj-refactor t
               clojure-enable-linters 'clj-kondo
               cider-prompt-for-symbol nil)
@@ -65,7 +66,7 @@ This function should only modify configuration layer settings."
      haskell
      (helm :variables
            spacemacs-helm-rg-max-column-number 1024
-           helm-follow-mode-persistent t)
+           helm-follow-mode t)
      helpful
      html
      (javascript :variables
@@ -75,7 +76,8 @@ This function should only modify configuration layer settings."
                  javascript-fmt-on-save t
                  ;; node-add-modules-path t ; instead of adding node binaries to exec-path
                  javascript-backend 'lsp)
-     lsp ;; only available in develop branch of spacemacs
+     (lsp ;; only available in develop branch of spacemacs
+      :variables lsp-lens-enable t)
      markdown
      ;; mermaid
      multiple-cursors
@@ -112,7 +114,7 @@ This function should only modify configuration layer settings."
      typescript
      (unicode-fonts :variables
                     unicode-fonts-force-multi-color-on-mac t
-                    unicode-fonts-ligature-modes '(js-mode))
+                    unicode-fonts-ligature-modes '(js-mode org-mode))
      version-control
      yaml)
    ;; List of additional packages that will be installed without being wrapped
@@ -131,8 +133,8 @@ This function should only modify configuration layer settings."
                                       ;;                     :repo "copilot-emacs/copilot.el"
                                       ;;                     :files ("*.el" "dist")))
                                       editorconfig
+                                      (emacs-cody :location local)
                                       expand-region
-                                      emacs-cody
                                       helm-rg
                                       jsonnet-mode
                                       jsonrpc
@@ -140,7 +142,8 @@ This function should only modify configuration layer settings."
                                       keychain-environment
                                       multiple-cursors
                                       prettier-js
-                                      rg)
+                                      rg
+                                      spinner)
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
 
@@ -489,16 +492,6 @@ It should only modify the values of Spacemacs settings."
    ;; Transparency can be toggled through `toggle-transparency'. (default 90)
    dotspacemacs-active-transparency 90
 
-   ;; A value from the range (0..100), in increasing opacity, which describes
-   ;; the transparency level of a frame when it's inactive or deselected.
-   ;; Transparency can be toggled through `toggle-transparency'. (default 90)
-   dotspacemacs-inactive-transparency 90
-
-   ;; A value from the range (0..100), in increasing opacity, which describes the
-   ;; transparency level of a frame background when it's active or selected. Transparency
-   ;; can be toggled through `toggle-background-transparency'. (default 90)
-   dotspacemacs-background-transparency 90
-
    ;; If non-nil show the titles of transient states. (default t)
    dotspacemacs-show-transient-state-title t
 
@@ -660,7 +653,7 @@ default it calls `spacemacs/load-spacemacs-env' which loads the environment
 variables declared in `~/.spacemacs.env' or `~/.spacemacs.d/.spacemacs.env'.
 See the header of this file for more information."
   (spacemacs/load-spacemacs-env)
-)
+  )
 
 (defun dotspacemacs/user-init ()
   "Initialization for user code:
@@ -668,7 +661,7 @@ This function is called immediately after `dotspacemacs/init', before layer
 configuration.
 It is mostly for variables that should be set before packages are loaded.
 If you are unsure, try setting them in `dotspacemacs/user-config' first."
-)
+  )
 
 
 (defun dotspacemacs/user-load ()
@@ -676,7 +669,7 @@ If you are unsure, try setting them in `dotspacemacs/user-config' first."
 This function is called only while dumping Spacemacs configuration. You can
 `require' or `load' the libraries of your choice that will be included in the
 dump."
-)
+  )
 
 
 (defun dotspacemacs/user-config ()
@@ -685,6 +678,55 @@ This function is called at the very end of Spacemacs startup, after layer
 configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
+
+  ;; ----------------------------------------------------------------------------
+  ;; adding a spinner during cider--completing-read-host
+
+  (defvar cider--completing-read-spinner nil
+    "Spinner object for `cider--completing-read-host'.")
+
+  (defun cider--completing-read-spinner-start (&rest _args)
+    "Advice to start a spinner before `cider--completing-read-host'."
+    (unless (and cider--completing-read-spinner
+                 (spinner--active-p cider--completing-read-spinner))
+      ;; Ensure spinner type is valid
+      (setq cider--completing-read-spinner (spinner-create 'rotating-line t)))
+    (message "About to set host")
+    (spinner-start cider--completing-read-spinner))
+
+  (defun cider--completing-read-spinner-stop (&rest _args)
+    "Advice to stop the spinner after `cider--completing-read-host'."
+    (when (and cider--completing-read-spinner
+               (spinner--active-p cider--completing-read-spinner))
+      (spinner-stop cider--completing-read-spinner)
+      (setq cider--completing-read-spinner nil)
+      (message "Host is set. Searching for a port...")))
+
+  (defun spinner--timer-function (spinner)
+    "Function called to update SPINNER. Includes check for valid frames."
+    (let ((buffer (spinner--buffer spinner)))
+      (if (or (not (spinner--active-p spinner))
+              (and buffer (not (buffer-live-p buffer))))
+          (spinner-stop spinner)
+        ;; Ensure frames are valid before proceeding
+        (let ((frames (spinner--frames spinner)))
+          (when frames ;; Proceed only if frames are not nil
+            ;; Increment counter safely
+            (cl-callf (lambda (x) (if (< x 0)
+                                      (1+ x)
+                                    (% (1+ x) (length frames))))
+                (spinner--counter spinner))
+            ;; Update mode-line
+            (if (buffer-live-p buffer)
+                (with-current-buffer buffer
+                  (force-mode-line-update))
+              (force-mode-line-update)))))))
+
+  ;; Add advice around `cider--completing-read-host`
+  (advice-add 'cider--completing-read-host :before #'cider--completing-read-spinner-start)
+  (advice-add 'cider--completing-read-host :after #'cider--completing-read-spinner-stop)
+
+  ;; ----------------------------------------------------------------------------
 
   ;; something's wrong here
   ;; (defun my-customize-shell-prompt-for-light-theme ()
@@ -714,25 +756,26 @@ before packages are loaded."
   ;; (epa-file-enable) ;; already enabled by spacemacs?
   (setq epa-file-select-keys nil)
 
-  (let ((repo-path (expand-file-name "~/.emacs.d/private/local/emacs-cody")))
-    (when (file-directory-p repo-path)
-      (add-to-list 'load-path repo-path)
-      (use-package cody
-        :commands (cody-login cody-restart cody-chat cody-mode)
-        ;; Some common key bindings.
-        :bind (("C-M-n" . cody-completion-cycle-next-key-dispatch)
-               ("C-M-p" . cody-completion-cycle-prev-key-dispatch)
-               ("M-TAB" . cody-completion-accept-key-dispatch)
-               ("C-M-g" . cody-quit-key-dispatch))
-        :init
-        (setq cody--sourcegraph-host "sourcegraph.com") ; for clarity; this is the default.
-        ;; cody--access-token is set in my ~/.authinfo.gpg
-        (setopt cody-workspace-root "~/Repos/others/Tallyfor/balance") ; optional
-        ;; for now cody seems to want this version of node
-        (customize-set-variable 'cody-node-executable
-                                (expand-file-name "~/.nvm/versions/node/v20.4.0/bin/node"))
-        :config
-        (defalias 'cody-start 'cody-login))))
+  (use-package cody
+    :commands (cody-login cody-restart cody-chat cody-mode)
+
+    ;; Some common key bindings.
+    :bind (("C-M-n" . cody-completion-cycle-next-key-dispatch)
+           ("C-M-p" . cody-completion-cycle-prev-key-dispatch)
+           ("M-TAB" . cody-completion-accept-key-dispatch)
+           ("C-M-g" . cody-quit-key-dispatch))
+    :init
+    (setq cody--sourcegraph-host "sourcegraph.com") ; for clarity; this is the default.
+
+    ;; cody--access-token is set in my ~/.authinfo.gpg
+    (setopt cody-workspace-root "~/Repos/others/Tallyfor/balance") ; optional
+
+    ;; for now cody seems to want this version of node
+    (customize-set-variable 'cody-node-executable
+                            (expand-file-name "~/.nvm/versions/node/v20.4.0/bin/node"))
+
+    :config
+    (defalias 'cody-start 'cody-login))
 
   ;;   (define-key copilot-completion-map (kbd "C-<tab>") 'copilot-accept-completion-by-word)
   ;;   (copilot-node-executable (executable-find "node")))
@@ -787,6 +830,7 @@ before packages are loaded."
   ;;; (with-eval-after-load 'org (require 'org-tempo))
   (require 'org-tempo)
   (setq-default org-hide-leading-stars t)
+  (with-eval-after-load 'org (global-org-modern-mode)) ;; layer variable doesn't work, so try this
   ;;; need to recompile all elc files to get org-archive-subtree to work
   ;;; https://github.com/syl20bnr/spacemacs/issues/11801
 
@@ -851,6 +895,10 @@ before packages are loaded."
         [?\C-  ?\C-a ?\M-\\ ?\C-x ?\C-x ?\C-w ?\[ ?\[ ?\C-f ?\C-f backspace ?\C-b ?\C-y ?\C-  ?\M-b ?\M-b ?\C-w ?\C-y ?\C-f ?\[ ?\C-y ?\C-f ?\] ?\C-a tab])
 
   ;; Settings
+
+  (with-eval-after-load 'prog-mode
+    ;; s- is super, aka Alt on darwin
+    (define-key prog-mode-map (kbd "s-<double-mouse-1>") 'hs-toggle-hiding))
 
   (global-set-key (kbd "C-M-/") 'comint-dynamic-complete-filename)
 
@@ -1008,7 +1056,7 @@ before packages are loaded."
             (load init-file)))))
 
   ;; END
-      )
+  )
 
 
 
@@ -1022,7 +1070,7 @@ before packages are loaded."
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (company-anaconda yapfify pyvenv pytest pyenv-mode py-isort pip-requirements live-py-mode hy-mode dash-functional helm-pydoc cython-mode anaconda-mode pythonic reveal-in-osx-finder pbcopy osx-trash osx-dictionary launchctl xterm-color unfill smeargle shell-pop orgit org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download mwim multi-term mmm-mode markdown-toc markdown-mode magit-gitflow magit-popup htmlize helm-gitignore helm-company helm-c-yasnippet gnuplot gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ git-gutter-fringe fringe-helper git-gutter+ git-gutter gh-md fuzzy flyspell-correct-helm flyspell-correct flycheck-pos-tip pos-tip flycheck evil-magit magit git-commit with-editor transient eshell-z eshell-prompt-extras esh-help diff-hl company-statistics company auto-yasnippet yasnippet auto-dictionary ac-ispell auto-complete ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra lv hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile projectile pkg-info epl helm-mode-manager helm-make helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))))
+    (company-anaconda yapfify pyvenv pytest pyenv-mode py-isort pip-requirements live-py-mode hy-mode dash-functional helm-pydoc cython-mode anaconda-mode pythonic reveal-in-osx-finder pbcopy osx-trash osx-dictionary launchctl xterm-color unfill smeargle shell-pop orgit org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download mwim multi-term mmm-mode markdown-toc markdown-mode  htmlize helm-gitignore helm-company helm-c-yasnippet gnuplot gitignore-mode gitconfig-mode gitattributes-mode fringe-helper gh-md fuzzy flyspell-correct-helm flyspell-correct flycheck-pos-tip pos-tip flycheck  with-editor transient eshell-z eshell-prompt-extras esh-help diff-hl company-statistics company auto-yasnippet yasnippet auto-dictionary ac-ispell auto-complete ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra lv hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile projectile pkg-info epl helm-mode-manager helm-make helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -1034,57 +1082,54 @@ before packages are loaded."
 This is an auto-generated function, do not modify its content directly, use
 Emacs customize menu instead.
 This function is called at the very end of Spacemacs initialization."
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(cider-enrich-classpath t)
- '(ignored-local-variable-values '((cider-preferred-build-tool . "clojure-cli")))
- '(package-selected-packages
-   '(ac-ispell ace-jump-helm-line ace-link ace-window adaptive-wrap
-               aggressive-indent alert anaconda-mode anzu async auto-compile
-               auto-complete auto-dictionary auto-highlight-symbol
-               auto-yasnippet avy bind-key bind-map clean-aindent-mode
-               column-enforce-mode company company-anaconda company-statistics
-               cython-mode dash dash-functional define-word diff-hl diminish
-               dumb-jump elisp-slime-nav epl esh-help eshell-prompt-extras
-               eshell-z eval-sexp-fu evil evil-anzu evil-args evil-ediff
-               evil-escape evil-exchange evil-iedit-state evil-indent-plus
-               evil-lisp-state evil-magit evil-matchit evil-mc
-               evil-nerd-commenter evil-numbers evil-search-highlight-persist
-               evil-surround evil-tutor evil-unimpaired evil-visual-mark-mode
-               evil-visualstar exec-path-from-shell expand-region eyebrowse f
-               fancy-battery fill-column-indicator flx flx-ido flycheck
-               flycheck-clj-kondo flycheck-pos-tip flyspell-correct
-               flyspell-correct-helm fringe-helper fuzzy gh-md git-commit
-               git-gutter git-gutter+ git-gutter-fringe git-gutter-fringe+
-               git-link git-messenger git-timemachine gitattributes-mode
-               gitconfig-mode gitignore-mode gntp gnuplot golden-ratio
-               google-translate goto-chg helm helm-ag helm-c-yasnippet
-               helm-company helm-core helm-descbinds helm-flx helm-gitignore
-               helm-make helm-mode-manager helm-projectile helm-pydoc helm-swoop
-               helm-themes highlight highlight-indentation highlight-numbers
-               highlight-parentheses hl-todo htmlize hungry-delete hy-mode hydra
-               iedit indent-guide launchctl link-hint linum-relative
-               live-py-mode log4e lorem-ipsum lv macrostep magit magit-gitflow
-               magit-popup markdown-mode markdown-toc mmm-mode move-text
-               multi-term mwim neotree open-junk-file org-bullets
-               org-category-capture org-download org-mime org-plus-contrib
-               org-pomodoro org-present org-projectile orgit osx-dictionary
-               osx-trash packed paradox parent-mode pbcopy pcre2el persp-mode
-               pip-requirements pkg-info popup popwin pos-tip powerline
-               projectile py-isort pyenv-mode pytest pythonic pyvenv
-               rainbow-delimiters request restart-emacs reveal-in-osx-finder s
-               shell-pop smartparens smeargle spaceline spinner toc-org
-               transient undo-tree unfill use-package uuidgen vi-tilde-fringe
-               volatile-highlights which-key winum with-editor ws-butler
-               xterm-color yapfify yasnippet)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(comint-highlight-prompt ((t (:inherit minibuffer-prompt :foreground "gray80"))))
- '(highlight-parentheses-highlight ((nil (:weight ultra-bold))) t))
-)
+  (custom-set-variables
+   ;; custom-set-variables was added by Custom.
+   ;; If you edit it by hand, you could mess it up, so be careful.
+   ;; Your init file should contain only one such instance.
+   ;; If there is more than one, they won't work right.
+   '(cider-enrich-classpath t)
+   '(ignored-local-variable-values '((cider-preferred-build-tool . "clojure-cli")))
+   '(package-selected-packages
+     '(ac-ispell ace-jump-helm-line ace-link ace-window adaptive-wrap
+                 aggressive-indent alert anaconda-mode anzu async auto-compile
+                 auto-complete auto-dictionary auto-highlight-symbol
+                 auto-yasnippet avy bind-key bind-map clean-aindent-mode
+                 column-enforce-mode company company-anaconda company-statistics
+                 cython-mode dash dash-functional define-word diff-hl diminish
+                 dumb-jump elisp-slime-nav epl esh-help eshell-prompt-extras
+                 eshell-z eval-sexp-fu evil evil-anzu evil-args evil-ediff
+                 evil-escape evil-exchange evil-iedit-state evil-indent-plus
+                 evil-lisp-state evil-matchit evil-mc evil-nerd-commenter
+                 evil-numbers evil-search-highlight-persist evil-surround
+                 evil-tutor evil-unimpaired evil-visual-mark-mode evil-visualstar
+                 exec-path-from-shell expand-region eyebrowse f fancy-battery
+                 fill-column-indicator flx flx-ido flycheck flycheck-pos-tip
+                 flyspell-correct flyspell-correct-helm fringe-helper fuzzy gh-md
+                 gitattributes-mode gitconfig-mode gitignore-mode gntp gnuplot
+                 golden-ratio google-translate goto-chg helm helm-ag
+                 helm-c-yasnippet helm-company helm-core helm-descbinds helm-flx
+                 helm-gitignore helm-make helm-mode-manager helm-projectile
+                 helm-pydoc helm-swoop helm-themes highlight highlight-indentation
+                 highlight-numbers highlight-parentheses hl-todo htmlize
+                 hungry-delete hy-mode hydra iedit indent-guide launchctl
+                 link-hint linum-relative live-py-mode log4e lorem-ipsum lv
+                 macrostep markdown-mode markdown-toc mmm-mode move-text
+                 multi-term mwim neotree open-junk-file org-bullets
+                 org-category-capture org-download org-mime org-plus-contrib
+                 org-pomodoro org-present org-projectile orgit osx-dictionary
+                 osx-trash packed paradox parent-mode pbcopy pcre2el persp-mode
+                 pip-requirements pkg-info popup popwin pos-tip powerline
+                 projectile py-isort pyenv-mode pytest pythonic pyvenv
+                 rainbow-delimiters request restart-emacs reveal-in-osx-finder s
+                 sayid shell-pop smartparens smeargle spaceline spinner toc-org
+                 transient undo-tree unfill use-package uuidgen vi-tilde-fringe
+                 volatile-highlights which-key winum with-editor ws-butler
+                 xterm-color yapfify yasnippet)))
+  (custom-set-faces
+   ;; custom-set-faces was added by Custom.
+   ;; If you edit it by hand, you could mess it up, so be careful.
+   ;; Your init file should contain only one such instance.
+   ;; If there is more than one, they won't work right.
+   '(comint-highlight-prompt ((t (:inherit minibuffer-prompt :foreground "gray80"))))
+   '(highlight-parentheses-highlight ((nil (:weight ultra-bold))) t))
+  )
