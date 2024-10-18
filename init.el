@@ -815,7 +815,8 @@ before packages are loaded."
   (defun insert-current-date () (interactive)
          (insert (shell-command-to-string "echo -n $(date +%Y-%m-%d)")))
 
-  ;;; TODO move key bindings back to dotspacemacs/user-config
+  (global-set-key (kbd "C-c <") 'eyebrowse-prev-window-config)
+  (global-set-key (kbd "C-c >") 'eyebrowse-next-window-config)
 
   ;;; key-bindings I immediately miss
   (global-set-key (kbd "M-s s") 'helm-swoop)
