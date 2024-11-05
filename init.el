@@ -907,8 +907,12 @@ before packages are loaded."
 
   (with-eval-after-load 'smerge-mode
     ;; s- is super, aka Alt on darwin
-    (define-key prog-mode-map (kbd "s-<up>") 'smerge-keep-lower)    ;; aka keep mine
+    (define-key prog-mode-map (kbd "s-<up>") 'smerge-keep-upper)    ;; aka keep mine
     (define-key prog-mode-map (kbd "s-<down>") 'smerge-keep-lower)) ;; aka keep other
+
+  (with-eval-after-load 'magit
+    (define-key magit-hunk-section-map (kbd "s-<up>") 'magit-smerge-keep-upper)    ;; aka keep mine
+    (define-key magit-hunk-section-map (kbd "s-<down>") 'magit-smerge-keep-lower)) ;; aka keep other
 
   (global-set-key (kbd "C-M-/") 'comint-dynamic-complete-filename)
 
