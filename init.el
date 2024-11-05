@@ -82,9 +82,9 @@ This function should only modify configuration layer settings."
      ;; mermaid
      multiple-cursors
      (org :variables
-          ;; org-hide-emphasis-markers t
-          org-enable-valign t
-          org-enable-modern-support t)
+          org-hide-emphasis-markers t ;; like on /italics/ and *bold*
+          org-enable-modern-support nil ;; has a bad unicode for ***
+          org-enable-valign t)
      osx ;; hopefully this only activates on osx
      ;; python packages installed into "default" virtual environment
      ;; NEW see https://gist.github.com/durantschoon/f20657f038400859329303dded831c86
@@ -831,7 +831,10 @@ before packages are loaded."
   ;;; (with-eval-after-load 'org (require 'org-tempo))
   (require 'org-tempo)
   (setq-default org-hide-leading-stars t)
-  (with-eval-after-load 'org (global-org-modern-mode)) ;; layer variable doesn't work, so try this
+
+  ;; maybe this has the weird unicode bullet
+  ;; (with-eval-after-load 'org (global-org-modern-mode))
+
   ;;; need to recompile all elc files to get org-archive-subtree to work
   ;;; https://github.com/syl20bnr/spacemacs/issues/11801
 
