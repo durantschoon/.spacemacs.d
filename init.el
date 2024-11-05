@@ -815,8 +815,9 @@ before packages are loaded."
   (defun insert-current-date () (interactive)
          (insert (shell-command-to-string "echo -n $(date +%Y-%m-%d)")))
 
-  (global-set-key (kbd "C-c <") 'eyebrowse-prev-window-config)
-  (global-set-key (kbd "C-c >") 'eyebrowse-next-window-config)
+  ;; 2024 how did I live so long w/out these
+  (global-set-key (kbd "M-m <") 'eyebrowse-prev-window-config)
+  (global-set-key (kbd "M-m >") 'eyebrowse-next-window-config)
 
   ;;; key-bindings I immediately miss
   (global-set-key (kbd "M-s s") 'helm-swoop)
