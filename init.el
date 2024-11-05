@@ -905,6 +905,11 @@ before packages are loaded."
     ;; s- is super, aka Alt on darwin
     (define-key prog-mode-map (kbd "s-<double-mouse-1>") 'hs-toggle-hiding))
 
+  (with-eval-after-load 'smerge-mode
+    ;; s- is super, aka Alt on darwin
+    (define-key prog-mode-map (kbd "s-<up>") 'smerge-keep-lower)    ;; aka keep mine
+    (define-key prog-mode-map (kbd "s-<down>") 'smerge-keep-lower)) ;; aka keep other
+
   (global-set-key (kbd "C-M-/") 'comint-dynamic-complete-filename)
 
   (define-key global-map (kbd "RET") 'newline-and-indent)
