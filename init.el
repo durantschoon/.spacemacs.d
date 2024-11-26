@@ -679,6 +679,8 @@ configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
+  (setq make-backup-files t)
+
   ;; ----------------------------------------------------------------------------
   ;; adding a spinner during cider--completing-read-host
 
@@ -906,11 +908,12 @@ before packages are loaded."
     (define-key prog-mode-map (kbd "s-<double-mouse-1>") 'hs-toggle-hiding))
 
   (with-eval-after-load 'smerge-mode
-    ;; s- is super, aka Alt on darwin
+    ;; s- is super, aka Option on darwin
     (define-key prog-mode-map (kbd "s-<up>") 'smerge-keep-upper)    ;; aka keep mine
     (define-key prog-mode-map (kbd "s-<down>") 'smerge-keep-lower)) ;; aka keep other
 
   (with-eval-after-load 'magit
+    ;; s- is super, aka Option on darwin
     (define-key magit-hunk-section-map (kbd "s-<up>") 'magit-smerge-keep-upper)    ;; aka keep mine
     (define-key magit-hunk-section-map (kbd "s-<down>") 'magit-smerge-keep-lower)) ;; aka keep other
 
@@ -927,8 +930,7 @@ before packages are loaded."
     (setq ns-function-modifier 'hyper)    ; make Fn key do Hyper
     ;; ---------- SCROLLING ----------    ; for trackpads
     (global-set-key [wheel-right] 'scroll-left)
-    (global-set-key [wheel-left] 'scroll-right)
-    )
+    (global-set-key [wheel-left] 'scroll-right))
   (global-set-key [kp-delete] 'delete-char) ;; sets fn-delete to be right-delete
 
   (when (eq system-type 'darwin) ; mac specific settings
@@ -1084,7 +1086,7 @@ before packages are loaded."
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (company-anaconda yapfify pyvenv pytest pyenv-mode py-isort pip-requirements live-py-mode hy-mode dash-functional helm-pydoc cython-mode anaconda-mode pythonic reveal-in-osx-finder pbcopy osx-trash osx-dictionary launchctl xterm-color unfill smeargle shell-pop orgit org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download mwim multi-term mmm-mode markdown-toc markdown-mode  htmlize helm-gitignore helm-company helm-c-yasnippet gnuplot gitignore-mode gitconfig-mode gitattributes-mode fringe-helper gh-md fuzzy flyspell-correct-helm flyspell-correct flycheck-pos-tip pos-tip flycheck  with-editor transient eshell-z eshell-prompt-extras esh-help diff-hl company-statistics company auto-yasnippet yasnippet auto-dictionary ac-ispell auto-complete ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra lv hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile projectile pkg-info epl helm-mode-manager helm-make helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist highlight evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))))
+    (company-anaconda yapfify pyvenv pytest pyenv-mode py-isort pip-requirements live-py-mode hy-mode dash-functional helm-pydoc cython-mode anaconda-mode pythonic reveal-in-osx-finder pbcopy osx-trash osx-dictionary launchctl xterm-color unfill smeargle shell-pop orgit org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download mwim multi-term mmm-mode markdown-toc markdown-mode  htmlize helm-gitignore helm-company helm-c-yasnippet gnuplot gitignore-mode gitconfig-mode gitattributes-mode fringe-helper gh-md fuzzy flyspell-correct-helm flyspell-correct flycheck-pos-tip pos-tip flycheck  with-editor transient eshell-z eshell-prompt-extras esh-help diff-hl company-statistics company auto-yasnippet yasnippet auto-dictionary ac-ispell auto-complete ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra lv hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile projectile pkg-info epl helm-mode-manager helm-make helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell smartparens iedit anzu goto-chg undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -1111,11 +1113,7 @@ This function is called at the very end of Spacemacs initialization."
                  column-enforce-mode company company-anaconda company-statistics
                  cython-mode dash dash-functional define-word diff-hl diminish
                  dumb-jump elisp-slime-nav epl esh-help eshell-prompt-extras
-                 eshell-z eval-sexp-fu evil evil-anzu evil-args evil-ediff
-                 evil-escape evil-exchange evil-iedit-state evil-indent-plus
-                 evil-lisp-state evil-matchit evil-mc evil-nerd-commenter
-                 evil-numbers evil-search-highlight-persist evil-surround
-                 evil-tutor evil-unimpaired evil-visual-mark-mode evil-visualstar
+                 eshell-z eval-sexp-fu 
                  exec-path-from-shell expand-region eyebrowse f fancy-battery
                  fill-column-indicator flx flx-ido flycheck flycheck-pos-tip
                  flyspell-correct flyspell-correct-helm fringe-helper fuzzy gh-md
