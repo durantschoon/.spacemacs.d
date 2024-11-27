@@ -5,6 +5,9 @@
 (defun dotspacemacs/layers ()
   "Layer configuration:
 This function should only modify configuration layer settings."
+  (setq bds/light-theme 'modus-operandi-deuteranopia)
+  (setq bds/dark-theme 'modus-vivendi-deuteranopia)
+
   (setq-default
    ;; Base distribution to use. This is a layer contained in the directory
    ;; `+distribution'. For now available distributions are `spacemacs-base'
@@ -337,8 +340,7 @@ It should only modify the values of Spacemacs settings."
    ;; Press `SPC T n' to cycle to the next theme in the list (works great
    ;; with 2 themes variants, one dark and one light)
    ;; dotspacemacs-themes '(spacemacs-dark spacemacs-light)
-   dotspacemacs-themes '(modus-operandi-deuteranopia
-                         modus-vivendi-deuteranopia)
+   dotspacemacs-themes (list bds/light-theme bds/dark-theme)
 
    ;; Set the theme for the Spaceline. Supported themes are `spacemacs',
    ;; `all-the-icons', `custom', `doom', `vim-powerline' and `vanilla'. The
@@ -729,6 +731,15 @@ before packages are loaded."
   (advice-add 'cider--completing-read-host :after #'cider--completing-read-spinner-stop)
 
   ;; ----------------------------------------------------------------------------
+  ;; set theme based on (darwin) system from emacs-plus
+  (defun my/apply-theme (appearance)
+    "Load theme, taking current system APPEARANCE into consideration."
+    (mapc #'disable-theme custom-enabled-themes)
+    (pcase appearance
+      ('light (load-theme bds/light-theme t))
+      ('dark (load-theme bds/dark-theme t))))
+
+  (add-hook 'ns-system-appearance-change-functions #'my/apply-theme)
 
   ;; something's wrong here
   ;; (defun my-customize-shell-prompt-for-light-theme ()
