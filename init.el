@@ -1124,7 +1124,7 @@ This function is called at the very end of Spacemacs initialization."
                  column-enforce-mode company company-anaconda company-statistics
                  cython-mode dash dash-functional define-word diff-hl diminish
                  dumb-jump elisp-slime-nav epl esh-help eshell-prompt-extras
-                 eshell-z eval-sexp-fu 
+                 eshell-z eval-sexp-fu
                  exec-path-from-shell expand-region eyebrowse f fancy-battery
                  fill-column-indicator flx flx-ido flycheck flycheck-pos-tip
                  flyspell-correct flyspell-correct-helm fringe-helper fuzzy gh-md
