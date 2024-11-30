@@ -5,8 +5,8 @@
 (defun dotspacemacs/layers ()
   "Layer configuration:
 This function should only modify configuration layer settings."
-  (setq bds/light-theme 'modus-operandi-deuteranopia)
-  (setq bds/dark-theme 'modus-vivendi-deuteranopia)
+  (setq-default bds/light-theme 'modus-operandi-tinted)
+  (setq-default bds/dark-theme 'modus-vivendi-tinted)
 
   (setq-default
    ;; Base distribution to use. This is a layer contained in the directory
@@ -740,6 +740,7 @@ before packages are loaded."
       ('dark (load-theme bds/dark-theme t))))
 
   (add-hook 'ns-system-appearance-change-functions #'my/apply-theme)
+  (my/apply-theme 'light)
 
   ;; something's wrong here
   ;; (defun my-customize-shell-prompt-for-light-theme ()
