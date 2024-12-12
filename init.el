@@ -1134,30 +1134,29 @@ This function is called at the very end of Spacemacs initialization."
                  column-enforce-mode company company-anaconda company-statistics
                  cython-mode dash dash-functional define-word diff-hl diminish
                  dumb-jump elisp-slime-nav epl esh-help eshell-prompt-extras
-                 eshell-z eval-sexp-fu
-                 exec-path-from-shell expand-region eyebrowse f fancy-battery
-                 fill-column-indicator flx flx-ido flycheck flycheck-pos-tip
-                 flyspell-correct flyspell-correct-helm fringe-helper fuzzy gh-md
-                 gitattributes-mode gitconfig-mode gitignore-mode gntp gnuplot
-                 golden-ratio google-translate goto-chg helm helm-ag
-                 helm-c-yasnippet helm-company helm-core helm-descbinds helm-flx
-                 helm-gitignore helm-make helm-mode-manager helm-projectile
-                 helm-pydoc helm-swoop helm-themes highlight highlight-indentation
-                 highlight-numbers highlight-parentheses hl-todo htmlize
-                 hungry-delete hy-mode hydra iedit indent-guide launchctl
-                 link-hint linum-relative live-py-mode log4e lorem-ipsum lv
-                 macrostep markdown-mode markdown-toc mmm-mode move-text
-                 multi-term mwim neotree open-junk-file org-bullets
-                 org-category-capture org-download org-mime org-plus-contrib
-                 org-pomodoro org-present org-projectile orgit osx-dictionary
-                 osx-trash packed paradox parent-mode pbcopy pcre2el persp-mode
-                 pip-requirements pkg-info popup popwin pos-tip powerline
-                 projectile py-isort pyenv-mode pytest pythonic pyvenv
+                 eshell-z eval-sexp-fu exec-path-from-shell expand-region
+                 eyebrowse f fancy-battery fill-column-indicator flx flx-ido
+                 flycheck flycheck-pos-tip flyspell-correct flyspell-correct-helm
+                 fringe-helper fuzzy gh-md gitattributes-mode gitconfig-mode
+                 gitignore-mode gntp gnuplot golden-ratio google-translate
+                 goto-chg graphql-mode helm helm-ag helm-c-yasnippet helm-company
+                 helm-core helm-descbinds helm-flx helm-gitignore helm-make
+                 helm-mode-manager helm-projectile helm-pydoc helm-swoop
+                 helm-themes highlight-indentation highlight-numbers
+                 highlight-parentheses hl-todo htmlize hungry-delete hy-mode hydra
+                 iedit indent-guide launchctl link-hint linum-relative
+                 live-py-mode log4e lorem-ipsum lv macrostep markdown-mode
+                 markdown-toc memoize mmm-mode move-text multi-term mwim neotree
+                 open-junk-file org-bullets org-category-capture org-download
+                 org-mime org-plus-contrib org-pomodoro org-present org-projectile
+                 orgit osx-dictionary osx-trash packed paradox parent-mode pbcopy
+                 pcre2el persp-mode pip-requirements pkg-info popup popwin pos-tip
+                 powerline projectile py-isort pyenv-mode pytest pythonic pyvenv
                  rainbow-delimiters request restart-emacs reveal-in-osx-finder s
-                 sayid shell-pop smartparens smeargle spaceline spinner toc-org
-                 transient undo-tree unfill use-package uuidgen vi-tilde-fringe
-                 volatile-highlights which-key winum with-editor ws-butler
-                 xterm-color yapfify yasnippet)))
+                 shell-pop smartparens smeargle spaceline spaceline-all-the-icons
+                 spinner toc-org transient undo-tree unfill use-package uuidgen
+                 vi-tilde-fringe volatile-highlights which-key winum with-editor
+                 ws-butler xterm-color yapfify yasnippet)))
   (custom-set-faces
    ;; custom-set-faces was added by Custom.
    ;; If you edit it by hand, you could mess it up, so be careful.
