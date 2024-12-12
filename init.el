@@ -681,7 +681,13 @@ configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
+  ;; work-around
+  (use-package helm-rg
+    :config (setq helm-rg-default-directory 'git-root))
+
   (setq make-backup-files t)
+
+  (keychain-refresh-environment)
 
   ;; ----------------------------------------------------------------------------
   ;; adding a spinner during cider--completing-read-host
@@ -1072,6 +1078,9 @@ before packages are loaded."
            ("C-!"         . mc/mark-next-symbol-like-this)
            ("s-r"         . mc/mark-all-in-region)
            ("s-d"         . mc/mark-all-dwim)))
+
+  (use-package helm-projectile
+    :ensure t)
 
   ;; Run Last
 
