@@ -2,12 +2,12 @@
 ;; This file is loaded by Spacemacs at startup.
 ;; It must be stored in your home directory.
 
+(defvar bds/light-theme 'modus-operandi-tinted)
+(defvar bds/dark-theme 'modus-vivendi-tinted)
+
 (defun dotspacemacs/layers ()
   "Layer configuration:
 This function should only modify configuration layer settings."
-  (setq-default bds/light-theme 'modus-operandi-tinted)
-  (setq-default bds/dark-theme 'modus-vivendi-tinted)
-
   (setq-default
    ;; Base distribution to use. This is a layer contained in the directory
    ;; `+distribution'. For now available distributions are `spacemacs-base'
