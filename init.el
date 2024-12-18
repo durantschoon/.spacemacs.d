@@ -983,8 +983,10 @@ before packages are loaded."
   (global-set-key [kp-delete] 'delete-char) ;; sets fn-delete to be right-delete
 
   (when (eq system-type 'darwin) ; mac specific settings
-    (global-set-key "\M-`" 'other-frame)  ; act like other mac programs
-    )
+    (global-set-key "\M-`" 'other-frame)) ; act like other mac programs
+
+  (when (eq system-type 'darwin)
+    (add-to-list 'exec-path "/opt/homebrew/bin")) ; for apple silicon anyway
 
   ;; if placed at the beginning of dotspacemacs/user-config,
   ;; this breaks my binding of command to Meta on mac
