@@ -4,3 +4,6 @@
 /userconfig.el
 /work_init.el
 /.DS_Store
+.lsp/
+.clj-kondo/
+**/.portal
