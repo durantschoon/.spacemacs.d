@@ -47,7 +47,7 @@ This function should only modify configuration layer settings."
                       auto-completion-private-snippets-directory "~/.spacemacs.d/snippets"
                       auto-completion-enable-sort-by-usage t)
      better-defaults
-     ;; need to install clojure for your system
+     ;; need to install clojure for your system, also brew install clojure-lsp on darwin
      (clojure :variables
               clojure-enable-sayid t
               clojure-enable-clj-refactor t
@@ -68,6 +68,7 @@ This function should only modify configuration layer settings."
      emoji
      git
      graphql
+     ;; gtags ;; see layer for set up first, modify install emacs script
      haskell
      (helm :variables
            spacemacs-helm-rg-max-column-number 1024
