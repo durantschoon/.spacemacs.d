@@ -734,22 +734,30 @@ before packages are loaded."
   (defvar my-cider-start-time nil
     "Stores the start time of the CIDER startup process.")
 
-  (defun my-start-timer-early ()
-    "Start the CIDER startup timer as early as possible."
-    (setq my-cider-start-time (current-time))
-    (message "CIDER startup timer started as early as possible."))
+  (defvar my-cider-spinner nil
+    "Stores the spinner instance for CIDER startup.")
 
-  (defun my-stop-timer-with-confirmation ()
-    "Stop the CIDER startup timer and ask for user confirmation."
+  (defun my-start-timer-and-spinner ()
+    "Start the CIDER startup timer and spinner."
+    (setq my-cider-start-time (current-time))
+    (setq my-cider-spinner (spinner-create 'progress-bar t))
+    (spinner-start my-cider-spinner)
+    (message "CIDER startup timer and spinner started."))
+
+  (defun my-stop-timer-and-spinner ()
+    "Stop the CIDER startup timer and spinner."
     (if my-cider-start-time
         (let ((elapsed (float-time (time-subtract (current-time) my-cider-start-time))))
           (setq my-cider-start-time nil)
+          (when my-cider-spinner
+            (spinner-stop my-cider-spinner)
+            (setq my-cider-spinner nil))
           (message "CIDER startup timer stopped. Elapsed time: %.2f seconds." elapsed))
       (message "Timer was not started.")))
 
   (defun my-wrap-cider-jack-in (orig-fun &rest args)
-    "Wrap around `cider-jack-in` functions to start the timer."
-    (my-start-timer-early)
+    "Wrap around `cider-jack-in` functions to start the timer and spinner."
+    (my-start-timer-and-spinner)
     (apply orig-fun args)) ;; Call the original cider-jack-in function.
 
   ;; Add advice to `cider-jack-in` and related functions
@@ -758,7 +766,21 @@ before packages are loaded."
   (advice-add 'cider-jack-in-cljs :around #'my-wrap-cider-jack-in)
   (advice-add 'cider-jack-in-clj&cljs :around #'my-wrap-cider-jack-in)
 
-  (add-hook 'cider-connected-hook #'my-stop-timer-with-confirmation)
+  (add-hook 'cider-connected-hook #'my-stop-timer-and-spinner)
+
+  ;; spinner
+  (defun my-start-spinner ()
+    "Start the spinner for CIDER startup."
+    (spinner-start (spinner-create 'progress-bar)))
+
+  (defun my-stop-spinner ()
+    "Stop the spinner for CIDER startup."
+    (spinner-stop (spinner-create 'progress-bar)))
+
+  ;; Use hooks for spinner
+  (add-hook 'cider-pre-connected-hook #'my-start-spinner)
+  (add-hook 'cider-connected-hook #'my-stop-spinner)
+
 
 
   ;; ----------------------------------------------------------------------------
