@@ -724,49 +724,63 @@ before packages are loaded."
   ;; ----------------------------------------------------------------------------
   ;; adding a spinner during cider--completing-read-host
 
-  (defvar cider--completing-read-spinner nil
-    "Spinner object for `cider--completing-read-host'.")
+  (use-package spinner
+    :ensure t)
 
-  (defun cider--completing-read-spinner-start (&rest _args)
-    "Advice to start a spinner before `cider--completing-read-host'."
-    (unless (and cider--completing-read-spinner
-                 (spinner--active-p cider--completing-read-spinner))
-      ;; Ensure spinner type is valid
-      (setq cider--completing-read-spinner (spinner-create 'rotating-line t)))
-    (message "About to set host")
-    (spinner-start cider--completing-read-spinner))
+  (defvar cider-jack-in-stats-file (expand-file-name "~/.emacs.d/cider-jack-in-stats.el"))
+  (defvar cider-jack-in-timings '())
 
-  (defun cider--completing-read-spinner-stop (&rest _args)
-    "Advice to stop the spinner after `cider--completing-read-host'."
-    (when (and cider--completing-read-spinner
-               (spinner--active-p cider--completing-read-spinner))
-      (spinner-stop cider--completing-read-spinner)
-      (setq cider--completing-read-spinner nil)
-      (message "Host is set. Searching for a port...")))
+  (defun load-cider-jack-in-stats ()
+    "Load the cider-jack-in statistics from the stats file."
+    (when (file-exists-p cider-jack-in-stats-file)
+      (load-file cider-jack-in-stats-file)))
 
-  (defun spinner--timer-function (spinner)
-    "Function called to update SPINNER. Includes check for valid frames."
-    (let ((buffer (spinner--buffer spinner)))
-      (if (or (not (spinner--active-p spinner))
-              (and buffer (not (buffer-live-p buffer))))
-          (spinner-stop spinner)
-        ;; Ensure frames are valid before proceeding
-        (let ((frames (spinner--frames spinner)))
-          (when frames ;; Proceed only if frames are not nil
-            ;; Increment counter safely
-            (cl-callf (lambda (x) (if (< x 0)
-                                      (1+ x)
-                                    (% (1+ x) (length frames))))
-                (spinner--counter spinner))
-            ;; Update mode-line
-            (if (buffer-live-p buffer)
-                (with-current-buffer buffer
-                  (force-mode-line-update))
-              (force-mode-line-update)))))))
+  (defun save-cider-jack-in-stats ()
+    "Save the cider-jack-in statistics to the stats file."
+    (with-temp-file cider-jack-in-stats-file
+      (insert (format "(setq cider-jack-in-timings '%S)" cider-jack-in-timings))))
 
-  ;; Add advice around `cider--completing-read-host`
-  (advice-add 'cider--completing-read-host :before #'cider--completing-read-spinner-start)
-  (advice-add 'cider--completing-read-host :after #'cider--completing-read-spinner-stop)
+  (defun calculate-stats (timings)
+    "Calculate mean and standard deviation of TIMINGS."
+    (let* ((n (length timings))
+           (mean (/ (apply #'+ timings) (float n)))
+           (variance (/ (apply #'+ (mapcar (lambda (x) (expt (- x mean) 2)) timings)) n))
+           (std-dev (sqrt variance)))
+      (list :mean mean :std-dev std-dev)))
+
+  (defun cider-jack-in-wrapper (original-fn &rest args)
+    "Wrapper around CIDER jack-in commands to measure time and report stats.
+     ORIGINAL-FN is the wrapped command, and ARGS are its arguments."
+    (load-cider-jack-in-stats)
+    (let* ((spinner (spinner-start 'progress-bar))
+           (start-time (float-time))
+           result)
+      (setq result (apply original-fn args))
+      (spinner-stop spinner)
+      (let* ((elapsed (- (float-time) start-time))
+             (stats (progn
+                      (add-to-list 'cider-jack-in-timings elapsed)
+                      (save-cider-jack-in-stats)
+                      (calculate-stats cider-jack-in-timings)))
+             (mean (plist-get stats :mean))
+             (std-dev (plist-get stats :std-dev))
+             (is-outlier (or (< elapsed (- mean std-dev))
+                             (> elapsed (+ mean std-dev)))))
+        (message "CIDER jack-in took %.2f seconds. Average: %.2f, Std Dev: %.2f. %s"
+                 elapsed mean std-dev
+                 (if is-outlier "This run is an outlier!" "This run is typical.")))
+      result))
+
+  (dolist (command '(cider-jack-in-clj cider-jack-in-cljs cider-jack-in-clj&cljs))
+    (advice-add command :around #'cider-jack-in-wrapper))
+
+  (with-eval-after-load 'cider
+    (spacemacs/set-leader-keys
+      "mjc" 'cider-jack-in-clj
+      "mjs" 'cider-jack-in-cljs
+      "mjC" 'cider-jack-in-clj&cljs))
+
+  (setq spinner-frames '("⠋" "⠙" "⠹" "⠸" "⠼" "⠴" "⠦" "⠧" "⠇" "⠏"))
 
   ;; ----------------------------------------------------------------------------
   ;; set theme based on (darwin) system from emacs-plus
