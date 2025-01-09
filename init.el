@@ -967,6 +967,10 @@ before packages are loaded."
     (define-key magit-hunk-section-map (kbd "s-<up>") 'magit-smerge-keep-upper)    ;; aka keep mine
     (define-key magit-hunk-section-map (kbd "s-<down>") 'magit-smerge-keep-lower)) ;; aka keep other
 
+  (with-eval-after-load 'projectile
+    (setq projectile-enable-caching t)
+    (setq projectile-tags-command "ctags -e -R ."))
+
   (global-set-key (kbd "C-M-/") 'comint-dynamic-complete-filename)
 
   (define-key global-map (kbd "RET") 'newline-and-indent)
