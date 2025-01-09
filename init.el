@@ -727,60 +727,31 @@ before packages are loaded."
   (use-package spinner
     :ensure t)
 
-  (defvar cider-jack-in-stats-file (expand-file-name "~/.emacs.d/cider-jack-in-stats.el"))
-  (defvar cider-jack-in-timings '())
-
-  (defun load-cider-jack-in-stats ()
-    "Load the cider-jack-in statistics from the stats file."
-    (when (file-exists-p cider-jack-in-stats-file)
-      (load-file cider-jack-in-stats-file)))
-
-  (defun save-cider-jack-in-stats ()
-    "Save the cider-jack-in statistics to the stats file."
-    (with-temp-file cider-jack-in-stats-file
-      (insert (format "(setq cider-jack-in-timings '%S)" cider-jack-in-timings))))
-
-  (defun calculate-stats (timings)
-    "Calculate mean and standard deviation of TIMINGS."
-    (let* ((n (length timings))
-           (mean (/ (apply #'+ timings) (float n)))
-           (variance (/ (apply #'+ (mapcar (lambda (x) (expt (- x mean) 2)) timings)) n))
-           (std-dev (sqrt variance)))
-      (list :mean mean :std-dev std-dev)))
-
-  (defun cider-jack-in-wrapper (original-fn &rest args)
-    "Wrapper around CIDER jack-in commands to measure time and report stats.
-     ORIGINAL-FN is the wrapped command, and ARGS are its arguments."
-    (load-cider-jack-in-stats)
-    (let* ((spinner (spinner-start 'progress-bar))
-           (start-time (float-time))
-           result)
-      (setq result (apply original-fn args))
-      (spinner-stop spinner)
-      (let* ((elapsed (- (float-time) start-time))
-             (stats (progn
-                      (add-to-list 'cider-jack-in-timings elapsed)
-                      (save-cider-jack-in-stats)
-                      (calculate-stats cider-jack-in-timings)))
-             (mean (plist-get stats :mean))
-             (std-dev (plist-get stats :std-dev))
-             (is-outlier (or (< elapsed (- mean std-dev))
-                             (> elapsed (+ mean std-dev)))))
-        (message "CIDER jack-in took %.2f seconds. Average: %.2f, Std Dev: %.2f. %s"
-                 elapsed mean std-dev
-                 (if is-outlier "This run is an outlier!" "This run is typical.")))
-      result))
-
-  (dolist (command '(cider-jack-in-clj cider-jack-in-cljs cider-jack-in-clj&cljs))
-    (advice-add command :around #'cider-jack-in-wrapper))
-
-  (with-eval-after-load 'cider
-    (spacemacs/set-leader-keys
-      "mjc" 'cider-jack-in-clj
-      "mjs" 'cider-jack-in-cljs
-      "mjC" 'cider-jack-in-clj&cljs))
-
   (setq spinner-frames '("⠋" "⠙" "⠹" "⠸" "⠼" "⠴" "⠦" "⠧" "⠇" "⠏"))
+
+  ;; Measure start up time instead
+
+  (defvar cider-startup-time nil
+    "Holds the time it took for CIDER to start and connect to the REPL.")
+
+  (defun record-cider-startup-time ()
+    "Record the startup time for CIDER when the REPL becomes ready."
+    (let ((startup-duration (time-subtract (current-time) cider-startup-time)))
+      (message "CIDER startup completed in %.2f seconds."
+               (float-time startup-duration))
+      ;; Reset `cider-startup-time` after recording the duration.
+      (setq cider-startup-time nil)))
+
+  (defun setup-cider-startup-timer ()
+    "Initialize the CIDER startup timer."
+    (setq cider-startup-time (current-time)))
+
+  ;; Hook to start the timer as soon as a `jack-in` or `connect` starts.
+  (add-hook 'cider-pre-jack-in-hook #'setup-cider-startup-timer)
+  (add-hook 'cider-pre-connect-hook #'setup-cider-startup-timer)
+
+  ;; Hook to calculate the startup time when the connection is ready.
+  (add-hook 'cider-connected-hook #'record-cider-startup-time)
 
   ;; ----------------------------------------------------------------------------
   ;; set theme based on (darwin) system from emacs-plus
