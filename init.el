@@ -744,15 +744,26 @@ before packages are loaded."
     (spinner-start my-cider-spinner)
     (message "CIDER startup timer and spinner started."))
 
+  (defun my-log-startup-time (elapsed)
+    "Log the elapsed CIDER startup time to a file."
+    (let ((log-file (expand-file-name "cider-jack-in-times.log" user-emacs-directory)))
+      (with-temp-file log-file
+        (when (file-exists-p log-file)
+          (insert-file-contents log-file)) ;; Append to the existing log
+        (insert (format "CIDER startup completed in %.2f seconds at %s\n"
+                        elapsed
+                        (current-time-string))))))
+
   (defun my-stop-timer-and-spinner ()
-    "Stop the CIDER startup timer and spinner."
+    "Stop the CIDER startup timer and spinner, and log the time."
     (if my-cider-start-time
         (let ((elapsed (float-time (time-subtract (current-time) my-cider-start-time))))
           (setq my-cider-start-time nil)
           (when my-cider-spinner
             (spinner-stop my-cider-spinner)
             (setq my-cider-spinner nil))
-          (message "CIDER startup timer stopped. Elapsed time: %.2f seconds." elapsed))
+          (message "CIDER startup timer stopped. Elapsed time: %.2f seconds." elapsed)
+          (my-log-startup-time elapsed)) ;; Log the startup time
       (message "Timer was not started.")))
 
   (defun my-wrap-cider-jack-in (orig-fun &rest args)
