@@ -780,28 +780,6 @@ before packages are loaded."
   (add-hook 'ns-system-appearance-change-functions #'my/apply-theme)
   (my/apply-theme 'light)
 
-  ;; something's wrong here
-  ;; (defun my-customize-shell-prompt-for-light-theme ()
-  ;;   "Customize shell prompt color for light themes like modus-operandi-deuteranopia."
-  ;;   (if (member 'modus-operandi-deuteranopia custom-enabled-themes)
-  ;;       (custom-set-faces
-  ;;        ;; Adjust the colors as desired
-  ;;        '(defface ansi-color-black
-  ;;           '((t :foreground "cyan" :background "black"))
-  ;;           "Face used to render black color code."
-  ;;           :group 'ansi-colors
-  ;;           :version "28.1"))
-  ;;     (custom-set-faces
-  ;;      ;; Default or dark theme colors
-  ;;      '(defface ansi-color-black
-  ;;         '((t :foreground "black" :background "black"))
-  ;;         "Face used to render black color code."
-  ;;         :group 'ansi-colors
-  ;;         :version "28.1"))))
-  ;; (my-customize-shell-prompt-for-light-theme)
-
-  ;; Hook to run after changing themes
-  ;; (add-hook 'after-load-theme-hook 'my-customize-shell-prompt-for-light-theme)
 
   ;; use ~/.authinfo.gpg with emacs
   (require 'epa-file)
