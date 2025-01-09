@@ -729,29 +729,37 @@ before packages are loaded."
 
   (setq spinner-frames '("⠋" "⠙" "⠹" "⠸" "⠼" "⠴" "⠦" "⠧" "⠇" "⠏"))
 
-  ;; Measure start up time instead
+  ;; Measure start up time
 
-  (defvar cider-startup-time nil
-    "Holds the time it took for CIDER to start and connect to the REPL.")
+  (defvar my-cider-start-time nil
+    "Stores the start time of the CIDER startup process.")
 
-  (defun record-cider-startup-time ()
-    "Record the startup time for CIDER when the REPL becomes ready."
-    (let ((startup-duration (time-subtract (current-time) cider-startup-time)))
-      (message "CIDER startup completed in %.2f seconds."
-               (float-time startup-duration))
-      ;; Reset `cider-startup-time` after recording the duration.
-      (setq cider-startup-time nil)))
+  (defun my-start-timer-early ()
+    "Start the CIDER startup timer as early as possible."
+    (setq my-cider-start-time (current-time))
+    (message "CIDER startup timer started as early as possible."))
 
-  (defun setup-cider-startup-timer ()
-    "Initialize the CIDER startup timer."
-    (setq cider-startup-time (current-time)))
+  (defun my-stop-timer-with-confirmation ()
+    "Stop the CIDER startup timer and ask for user confirmation."
+    (if my-cider-start-time
+        (let ((elapsed (float-time (time-subtract (current-time) my-cider-start-time))))
+          (setq my-cider-start-time nil)
+          (message "CIDER startup timer stopped. Elapsed time: %.2f seconds." elapsed))
+      (message "Timer was not started.")))
 
-  ;; Hook to start the timer as soon as a `jack-in` or `connect` starts.
-  (add-hook 'cider-pre-jack-in-hook #'setup-cider-startup-timer)
-  (add-hook 'cider-pre-connect-hook #'setup-cider-startup-timer)
+  (defun my-wrap-cider-jack-in (orig-fun &rest args)
+    "Wrap around `cider-jack-in` functions to start the timer."
+    (my-start-timer-early)
+    (apply orig-fun args)) ;; Call the original cider-jack-in function.
 
-  ;; Hook to calculate the startup time when the connection is ready.
-  (add-hook 'cider-connected-hook #'record-cider-startup-time)
+  ;; Add advice to `cider-jack-in` and related functions
+  (advice-add 'cider-jack-in :around #'my-wrap-cider-jack-in)
+  (advice-add 'cider-jack-in-clj :around #'my-wrap-cider-jack-in)
+  (advice-add 'cider-jack-in-cljs :around #'my-wrap-cider-jack-in)
+  (advice-add 'cider-jack-in-clj&cljs :around #'my-wrap-cider-jack-in)
+
+  (add-hook 'cider-connected-hook #'my-stop-timer-with-confirmation)
+
 
   ;; ----------------------------------------------------------------------------
   ;; set theme based on (darwin) system from emacs-plus
