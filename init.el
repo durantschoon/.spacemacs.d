@@ -713,6 +713,23 @@ configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
+  (setq browse-url-browser-function #'xwidget-webkit-browse-url)
+
+  (spacemacs/set-leader-keys "ox" 'xwidget-webkit-browse-url) ;; open with SPC o x
+
+  (defun my-xwidget-webkit-display-right (url &optional new-session)
+    "Open xwidget-webkit browser in a window split to the right."
+    (let ((buffer (get-buffer-create "*xwidget-webkit*")))
+      ;; Split the window to the right
+      (select-window (split-window-right))
+      ;; Switch to the xwidget-webkit buffer in the new window
+      (switch-to-buffer buffer)
+      ;; Use xwidget-webkit to browse the URL
+      (xwidget-webkit-browse-url url new-session)))
+
+  ;; Set `browse-url-browser-function` to use the custom function
+  (setq browse-url-browser-function #'my-xwidget-webkit-display-right)
+
   ;; work-around
   (use-package helm-rg
     :config (setq helm-rg-default-directory 'git-root))
