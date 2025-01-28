@@ -717,14 +717,16 @@ before packages are loaded."
 
   (spacemacs/set-leader-keys "ox" 'xwidget-webkit-browse-url) ;; open with SPC o x
 
-  (defun my-xwidget-webkit-display-right (url &optional new-session)
-    "Open xwidget-webkit browser in a window split to the right."
-    (let ((buffer (get-buffer-create "*xwidget-webkit*")))
-      ;; Split the window to the right
-      (select-window (split-window-right))
-      ;; Switch to the xwidget-webkit buffer in the new window
-      (switch-to-buffer buffer)
-      ;; Use xwidget-webkit to browse the URL
+  (defun my-xwidget-webkit-display-right-reuse (url &optional new-session)
+    "Open xwidget-webkit browser in a window split to the right, reusing an existing buffer if possible."
+    (let ((new-window (split-window-right 40)) ;; 40 columns
+          (xwidget-buffer (get-buffer "*xwidget-webkit*")))
+      (select-window new-window)
+      (unless xwidget-buffer
+        (setq xwidget-buffer (generate-new-buffer "*xwidget-webkit*"))
+        (with-current-buffer xwidget-buffer
+          (xwidget-webkit-mode)))
+      (switch-to-buffer xwidget-buffer)
       (xwidget-webkit-browse-url url new-session)))
 
   ;; Set `browse-url-browser-function` to use the custom function
