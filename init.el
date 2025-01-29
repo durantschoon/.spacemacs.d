@@ -717,17 +717,17 @@ before packages are loaded."
 
   (spacemacs/set-leader-keys "ox" 'xwidget-webkit-browse-url) ;; open with SPC o x
 
-  (defun my-xwidget-webkit-display-right-reuse (url &optional new-session)
-    "Open xwidget-webkit browser in a window split to the right, reusing an existing buffer if possible."
-    (let ((new-window (split-window-right 40)) ;; 40 columns
-          (xwidget-buffer (get-buffer "*xwidget-webkit*")))
-      (select-window new-window)
-      (unless xwidget-buffer
-        (setq xwidget-buffer (generate-new-buffer "*xwidget-webkit*"))
+  (defun my-xwidget-webkit-display-right (url &optional new-session)
+    "Open xwidget-webkit browser in a window split to the right."
+    (let ((new-window (split-window-right)))
+      (select-window new-window) ;; Switch to the right-hand window
+      ;; Create a new xwidget buffer and display the URL in it
+      (let ((xwidget-buffer (get-buffer-create "*xwidget-webkit*")))
         (with-current-buffer xwidget-buffer
-          (xwidget-webkit-mode)))
-      (switch-to-buffer xwidget-buffer)
-      (xwidget-webkit-browse-url url new-session)))
+          (xwidget-webkit-mode)) ;; Ensure the buffer is in xwidget-webkit-mode
+        (set-window-buffer new-window xwidget-buffer) ;; Attach buffer to the right window
+        (xwidget-webkit-browse-url url new-session)
+        (select-window new-window)))) ;; Ensure focus stays on the right window
 
   ;; Set `browse-url-browser-function` to use the custom function
   (setq browse-url-browser-function #'my-xwidget-webkit-display-right)
