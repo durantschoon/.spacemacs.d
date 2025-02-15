@@ -851,6 +851,10 @@ before packages are loaded."
   (require 'epa-file)
   ;; (epa-file-enable) ;; already enabled by spacemacs?
   (setq epa-file-select-keys nil)
+  (when (file-exists-p "/usr/local/MacGPG2/bin/gpg2") ;; macos at least for now
+    (custom-set-variables
+     '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")))
+  (epa-file-enable)
 
   (use-package cody
     :commands (cody-login cody-restart cody-chat cody-mode)
@@ -1125,7 +1129,6 @@ before packages are loaded."
   (global-set-key [f6] 'toggle-truncate-lines)
 
   (global-set-key (kbd "C-c o") 'browse-url-at-point) ; like "o"pen
-
 
   (defun my-zap-to-char ()
     "Kill up to the ARG'th occurence of CHAR, and leave CHAR. If
