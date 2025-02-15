@@ -82,6 +82,13 @@ This function should only modify configuration layer settings."
                  javascript-fmt-on-save t
                  ;; node-add-modules-path t ; instead of adding node binaries to exec-path
                  javascript-backend 'lsp)
+     (llm-client :variables
+                 ;; Note I have my api-key set in my ~/.authinfo.gpg (on mac)
+                 ;; in this format:
+                 ;; machine api.openai.com login apikey password TOKEN
+                 ;; but I'm starting testing with local ollama, not openai api
+                 llm-client-enable-gptel t
+                 llm-client-enable-ellama t)
      (lsp ;; only available in develop branch of spacemacs
       :variables lsp-lens-enable t)
      markdown
@@ -713,6 +720,20 @@ configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
+  ;; add llm options
+  (gptel-make-ollama "Ollama"             ;Any name of your choosing
+    :host "localhost:11434"               ;Where it's running
+    :stream t                             ;Stream responses
+    :models '(qwen2.5:latest))            ;List of models
+
+  ;; set default
+  (setq
+   gptel-model 'qwen2.5:latest
+   gptel-backend (gptel-make-ollama "Ollama"
+                   :host "localhost:11434"
+                   :stream t
+                   :models '(qwen2.5:latest)))
+
   (setq browse-url-browser-function #'xwidget-webkit-browse-url)
 
   (spacemacs/set-leader-keys "ox" 'xwidget-webkit-browse-url) ;; open with SPC o x
@@ -1194,27 +1215,28 @@ This function is called at the very end of Spacemacs initialization."
                  auto-yasnippet avy bind-key bind-map clean-aindent-mode
                  column-enforce-mode company company-anaconda company-statistics
                  cython-mode dash dash-functional define-word diff-hl diminish
-                 dumb-jump elisp-slime-nav epl esh-help eshell-prompt-extras
-                 eshell-z eval-sexp-fu exec-path-from-shell expand-region
-                 eyebrowse f fancy-battery fill-column-indicator flx flx-ido
-                 flycheck flycheck-pos-tip flyspell-correct flyspell-correct-helm
-                 fringe-helper fuzzy gh-md gitattributes-mode gitconfig-mode
-                 gitignore-mode gntp gnuplot golden-ratio google-translate
-                 goto-chg graphql-mode helm helm-ag helm-c-yasnippet helm-company
-                 helm-core helm-descbinds helm-flx helm-gitignore helm-make
-                 helm-mode-manager helm-projectile helm-pydoc helm-swoop
-                 helm-themes highlight-indentation highlight-numbers
-                 highlight-parentheses hl-todo htmlize hungry-delete hy-mode hydra
-                 iedit indent-guide launchctl link-hint linum-relative
-                 live-py-mode log4e lorem-ipsum lv macrostep markdown-mode
-                 markdown-toc memoize mmm-mode move-text multi-term mwim neotree
-                 open-junk-file org-bullets org-category-capture org-download
-                 org-mime org-plus-contrib org-pomodoro org-present org-projectile
-                 orgit osx-dictionary osx-trash packed paradox parent-mode pbcopy
-                 pcre2el persp-mode pip-requirements pkg-info popup popwin pos-tip
-                 projectile py-isort pyenv-mode pytest pythonic pyvenv
-                 rainbow-delimiters request restart-emacs reveal-in-osx-finder s
-                 shell-pop smartparens smeargle spaceline spaceline-all-the-icons
+                 dumb-jump elisp-slime-nav ellama epl esh-help
+                 eshell-prompt-extras eshell-z eval-sexp-fu exec-path-from-shell
+                 expand-region eyebrowse f fancy-battery fill-column-indicator flx
+                 flx-ido flycheck flycheck-pos-tip flyspell-correct
+                 flyspell-correct-helm fringe-helper fuzzy gh-md
+                 gitattributes-mode gitconfig-mode gitignore-mode gntp gnuplot
+                 golden-ratio google-translate goto-chg gptel helm helm-ag
+                 helm-c-yasnippet helm-company helm-core helm-descbinds helm-flx
+                 helm-gitignore helm-make helm-mode-manager helm-projectile
+                 helm-pydoc helm-swoop helm-themes highlight-indentation
+                 highlight-numbers highlight-parentheses hl-todo htmlize
+                 hungry-delete hy-mode hydra iedit indent-guide launchctl
+                 link-hint linum-relative live-py-mode llm log4e lorem-ipsum lv
+                 macrostep markdown-mode markdown-toc mmm-mode move-text
+                 multi-term mwim neotree open-junk-file org-bullets
+                 org-category-capture org-download org-mime org-plus-contrib
+                 org-pomodoro org-present org-projectile orgit osx-dictionary
+                 osx-trash packed paradox parent-mode pbcopy pcre2el persp-mode
+                 pip-requirements pkg-info plz plz-event-source plz-media-type
+                 popup popwin pos-tip projectile py-isort pyenv-mode pytest
+                 pythonic pyvenv rainbow-delimiters request restart-emacs
+                 reveal-in-osx-finder s shell-pop smartparens smeargle spaceline
                  spinner toc-org transient undo-tree unfill use-package uuidgen
                  vi-tilde-fringe volatile-highlights which-key winum with-editor
                  ws-butler xterm-color yapfify yasnippet)))
