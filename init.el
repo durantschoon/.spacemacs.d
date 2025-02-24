@@ -1155,11 +1155,10 @@ before packages are loaded."
   (use-package multiple-cursors
     :ensure t
     :init
-    ;; (require 'cl) -- testing this commented out
-    :bind (("C-S-c C-S-c" . mc/edit-lines)
+    :bind (;; spacemacs ("M-m s m r" . mc/edit-lines)
+           ;; spacemacs ("M-m s m b" . mc/mark-all-like-this)
            ("C->"         . mc/mark-next-like-this)
            ("C-<"         . mc/mark-previous-like-this)
-           ("C-c C-<"     . mc/mark-all-like-this)
            ("C-!"         . mc/mark-next-symbol-like-this)
            ("s-r"         . mc/mark-all-in-region)
            ("s-d"         . mc/mark-all-dwim)))
