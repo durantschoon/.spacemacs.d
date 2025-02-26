@@ -2,8 +2,15 @@
 ;; This file is loaded by Spacemacs at startup.
 ;; It must be stored in your home directory.
 
-(defvar bds/light-theme 'modus-operandi-tinted)
-(defvar bds/dark-theme 'modus-vivendi-tinted)
+(defcustom bds/light-theme 'modus-operandi-tinted
+  "The theme to use when the background is set to light."
+  :type 'symbol
+  :group 'bds)
+
+(defcustom bds/dark-theme 'modus-vivendi-tinted
+  "The theme to use when the background is set to dark."
+  :type 'symbol
+  :group 'bds)
 
 (defun dotspacemacs/layers ()
   "Layer configuration:
