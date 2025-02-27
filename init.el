@@ -728,18 +728,29 @@ Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
   ;; add llm options
-  (gptel-make-ollama "Ollama"             ;Any name of your choosing
-    :host "localhost:11434"               ;Where it's running
-    :stream t                             ;Stream responses
-    :models '(qwen2.5:latest))            ;List of models
+  (gptel-make-ollama "Ollama Local"       ; Any name of your choosing
+    :host "localhost:11434"               ; Where it's running
+    :stream t                             ; Stream responses
+    :models '(codellama:latest
+              qwen2.5:latest))            ; List of models
 
   ;; set default
   (setq
-   gptel-model 'qwen2.5:latest
-   gptel-backend (gptel-make-ollama "Ollama"
+   gptel-model 'codellama:latest
+   gptel-backend (gptel-make-ollama "Ollama Local Codellama"
                    :host "localhost:11434"
                    :stream t
-                   :models '(qwen2.5:latest)))
+                   :models '(codellama:latest
+                             qwen2.5:latest)))
+
+  ;; useful to remember this in gptel-mode
+  ;; C-c RET					gptel-send
+
+  ;; Add key bindings for gptel -- actually the defaults are probably ok for now
+  ;; (spacemacs/set-leader-keys
+  ;;   "aig" 'gptel        ; vs. $ g g
+  ;;   "aic" 'gptel-send   ; vs. $ g c
+  ;;   "aim" 'gptel-menu)  ; vs. $ g m
 
   (setq browse-url-browser-function #'xwidget-webkit-browse-url)
 
