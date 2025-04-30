@@ -287,7 +287,10 @@ It should only modify the values of Spacemacs settings."
    ;; number is the project limit and the second the limit on the recent files
    ;; within a project.
    dotspacemacs-startup-lists '((recents . 5)
-                                (projects . 7))
+                                (projects . 7)
+                                (bookmarks . 3)
+                                (agenda . 7)
+                                (todos . 5))
 
    ;; True if the home buffer should respond to resize events. (default t)
    dotspacemacs-startup-buffer-responsive t
@@ -299,7 +302,7 @@ It should only modify the values of Spacemacs settings."
    dotspacemacs-startup-buffer-multi-digit-delay 0.4
 
    ;; If non-nil, show file icons for entries and headings on Spacemacs home buffer.
-   ;; This has no effect in terminal or if "all-the-icons" package or the font
+   ;; This has no effect in terminal or if "nerd-icons" package or the font
    ;; is not installed. (default nil)
    dotspacemacs-startup-buffer-show-icons t
 
@@ -349,11 +352,12 @@ It should only modify the values of Spacemacs settings."
    ;; fixed-pitch faces. The `:size' can be specified as
    ;; a non-negative integer (pixel size), or a floating-point (point size).
    ;; Point size is recommended, because it's device independent. (default 10.0)
-   dotspacemacs-default-font '("Source Code Pro for Powerline"
-                               :size 12.0
+   dotspacemacs-default-font '("FiraCode Nerd Font Mono"
+                               :size 12
                                :weight normal
                                :width normal
                                :powerline-scale 1.1)
+
    ;; The leader key (default "SPC")
    dotspacemacs-leader-key "SPC"
 
@@ -373,10 +377,10 @@ It should only modify the values of Spacemacs settings."
    dotspacemacs-major-mode-leader-key ","
 
    ;; Major mode leader key accessible in `emacs state' and `insert state'.
-   ;; (default "C-M-m" for terminal mode, "<M-return>" for GUI mode).
+   ;; (default "C-M-m" for terminal mode, "M-<return>" for GUI mode).
    ;; Thus M-RET should work as leader key in both GUI and terminal modes.
    ;; C-M-m also should work in terminal mode, but not in GUI mode.
-   dotspacemacs-major-mode-emacs-leader-key (if window-system "<M-return>" "C-M-m")
+   dotspacemacs-major-mode-emacs-leader-key (if window-system "M-<return>" "C-M-m")
 
    ;; These variables control whether separate commands are bound in the GUI to
    ;; the key pairs `C-i', `TAB' and `C-m', `RET'.
@@ -750,75 +754,49 @@ before packages are loaded."
   ;; ----------------------------------------------------------------------------
   ;; adding a spinner during cider--completing-read-host
 
-  (use-package spinner
-    :ensure t)
+  (defvar cider--completing-read-spinner nil
+    "Spinner object for `cider--completing-read-host'.")
 
-  (setq spinner-frames '("⠋" "⠙" "⠹" "⠸" "⠼" "⠴" "⠦" "⠧" "⠇" "⠏"))
+  (defun cider--completing-read-spinner-start (&rest _args)
+    "Advice to start a spinner before `cider--completing-read-host'."
+    (unless (and cider--completing-read-spinner
+                 (spinner--active-p cider--completing-read-spinner))
+      ;; Ensure spinner type is valid
+      (setq cider--completing-read-spinner (spinner-create 'rotating-line t)))
+    (message "About to set host")
+    (spinner-start cider--completing-read-spinner))
 
-  ;; Measure start up time
+  (defun cider--completing-read-spinner-stop (&rest _args)
+    "Advice to stop the spinner after `cider--completing-read-host'."
+    (when (and cider--completing-read-spinner
+               (spinner--active-p cider--completing-read-spinner))
+      (spinner-stop cider--completing-read-spinner)
+      (setq cider--completing-read-spinner nil)
+      (message "Host is set. Searching for a port...")))
 
-  (defvar my-cider-start-time nil
-    "Stores the start time of the CIDER startup process.")
+  (defun spinner--timer-function (spinner)
+    "Function called to update SPINNER. Includes check for valid frames."
+    (let ((buffer (spinner--buffer spinner)))
+      (if (or (not (spinner--active-p spinner))
+              (and buffer (not (buffer-live-p buffer))))
+          (spinner-stop spinner)
+        ;; Ensure frames are valid before proceeding
+        (let ((frames (spinner--frames spinner)))
+          (when frames ;; Proceed only if frames are not nil
+            ;; Increment counter safely
+            (cl-callf (lambda (x) (if (< x 0)
+                                      (1+ x)
+                                    (% (1+ x) (length frames))))
+                (spinner--counter spinner))
+            ;; Update mode-line
+            (if (buffer-live-p buffer)
+                (with-current-buffer buffer
+                  (force-mode-line-update))
+              (force-mode-line-update)))))))
 
-  (defvar my-cider-spinner nil
-    "Stores the spinner instance for CIDER startup.")
-
-  (defun my-start-timer-and-spinner ()
-    "Start the CIDER startup timer and spinner."
-    (setq my-cider-start-time (current-time))
-    (setq my-cider-spinner (spinner-create 'progress-bar t))
-    (spinner-start my-cider-spinner)
-    (message "CIDER startup timer and spinner started."))
-
-  (defun my-log-startup-time (elapsed)
-    "Log the elapsed CIDER startup time to a file."
-    (let ((log-file (expand-file-name "cider-jack-in-times.log" user-emacs-directory)))
-      (with-temp-file log-file
-        (when (file-exists-p log-file)
-          (insert-file-contents log-file)) ;; Append to the existing log
-        (insert (format "CIDER startup completed in %.2f seconds at %s\n"
-                        elapsed
-                        (current-time-string))))))
-
-  (defun my-stop-timer-and-spinner ()
-    "Stop the CIDER startup timer and spinner, and log the time."
-    (if my-cider-start-time
-        (let ((elapsed (float-time (time-subtract (current-time) my-cider-start-time))))
-          (setq my-cider-start-time nil)
-          (when my-cider-spinner
-            (spinner-stop my-cider-spinner)
-            (setq my-cider-spinner nil))
-          (message "CIDER startup timer stopped. Elapsed time: %.2f seconds." elapsed)
-          (my-log-startup-time elapsed)) ;; Log the startup time
-      (message "Timer was not started.")))
-
-  (defun my-wrap-cider-jack-in (orig-fun &rest args)
-    "Wrap around `cider-jack-in` functions to start the timer and spinner."
-    (my-start-timer-and-spinner)
-    (apply orig-fun args)) ;; Call the original cider-jack-in function.
-
-  ;; Add advice to `cider-jack-in` and related functions
-  (advice-add 'cider-jack-in :around #'my-wrap-cider-jack-in)
-  (advice-add 'cider-jack-in-clj :around #'my-wrap-cider-jack-in)
-  (advice-add 'cider-jack-in-cljs :around #'my-wrap-cider-jack-in)
-  (advice-add 'cider-jack-in-clj&cljs :around #'my-wrap-cider-jack-in)
-
-  (add-hook 'cider-connected-hook #'my-stop-timer-and-spinner)
-
-  ;; spinner
-  (defun my-start-spinner ()
-    "Start the spinner for CIDER startup."
-    (spinner-start (spinner-create 'progress-bar)))
-
-  (defun my-stop-spinner ()
-    "Stop the spinner for CIDER startup."
-    (spinner-stop (spinner-create 'progress-bar)))
-
-  ;; Use hooks for spinner
-  (add-hook 'cider-pre-connected-hook #'my-start-spinner)
-  (add-hook 'cider-connected-hook #'my-stop-spinner)
-
-
+  ;; Add advice around `cider--completing-read-host`
+  (advice-add 'cider--completing-read-host :before #'cider--completing-read-spinner-start)
+  (advice-add 'cider--completing-read-host :after #'cider--completing-read-spinner-stop)
 
   ;; ----------------------------------------------------------------------------
   ;; set theme based on (darwin) system from emacs-plus
@@ -918,6 +896,10 @@ before packages are loaded."
   ;;; (with-eval-after-load 'org (require 'org-tempo))
   (require 'org-tempo)
   (setq-default org-hide-leading-stars t)
+  (setq org-agenda-files '(;; "~/Dropbox/work/org/freenome/agenda.org"
+                           "~/Dropbox/home/org/agenda/tasks.org"
+                           "~/Dropbox/home/org/agenda/personal.org"))
+
 
   ;; maybe this has the weird unicode bullet
   ;; (with-eval-after-load 'org (global-org-modern-mode))
