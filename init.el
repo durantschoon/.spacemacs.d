@@ -707,6 +707,17 @@ configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
+  ;; this helps on macos to avoid using /var/folders
+  (setenv "TMPDIR" "/tmp")
+
+  (defun my/shell-reminder-use-vterm ()
+    "Reminder to use vterm instead of shell, then runs vterm."
+    (interactive)
+    (message "⚠️ You're using `M-x shell`. Using vterm, `M-x vterm`, for better performance.")
+    (vterm))
+
+  (advice-add 'shell :override #'my/shell-reminder-use-vterm)
+
   (setq org-capture-templates
         '(("r" "Robotics Task" entry
            (file+headline "~/Dropbox/home/org/robotics/summer2025.org" "Captured Tasks")
