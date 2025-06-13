@@ -737,7 +737,7 @@ SCHEDULED: %^t
   ;; set default
   (setq
    gptel-model 'codellama:latest
-   gptel-backend (gptel-make-ollama "Ollama Local Codellama"
+   gptel-backend (gptel-make-ollama "Ollama Local Codellama or Qwen"
                    :host "localhost:11434"
                    :stream t
                    :models '(codellama:latest
