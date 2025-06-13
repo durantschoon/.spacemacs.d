@@ -920,9 +920,8 @@ SCHEDULED: %^t
   (global-set-key (kbd "C-c f") 'select-frame-by-name)
 
   ;;; enable easy-templates in org-mode
-  ;;; I might want
-  ;;; (with-eval-after-load 'org (require 'org-tempo))
-  (require 'org-tempo)
+  ;;; hopefully this makes '<s'+TAB create src blocks again
+  (with-eval-after-load 'org (require 'org-tempo))
   (setq-default org-hide-leading-stars t)
   (setq org-agenda-files '(;; "~/Dropbox/work/org/freenome/agenda.org"
                            "~/Dropbox/home/org/agenda/tasks.org"
