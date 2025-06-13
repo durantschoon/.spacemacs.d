@@ -98,13 +98,20 @@ This function should only modify configuration layer settings."
                  llm-client-enable-ellama t)
      (lsp ;; only available in develop branch of spacemacs
       :variables lsp-lens-enable t)
+     (major-modes :variables
+                  c-multiline-string-start-char "/*"
+                  arduino-executable "arduino-cli"
+                  arduino-cli-verify t
+                  arduino-cli-warnings 'all)
      markdown
      ;; mermaid
      multiple-cursors
      (org :variables
           org-hide-emphasis-markers t ;; like on /italics/ and *bold*
           org-enable-modern-support nil ;; has a bad unicode for ***
-          org-enable-valign t)
+          org-enable-valign t
+          org-agenda-block-separator 8411 ;; fancy dots at top
+          )
      osx ;; hopefully this only activates on osx
      ;; python packages installed into "default" virtual environment
      ;; NEW see https://gist.github.com/durantschoon/f20657f038400859329303dded831c86
@@ -699,6 +706,26 @@ configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
+  (setq org-capture-templates
+        '(("r" "Robotics Task" entry
+           (file+headline "~/Dropbox/home/org/robotics/summer2025.org" "Captured Tasks")
+           "* TODO %^{Task description}
+SCHEDULED: %^t
+:PROPERTIES:
+:CREATED: %U
+:END:
+%?"
+           :empty-lines 1)
+
+          ("j" "Robotics Journal" entry
+           (file+datetree "~/Dropbox/home/org/robotics/journal.org")
+           "* %U - %^{Brief title}
+%?
+"
+           :empty-lines 1)))
+
+  (add-to-list 'auto-minor-mode-alist '("\\.ino\\'" . arduino-cli-mode))
+
   ;; add llm options
   (gptel-make-ollama "Ollama Local"       ; Any name of your choosing
     :host "localhost:11434"               ; Where it's running
@@ -898,7 +925,8 @@ before packages are loaded."
   (setq-default org-hide-leading-stars t)
   (setq org-agenda-files '(;; "~/Dropbox/work/org/freenome/agenda.org"
                            "~/Dropbox/home/org/agenda/tasks.org"
-                           "~/Dropbox/home/org/agenda/personal.org"))
+                           "~/Dropbox/home/org/agenda/personal.org"
+                           "~/Dropbox/home/org/robotics/summer2025.org"))
 
 
   ;; maybe this has the weird unicode bullet
@@ -1177,39 +1205,40 @@ This function is called at the very end of Spacemacs initialization."
    ;; Your init file should contain only one such instance.
    ;; If there is more than one, they won't work right.
    '(cider-enrich-classpath t)
+   '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")
    '(ignored-local-variable-values '((cider-preferred-build-tool . "clojure-cli")))
    '(package-selected-packages
      '(ac-ispell ace-jump-helm-line ace-link ace-window adaptive-wrap
                  aggressive-indent alert anaconda-mode anzu async auto-compile
                  auto-complete auto-dictionary auto-highlight-symbol
-                 auto-yasnippet avy bind-key bind-map clean-aindent-mode
-                 column-enforce-mode company company-anaconda company-statistics
-                 cython-mode dash dash-functional define-word diff-hl diminish
-                 dumb-jump elisp-slime-nav ellama epl esh-help
+                 auto-minor-mode auto-yasnippet avy bind-key bind-map
+                 clean-aindent-mode column-enforce-mode company company-anaconda
+                 company-statistics cython-mode dash dash-functional define-word
+                 diff-hl diminish dumb-jump elisp-slime-nav epl esh-help
                  eshell-prompt-extras eshell-z eval-sexp-fu exec-path-from-shell
                  expand-region eyebrowse f fancy-battery fill-column-indicator flx
                  flx-ido flycheck flycheck-pos-tip flyspell-correct
                  flyspell-correct-helm fringe-helper fuzzy gh-md
                  gitattributes-mode gitconfig-mode gitignore-mode gntp gnuplot
-                 golden-ratio google-translate goto-chg gptel helm helm-ag
+                 golden-ratio google-translate goto-chg helm helm-ag
                  helm-c-yasnippet helm-company helm-core helm-descbinds helm-flx
                  helm-gitignore helm-make helm-mode-manager helm-projectile
                  helm-pydoc helm-swoop helm-themes highlight-indentation
                  highlight-numbers highlight-parentheses hl-todo htmlize
                  hungry-delete hy-mode hydra iedit indent-guide launchctl
-                 link-hint linum-relative live-py-mode llm log4e lorem-ipsum lv
+                 link-hint linum-relative live-py-mode log4e lorem-ipsum lv
                  macrostep markdown-mode markdown-toc mmm-mode move-text
                  multi-term mwim neotree open-junk-file org-bullets
                  org-category-capture org-download org-mime org-plus-contrib
                  org-pomodoro org-present org-projectile orgit osx-dictionary
                  osx-trash packed paradox parent-mode pbcopy pcre2el persp-mode
-                 pip-requirements pkg-info plz plz-event-source plz-media-type
-                 popup popwin pos-tip projectile py-isort pyenv-mode pytest
-                 pythonic pyvenv rainbow-delimiters request restart-emacs
-                 reveal-in-osx-finder s shell-pop smartparens smeargle spaceline
-                 spinner toc-org transient undo-tree unfill use-package uuidgen
-                 vi-tilde-fringe volatile-highlights which-key winum with-editor
-                 ws-butler xterm-color yapfify yasnippet)))
+                 pip-requirements pkg-info popup popwin pos-tip projectile
+                 py-isort pyenv-mode pytest pythonic pyvenv rainbow-delimiters
+                 request restart-emacs reveal-in-osx-finder s shell-pop
+                 smartparens smeargle spaceline spinner toc-org transient
+                 undo-tree unfill use-package uuidgen vi-tilde-fringe
+                 volatile-highlights which-key winum with-editor ws-butler
+                 xterm-color yapfify yasnippet)))
   (custom-set-faces
    ;; custom-set-faces was added by Custom.
    ;; If you edit it by hand, you could mess it up, so be careful.
