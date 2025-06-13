@@ -153,6 +153,7 @@ This function should only modify configuration layer settings."
    ;; `:location' property: '(your-package :location "~/path/to/your-package/")
    ;; Also include the dependencies as they will not be resolved automatically.
    dotspacemacs-additional-packages '(auto-minor-mode
+                                      avy
                                       buffer-move
                                       ;; copilot off, trying to use cody instead
                                       ;; (copilot :location (recipe
