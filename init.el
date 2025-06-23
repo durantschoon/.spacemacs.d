@@ -54,6 +54,10 @@ This function should only modify configuration layer settings."
                       auto-completion-private-snippets-directory "~/.spacemacs.d/snippets"
                       auto-completion-enable-sort-by-usage t)
      better-defaults
+     (c-c++ :variables
+            c-c++-backend 'lsp-clangd
+            c-c++-lsp-enable-semantic-highlight t
+            c-c++-enable-clang-format-on-save t)
      ;; need to install clojure for your system, also brew install clojure-lsp on darwin
      (clojure :variables
               clojure-enable-sayid t
@@ -707,8 +711,21 @@ configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
-  ;; this helps on macos to avoid using /var/folders
-  (setenv "TMPDIR" "/tmp")
+  ;; I add new code here and move it below when it seems to be working
+  ;; or at least when I add the next new code
+  (condition-case err
+      (progn
+        (message "🧪 Running experimental config...")
+        ;; ⬇ Put new or untested code here
+
+        ;; this helps on macos to avoid using /var/folders
+        (setenv "TMPDIR" "/tmp")
+        (setq temporary-file-directory "/tmp/")
+
+        ;; ✅ Success message
+        (message "✅ Experimental config loaded successfully."))
+    (error
+     (message "⚠️ Error in experimental config: %S" err)))
 
   (defun my/shell-reminder-use-vterm ()
     "Reminder to use vterm instead of shell, then runs vterm."
@@ -731,6 +748,13 @@ SCHEDULED: %^t
 
           ("j" "Robotics Journal" entry
            (file+datetree "~/Dropbox/home/org/robotics/journal.org")
+           "* %U - %^{Brief title}
+%?
+"
+           :empty-lines 1)
+
+          ("f" "Food" entry
+           (file+datetree "~/Dropbox/home/org/capture/food.org")
            "* %U - %^{Brief title}
 %?
 "
