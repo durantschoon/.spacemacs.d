@@ -127,7 +127,10 @@ This function should only modify configuration layer settings."
              python-backend 'lsp ;; new trying this
              python-sort-imports-on-save t)
      react
-     rust
+     (rust :variables
+           rust-backend 'lsp
+           lsp-rust-analyzer-cargo-auto-reload t
+           rustic-format-on-save t)
      search-engine
      ;; user `M-m '` like vscode to open/hide a shell
      (shell :variables
@@ -166,6 +169,7 @@ This function should only modify configuration layer settings."
                                       ;;                     :files ("*.el" "dist")))
                                       editorconfig
                                       (emacs-cody :location local)
+                                      exec-path-from-shell
                                       expand-region
                                       helm-rg
                                       jsonnet-mode
@@ -718,14 +722,18 @@ before packages are loaded."
         (message "🧪 Running experimental config...")
         ;; ⬇ Put new or untested code here
 
-        ;; this helps on macos to avoid using /var/folders
-        (setenv "TMPDIR" "/tmp")
-        (setq temporary-file-directory "/tmp/")
+        (when (memq window-system '(mac ns x))
+          (setq exec-path-from-shell-variables '("PATH" "MANPATH" "CARGO_HOME" "RUSTUP_HOME"))
+          (exec-path-from-shell-initialize))
 
         ;; ✅ Success message
         (message "✅ Experimental config loaded successfully."))
     (error
      (message "⚠️ Error in experimental config: %S" err)))
+
+  ;; this helps on macos to avoid using /var/folders
+  (setenv "TMPDIR" "/tmp")
+  (setq temporary-file-directory "/tmp/")
 
   (defun my/shell-reminder-use-vterm ()
     "Reminder to use vterm instead of shell, then runs vterm."
@@ -872,7 +880,6 @@ SCHEDULED: %^t
 
   (add-hook 'ns-system-appearance-change-functions #'my/apply-theme)
   (my/apply-theme 'light)
-
 
   ;; use ~/.authinfo.gpg with emacs
   (require 'epa-file)
@@ -1067,9 +1074,6 @@ SCHEDULED: %^t
 
   (when (eq system-type 'darwin) ; mac specific settings
     (global-set-key "\M-`" 'other-frame)) ; act like other mac programs
-
-  (when (eq system-type 'darwin)
-    (add-to-list 'exec-path "/opt/homebrew/bin")) ; for apple silicon anyway
 
   ;; if placed at the beginning of dotspacemacs/user-config,
   ;; this breaks my binding of command to Meta on mac
