@@ -2,12 +2,12 @@
 ;; This file is loaded by Spacemacs at startup.
 ;; It must be stored in your home directory.
 
-(defcustom bds/light-theme 'modus-operandi-tinted
+(defcustom bds/light-theme 'modus-operandi-deuteranopia
   "The theme to use when the background is set to light."
   :type 'symbol
   :group 'bds)
 
-(defcustom bds/dark-theme 'modus-vivendi-tinted
+(defcustom bds/dark-theme 'modus-vivendi-deuteranopia
   "The theme to use when the background is set to dark."
   :type 'symbol
   :group 'bds)
