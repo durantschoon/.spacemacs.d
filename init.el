@@ -68,6 +68,7 @@ This function should only modify configuration layer settings."
              colors-enable-nyan-cat-progress-bar t)
      command-log
      csv
+     dap
      ;; docker installs
      ;; for lsp
      ;; npm i -g dockerfile-language-server-nodejs
