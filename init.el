@@ -716,6 +716,8 @@ configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
+  ;; ==================== TESTING ZONE BEGIN ====================
+
   ;; I add new code here and move it below when it seems to be working
   ;; or at least when I add the next new code
   (condition-case err
@@ -723,18 +725,16 @@ before packages are loaded."
         (message "🧪 Running experimental config...")
         ;; ⬇ Put new or untested code here
 
-        (when (memq window-system '(mac ns x))
-          (setq exec-path-from-shell-variables '("PATH" "MANPATH" "CARGO_HOME" "RUSTUP_HOME"))
-          (exec-path-from-shell-initialize))
+
+        (add-hook 'org-mode-hook
+                  (lambda ()
+                    (add-hook 'before-save-hook 'org-align-all-tags nil 'local)))
 
         ;; ✅ Success message
         (message "✅ Experimental config loaded successfully."))
     (error
      (message "⚠️ Error in experimental config: %S" err)))
 
-  ;; this helps on macos to avoid using /var/folders
-  (setenv "TMPDIR" "/tmp")
-  (setq temporary-file-directory "/tmp/")
 
   (defun my/shell-reminder-use-vterm ()
     "Reminder to use vterm instead of shell, then runs vterm."
@@ -748,6 +748,14 @@ before packages are loaded."
         '(("r" "Robotics Task" entry
            (file+headline "~/Dropbox/home/org/robotics/summer2025.org" "Captured Tasks")
            "* TODO %^{Task description}
+
+    (when (memq window-system '(mac ns x))
+      (setq exec-path-from-shell-variables '("PATH" "MANPATH" "CARGO_HOME" "RUSTUP_HOME"))
+      (exec-path-from-shell-initialize))
+
+    ;; this helps on macos to avoid using /var/folders
+    (setenv "TMPDIR" "/tmp")
+    (setq temporary-file-directory "/tmp/")
 SCHEDULED: %^t
 :PROPERTIES:
 :CREATED: %U
