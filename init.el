@@ -735,74 +735,64 @@ before packages are loaded."
     (error
      (message "⚠️ Error in experimental config: %S" err)))
 
+  ;; Note, was trying this:
+  ;; Entire Customized Theme activation
+  ;; to resume with ChatGPT:
+  ;; "I want to fix the foreground color of the major mode segment in spaceline-all-the-icons"
+  ;; TEST CODE DELETED
 
+  ;; ==================== TESTING ZONE END ====================
 
+  (when (memq window-system '(mac ns x))
+    (setq exec-path-from-shell-variables '("PATH" "MANPATH" "CARGO_HOME" "RUSTUP_HOME"))
+    (exec-path-from-shell-initialize))
 
-  ;; Apply theme depending on system appearance
-  (defun my/apply-theme (appearance)
-    "Load theme, taking current system APPEARANCE into consideration."
+  ;; this helps on macos to avoid using /var/folders
+  (setenv "TMPDIR" "/tmp")
+  (setq temporary-file-directory "/tmp/")
 
-    ;; testing bright colors
-    ;; these change as seen in list-faces-display
-    ;; but these aren't the faces I'm trying to change
+  (defun my/shell-reminder-use-vterm ()
+    "Reminder to use vterm instead of shell, then runs vterm."
+    (interactive)
+    (message "⚠️ You're using `M-x shell`. Using vterm, `M-x vterm`, for better performance.")
+    (vterm))
 
-    ;; Set color overrides first
-    ;; (setq modus-themes-operandi-deuteranopia-color-overrides
-    ;;       '((bg-mode-line-active . "#ffdddd")
-    ;;         (fg-mode-line-active . "#990000")
-    ;;         (bg-mode-line-inactive . "#eeeeee")
-    ;;         (fg-mode-line-inactive . "#666666")))
+  (advice-add 'shell :override #'my/shell-reminder-use-vterm)
 
-    ;; (disable-theme (car custom-enabled-themes))
-    ;; (pcase appearance
-    ;;   ('light (modus-themes-load-theme 'modus-operandi-deuteranopia))
-    ;;   ('dark  (modus-themes-load-theme 'modus-vivendi-deuteranopia))))
-
-    (add-hook 'ns-system-appearance-change-functions #'my/apply-theme)
-
-    ;; Manually apply theme on startup
-    (my/apply-theme 'light)
-
-
-    (when (memq window-system '(mac ns x))
-      (setq exec-path-from-shell-variables '("PATH" "MANPATH" "CARGO_HOME" "RUSTUP_HOME"))
-      (exec-path-from-shell-initialize))
-
-    ;; this helps on macos to avoid using /var/folders
-    (setenv "TMPDIR" "/tmp")
-    (setq temporary-file-directory "/tmp/")
-
-    (defun my/shell-reminder-use-vterm ()
-      "Reminder to use vterm instead of shell, then runs vterm."
-      (interactive)
-      (message "⚠️ You're using `M-x shell`. Using vterm, `M-x vterm`, for better performance.")
-      (vterm))
-
-    (advice-add 'shell :override #'my/shell-reminder-use-vterm)
-
-    (setq org-capture-templates
-          '(("r" "Robotics Task" entry
-             (file+headline "~/Dropbox/home/org/robotics/summer2025.org" "Captured Tasks")
-             "* TODO %^{Task description}
+  (setq org-capture-templates
+        '(("r" "Robotics Task" entry
+           (file+headline "~/Dropbox/home/org/robotics/summer2025.org" "Captured Tasks")
+           "* TODO %^{Task description}
 SCHEDULED: %^t
 :PROPERTIES:
 :CREATED: %U
 :END:
 %?"
-             :empty-lines 1)
+           :empty-lines 1)
 
-            ("j" "Robotics Journal" entry
-             (file+datetree "~/Dropbox/home/org/robotics/journal.org")
-             "* %U - %^{Brief title}
+          ("j" "Robotics Journal" entry
+           (file+datetree "~/Dropbox/home/org/robotics/journal.org")
+           "* %U - %^{Brief title}
 %?
 "
-             :empty-lines 1)
+           :empty-lines 1)
 
-            ("f" "Food" entry
-             (file+datetree "~/Dropbox/home/org/capture/food.org")
-             "* %U - %^{Brief title}
+          ("f" "Food" entry
+           (file+datetree "~/Dropbox/home/org/capture/food.org")
+           "* %U - %^{Brief title}
 %?
 "
+           :empty-lines 1)
+
+          ("i" "Inbox (to categorize later)" entry
+           (file+headline "~/Dropbox/home/org/capture/inbox.org" "📥 Inbox for Fleeting Ideas")
+           "* %?\nEntered on %U\n"
+           :empty-lines 1)))
+
+  (setq org-agenda-files '("~/Dropbox/home/org/agenda/tasks.org"
+                           "~/Dropbox/home/org/agenda/personal.org"
+                           "~/Dropbox/home/org/robotics/summer2025.org"
+                           "~/Dropbox/home/org/capture/inbox.org"))
 
   (add-to-list 'auto-minor-mode-alist '("\\.ino\\'" . arduino-cli-mode))
 
@@ -905,6 +895,18 @@ SCHEDULED: %^t
   (advice-add 'cider--completing-read-host :before #'cider--completing-read-spinner-start)
   (advice-add 'cider--completing-read-host :after #'cider--completing-read-spinner-stop)
 
+  ;; ----------------------------------------------------------------------------
+  ;; set theme based on (darwin) system from emacs-plus
+  (defun my/apply-theme (appearance)
+    "Load theme, taking current system APPEARANCE into consideration."
+    (mapc #'disable-theme custom-enabled-themes)
+    (pcase appearance
+      ('light (load-theme bds/light-theme t))
+      ('dark (load-theme bds/dark-theme t))))
+
+  (add-hook 'ns-system-appearance-change-functions #'my/apply-theme)
+  (my/apply-theme 'light)
+
   ;; use ~/.authinfo.gpg with emacs
   (require 'epa-file)
   ;; (epa-file-enable) ;; already enabled by spacemacs?
@@ -976,18 +978,6 @@ SCHEDULED: %^t
   ;; 2024 how did I live so long w/out these
   (global-set-key (kbd "M-m <") 'eyebrowse-prev-window-config)
   (global-set-key (kbd "M-m >") 'eyebrowse-next-window-config)
-    ;; ----------------------------------------------------------------------------
-    ;; set theme based on (darwin) system from emacs-plus
-    (defun my/apply-theme (appearance)
-      "Load theme, taking current system APPEARANCE into consideration."
-      (mapc #'disable-theme custom-enabled-themes)
-      (pcase appearance
-        ('light (load-theme bds/light-theme t))
-        ('dark (load-theme bds/dark-theme t))))
-
-    (add-hook 'ns-system-appearance-change-functions #'my/apply-theme)
-    (my/apply-theme 'light)
-
 
   ;;; key-bindings I immediately miss
   (global-set-key (kbd "M-s s") 'helm-swoop)
@@ -1001,10 +991,6 @@ SCHEDULED: %^t
   ;;; hopefully this makes '<s'+TAB create src blocks again
   (with-eval-after-load 'org (require 'org-tempo))
   (setq-default org-hide-leading-stars t)
-  (setq org-agenda-files '(;; "~/Dropbox/work/org/freenome/agenda.org"
-                           "~/Dropbox/home/org/agenda/tasks.org"
-                           "~/Dropbox/home/org/agenda/personal.org"
-                           "~/Dropbox/home/org/robotics/summer2025.org"))
 
   ;; maybe this has the weird unicode bullet
   ;; (with-eval-after-load 'org (global-org-modern-mode))
@@ -1281,6 +1267,114 @@ This function is called at the very end of Spacemacs initialization."
    '(cider-enrich-classpath t)
    '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")
    '(ignored-local-variable-values '((cider-preferred-build-tool . "clojure-cli")))
+   '(package-selected-packages
+     '(ac-ispell ace-jump-helm-line ace-link ace-window adaptive-wrap
+                 aggressive-indent alert anaconda-mode anzu async auto-compile
+                 auto-complete auto-dictionary auto-highlight-symbol
+                 auto-minor-mode auto-yasnippet avy bind-key bind-map
+                 clean-aindent-mode column-enforce-mode company company-anaconda
+                 company-statistics cython-mode dash dash-functional define-word
+                 diff-hl diminish dumb-jump elisp-slime-nav epl esh-help
+                 eshell-prompt-extras eshell-z eval-sexp-fu exec-path-from-shell
+                 expand-region eyebrowse f fancy-battery fill-column-indicator flx
+                 flx-ido flycheck flycheck-pos-tip flyspell-correct
+                 flyspell-correct-helm fringe-helper fuzzy gh-md
+                 gitattributes-mode gitconfig-mode gitignore-mode gntp gnuplot
+                 golden-ratio google-translate goto-chg helm helm-ag
+                 helm-c-yasnippet helm-company helm-core helm-descbinds helm-flx
+                 helm-gitignore helm-make helm-mode-manager helm-projectile
+                 helm-pydoc helm-swoop helm-themes highlight-indentation
+                 highlight-numbers highlight-parentheses hl-todo htmlize
+                 hungry-delete hy-mode hydra iedit indent-guide launchctl
+                 link-hint linum-relative live-py-mode log4e lorem-ipsum lv
+                 macrostep markdown-mode markdown-toc memoize mmm-mode move-text
+                 multi-term mwim neotree open-junk-file org-bullets
+                 org-category-capture org-download org-mime org-plus-contrib
+                 org-pomodoro org-present org-projectile orgit osx-dictionary
+                 osx-trash packed paradox parent-mode pbcopy pcre2el persp-mode
+                 pip-requirements pkg-info popup popwin pos-tip projectile
+                 py-isort pyenv-mode pytest pythonic pyvenv rainbow-delimiters
+                 request restart-emacs reveal-in-osx-finder s shell-pop
+                 smartparens smeargle spaceline spinner toc-org transient
+                 undo-tree unfill use-package uuidgen vi-tilde-fringe
+                 volatile-highlights which-key winum with-editor ws-butler
+                 xterm-color yapfify yasnippet)))
+  (custom-set-faces
+   ;; custom-set-faces was added by Custom.
+   ;; If you edit it by hand, you could mess it up, so be careful.
+   ;; Your init file should contain only one such instance.
+   ;; If there is more than one, they won't work right.
+   '(comint-highlight-prompt ((t (:inherit minibuffer-prompt :foreground "gray80"))))
+   '(highlight-parentheses-highlight ((nil (:weight ultra-bold))) t))
+  )
+(defun dotspacemacs/emacs-custom-settings ()
+  "Emacs custom settings.
+This is an auto-generated function, do not modify its content directly, use
+Emacs customize menu instead.
+This function is called at the very end of Spacemacs initialization."
+  (custom-set-variables
+   ;; custom-set-variables was added by Custom.
+   ;; If you edit it by hand, you could mess it up, so be careful.
+   ;; Your init file should contain only one such instance.
+   ;; If there is more than one, they won't work right.
+   '(cider-enrich-classpath t)
+   '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")
+   '(ignored-local-variable-values '((cider-preferred-build-tool . "clojure-cli")))
+   '(org-tags-column -100)
+   '(package-selected-packages
+     '(ac-ispell ace-jump-helm-line ace-link ace-window adaptive-wrap
+                 aggressive-indent alert anaconda-mode anzu async auto-compile
+                 auto-complete auto-dictionary auto-highlight-symbol
+                 auto-minor-mode auto-yasnippet avy bind-key bind-map
+                 clean-aindent-mode column-enforce-mode company company-anaconda
+                 company-statistics cython-mode dash dash-functional define-word
+                 diff-hl diminish dumb-jump elisp-slime-nav epl esh-help
+                 eshell-prompt-extras eshell-z eval-sexp-fu exec-path-from-shell
+                 expand-region eyebrowse f fancy-battery fill-column-indicator flx
+                 flx-ido flycheck flycheck-pos-tip flyspell-correct
+                 flyspell-correct-helm fringe-helper fuzzy gh-md
+                 gitattributes-mode gitconfig-mode gitignore-mode gntp gnuplot
+                 golden-ratio google-translate goto-chg helm helm-ag
+                 helm-c-yasnippet helm-company helm-core helm-descbinds helm-flx
+                 helm-gitignore helm-make helm-mode-manager helm-projectile
+                 helm-pydoc helm-swoop helm-themes highlight-indentation
+                 highlight-numbers highlight-parentheses hl-todo htmlize
+                 hungry-delete hy-mode hydra iedit indent-guide launchctl
+                 link-hint linum-relative live-py-mode log4e lorem-ipsum lv
+                 macrostep markdown-mode markdown-toc memoize mmm-mode move-text
+                 multi-term mwim neotree open-junk-file org-bullets
+                 org-category-capture org-download org-mime org-plus-contrib
+                 org-pomodoro org-present org-projectile orgit osx-dictionary
+                 osx-trash packed paradox parent-mode pbcopy pcre2el persp-mode
+                 pip-requirements pkg-info popup popwin pos-tip projectile
+                 py-isort pyenv-mode pytest pythonic pyvenv rainbow-delimiters
+                 request restart-emacs reveal-in-osx-finder s shell-pop
+                 smartparens smeargle spaceline spinner toc-org transient
+                 undo-tree unfill use-package uuidgen vi-tilde-fringe
+                 volatile-highlights which-key winum with-editor ws-butler
+                 xterm-color yapfify yasnippet)))
+  (custom-set-faces
+   ;; custom-set-faces was added by Custom.
+   ;; If you edit it by hand, you could mess it up, so be careful.
+   ;; Your init file should contain only one such instance.
+   ;; If there is more than one, they won't work right.
+   '(comint-highlight-prompt ((t (:inherit minibuffer-prompt :foreground "gray80"))))
+   '(highlight-parentheses-highlight ((nil (:weight ultra-bold))) t))
+  )
+(defun dotspacemacs/emacs-custom-settings ()
+  "Emacs custom settings.
+This is an auto-generated function, do not modify its content directly, use
+Emacs customize menu instead.
+This function is called at the very end of Spacemacs initialization."
+  (custom-set-variables
+   ;; custom-set-variables was added by Custom.
+   ;; If you edit it by hand, you could mess it up, so be careful.
+   ;; Your init file should contain only one such instance.
+   ;; If there is more than one, they won't work right.
+   '(cider-enrich-classpath t)
+   '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")
+   '(ignored-local-variable-values '((cider-preferred-build-tool . "clojure-cli")))
+   '(org-tags-column -120)
    '(package-selected-packages
      '(ac-ispell ace-jump-helm-line ace-link ace-window adaptive-wrap
                  aggressive-indent alert anaconda-mode anzu async auto-compile
