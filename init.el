@@ -709,6 +709,10 @@ It is mostly for variables that should be set before packages are loaded.
 If you are unsure, try setting them in `dotspacemacs/user-config' first."
   )
 
+;; =========================================================================
+;; * dotspacemacs/user-config () *
+;; =========================================================================
+
 (defun dotspacemacs/user-config ()
   "Configuration for user code:
 This function is called at the very end of Spacemacs startup, after layer
@@ -716,7 +720,31 @@ configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
-  ;; ==================== TESTING ZONE BEGIN ====================
+  ;; =======================================================================
+  ;; ** Meta (use outline minor mode in elisp especially for user-config) **
+  ;; =======================================================================
+
+  ;; Use C-x c i for helm imenu to jump to a section
+
+  (defun my-setup-imenu-outline ()
+    "Add outline-style headings to imenu in Emacs Lisp mode."
+    (setq-local outline-regexp ";; \\*+ ")
+    (setq-local imenu-generic-expression
+                '(;; ("Functions" "^\\s-*(defun \\([^( \n]+\\)" 1)
+                  ;; ("Variables" "^\\s-*(def\\(var\\|const\\) \\([^( \n]+\\)" 2)
+                  ("Sections" "^\\s-*;; \\*+\\s-+\\(.*?\\)\\s-*\\**\\s-*$" 1)))
+    (outline-minor-mode 1))
+
+  (add-hook 'emacs-lisp-mode-hook #'my-setup-imenu-outline)
+
+  ;; Folding
+
+  (add-hook 'emacs-lisp-mode-hook #'outline-minor-mode)
+  (setq outline-regexp ";; \\*+ ")
+
+  ;; ======================================================================
+  ;; ** Testing Zone **
+  ;; ======================================================================
 
   ;; I add new code here and move it below when it seems to be working
   ;; or at least when I add the next new code
@@ -741,7 +769,9 @@ before packages are loaded."
   ;; "I want to fix the foreground color of the major mode segment in spaceline-all-the-icons"
   ;; TEST CODE DELETED
 
-  ;; ==================== TESTING ZONE END ====================
+  ;; ======================================================================
+  ;; ** MacOS specific **
+  ;; ======================================================================
 
   (when (memq window-system '(mac ns x))
     (setq exec-path-from-shell-variables '("PATH" "MANPATH" "CARGO_HOME" "RUSTUP_HOME"))
