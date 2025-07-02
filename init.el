@@ -736,13 +736,7 @@ before packages are loaded."
      (message "⚠️ Error in experimental config: %S" err)))
 
 
-  (defun my/shell-reminder-use-vterm ()
-    "Reminder to use vterm instead of shell, then runs vterm."
-    (interactive)
-    (message "⚠️ You're using `M-x shell`. Using vterm, `M-x vterm`, for better performance.")
-    (vterm))
 
-  (advice-add 'shell :override #'my/shell-reminder-use-vterm)
 
   (setq org-capture-templates
         '(("r" "Robotics Task" entry
@@ -756,6 +750,15 @@ before packages are loaded."
     ;; this helps on macos to avoid using /var/folders
     (setenv "TMPDIR" "/tmp")
     (setq temporary-file-directory "/tmp/")
+
+    (defun my/shell-reminder-use-vterm ()
+      "Reminder to use vterm instead of shell, then runs vterm."
+      (interactive)
+      (message "⚠️ You're using `M-x shell`. Using vterm, `M-x vterm`, for better performance.")
+      (vterm))
+
+    (advice-add 'shell :override #'my/shell-reminder-use-vterm)
+
 SCHEDULED: %^t
 :PROPERTIES:
 :CREATED: %U
