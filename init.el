@@ -881,18 +881,6 @@ SCHEDULED: %^t
   (advice-add 'cider--completing-read-host :before #'cider--completing-read-spinner-start)
   (advice-add 'cider--completing-read-host :after #'cider--completing-read-spinner-stop)
 
-  ;; ----------------------------------------------------------------------------
-  ;; set theme based on (darwin) system from emacs-plus
-  (defun my/apply-theme (appearance)
-    "Load theme, taking current system APPEARANCE into consideration."
-    (mapc #'disable-theme custom-enabled-themes)
-    (pcase appearance
-      ('light (load-theme bds/light-theme t))
-      ('dark (load-theme bds/dark-theme t))))
-
-  (add-hook 'ns-system-appearance-change-functions #'my/apply-theme)
-  (my/apply-theme 'light)
-
   ;; use ~/.authinfo.gpg with emacs
   (require 'epa-file)
   ;; (epa-file-enable) ;; already enabled by spacemacs?
@@ -964,6 +952,18 @@ SCHEDULED: %^t
   ;; 2024 how did I live so long w/out these
   (global-set-key (kbd "M-m <") 'eyebrowse-prev-window-config)
   (global-set-key (kbd "M-m >") 'eyebrowse-next-window-config)
+    ;; ----------------------------------------------------------------------------
+    ;; set theme based on (darwin) system from emacs-plus
+    (defun my/apply-theme (appearance)
+      "Load theme, taking current system APPEARANCE into consideration."
+      (mapc #'disable-theme custom-enabled-themes)
+      (pcase appearance
+        ('light (load-theme bds/light-theme t))
+        ('dark (load-theme bds/dark-theme t))))
+
+    (add-hook 'ns-system-appearance-change-functions #'my/apply-theme)
+    (my/apply-theme 'light)
+
 
   ;;; key-bindings I immediately miss
   (global-set-key (kbd "M-s s") 'helm-swoop)
