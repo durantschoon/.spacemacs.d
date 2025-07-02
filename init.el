@@ -721,7 +721,7 @@ Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
   ;; =======================================================================
-  ;; ** Meta (use outline minor mode in elisp especially for user-config) **
+  ;; ** 📋 Meta (use outline minor mode in elisp especially for user-config) **
   ;; =======================================================================
 
   ;; Use C-x c i for helm imenu to jump to a section
@@ -743,7 +743,7 @@ before packages are loaded."
   (setq outline-regexp ";; \\*+ ")
 
   ;; ======================================================================
-  ;; ** Testing Zone **
+  ;; ** 🧪 Testing Zone **
   ;; ======================================================================
 
   ;; I add new code here and move it below when it seems to be working
@@ -752,7 +752,6 @@ before packages are loaded."
       (progn
         (message "🧪 Running experimental config...")
         ;; ⬇ Put new or untested code here
-
 
         (add-hook 'org-mode-hook
                   (lambda ()
@@ -763,14 +762,8 @@ before packages are loaded."
     (error
      (message "⚠️ Error in experimental config: %S" err)))
 
-  ;; Note, was trying this:
-  ;; Entire Customized Theme activation
-  ;; to resume with ChatGPT:
-  ;; "I want to fix the foreground color of the major mode segment in spaceline-all-the-icons"
-  ;; TEST CODE DELETED
-
   ;; ======================================================================
-  ;; ** MacOS specific **
+  ;; ** 🌍 System Environment & Paths **
   ;; ======================================================================
 
   (when (memq window-system '(mac ns x))
@@ -781,6 +774,30 @@ before packages are loaded."
   (setenv "TMPDIR" "/tmp")
   (setq temporary-file-directory "/tmp/")
 
+  (keychain-refresh-environment)
+
+  ;; ======================================================================
+  ;; ** 🍎 MacOS Specific Settings **
+  ;; ======================================================================
+
+  (when (eq system-type 'darwin)          ; mac specific settings
+    ;; ---------- REMAP KEYS ----------
+    ;; (setq mac-option-modifier 'alt)    ; not needed, I think
+    (setq mac-command-modifier 'meta)
+    (setq mac-option-modifier 'super)     ; make opt key do Super
+    (setq mac-control-modifier 'control)  ; make Control key do Control
+    (setq ns-function-modifier 'hyper)    ; make Fn key do Hyper
+    ;; ---------- SCROLLING ----------    ; for trackpads
+    (global-set-key [wheel-right] 'scroll-left)
+    (global-set-key [wheel-left] 'scroll-right))
+
+  (when (eq system-type 'darwin) ; mac specific settings
+    (global-set-key "\M-`" 'other-frame)) ; act like other mac programs
+
+  ;; ======================================================================
+  ;; ** 💻 Shell & Terminal Configuration **
+  ;; ======================================================================
+
   (defun my/shell-reminder-use-vterm ()
     "Reminder to use vterm instead of shell, then runs vterm."
     (interactive)
@@ -788,6 +805,12 @@ before packages are loaded."
     (vterm))
 
   (advice-add 'shell :override #'my/shell-reminder-use-vterm)
+
+  (push '("*shell*" :height 10 :position bottom) popwin:special-display-config)
+
+  ;; ======================================================================
+  ;; ** 📝 Org Mode Configuration **
+  ;; ======================================================================
 
   (setq org-capture-templates
         '(("r" "Robotics Task" entry
@@ -824,7 +847,20 @@ SCHEDULED: %^t
                            "~/Dropbox/home/org/robotics/summer2025.org"
                            "~/Dropbox/home/org/capture/inbox.org"))
 
-  (add-to-list 'auto-minor-mode-alist '("\\.ino\\'" . arduino-cli-mode))
+  ;;; enable easy-templates in org-mode
+  ;;; hopefully this makes '<s'+TAB create src blocks again
+  (with-eval-after-load 'org (require 'org-tempo))
+  (setq-default org-hide-leading-stars t)
+
+  ;; to use org-link-jira-from-middle:
+  ;; paste into a new line: PTS-XYZ-link title text here
+  ;; place cursor between link and title, then run the macro
+  (fset 'org-link-jira-from-middle
+        [?\C-  ?\C-a ?\M-\\ ?\C-x ?\C-x ?\C-w ?\[ ?\[ ?\C-f ?\C-f backspace ?\C-b ?\C-y ?\C-  ?\M-b ?\M-b ?\C-w ?\C-y ?\C-f ?\[ ?\C-y ?\C-f ?\] ?\C-a tab])
+
+  ;; ======================================================================
+  ;; ** 🤖 LLM & AI Configuration **
+  ;; ======================================================================
 
   ;; add llm options
   (gptel-make-ollama "Ollama Local"       ; Any name of your choosing
@@ -845,11 +881,30 @@ SCHEDULED: %^t
   ;; useful to remember this in gptel-mode
   ;; C-c RET					gptel-send
 
-  ;; Add key bindings for gptel -- actually the defaults are probably ok for now
-  ;; (spacemacs/set-leader-keys
-  ;;   "aig" 'gptel        ; vs. $ g g
-  ;;   "aic" 'gptel-send   ; vs. $ g c
-  ;;   "aim" 'gptel-menu)  ; vs. $ g m
+  (use-package cody
+    :commands (cody-login cody-restart cody-chat cody-mode)
+
+    ;; Some common key bindings.
+    :bind (("C-M-n" . cody-completion-cycle-next-key-dispatch)
+           ("C-M-p" . cody-completion-cycle-prev-key-dispatch)
+           ("M-TAB" . cody-completion-accept-key-dispatch)
+           ("C-M-g" . cody-quit-key-dispatch))
+    :init
+    (setq cody--sourcegraph-host "sourcegraph.com") ; for clarity; this is the default.
+
+    ;; cody--access-token is set in my ~/.authinfo.gpg
+    (setopt cody-workspace-root "~/Repos/others/Tallyfor/balance") ; optional
+
+    ;; for now cody seems to want this version of node
+    (customize-set-variable 'cody-node-executable
+                            (expand-file-name "~/.nvm/versions/node/v20.4.0/bin/node"))
+
+    :config
+    (defalias 'cody-start 'cody-login))
+
+  ;; ======================================================================
+  ;; ** 🌐 Web Browser Configuration **
+  ;; ======================================================================
 
   (setq browse-url-browser-function #'xwidget-webkit-browse-url)
 
@@ -870,13 +925,43 @@ SCHEDULED: %^t
   ;; Set `browse-url-browser-function` to use the custom function
   (setq browse-url-browser-function #'my-xwidget-webkit-display-right)
 
-  ;; work-around
-  (use-package helm-rg
-    :config (setq helm-rg-default-directory 'git-root))
+  ;; ======================================================================
+  ;; ** 🎨 Theme & Appearance **
+  ;; ======================================================================
 
-  (setq make-backup-files t)
+  ;; set theme based on (darwin) system from emacs-plus
+  (defun my/apply-theme (appearance)
+    "Load theme, taking current system APPEARANCE into consideration."
+    (mapc #'disable-theme custom-enabled-themes)
+    (pcase appearance
+      ('light (load-theme bds/light-theme t))
+      ('dark (load-theme bds/dark-theme t))))
 
-  (keychain-refresh-environment)
+  (add-hook 'ns-system-appearance-change-functions #'my/apply-theme)
+  (my/apply-theme 'light)
+
+  ;; ======================================================================
+  ;; ** 🔐 Security & Authentication **
+  ;; ======================================================================
+
+  ;; use ~/.authinfo.gpg with emacs
+  (require 'epa-file)
+  ;; (epa-file-enable) ;; already enabled by spacemacs?
+  (setq epa-file-select-keys nil)
+  (when (file-exists-p "/usr/local/MacGPG2/bin/gpg2") ;; macos at least for now
+    (custom-set-variables
+     '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")))
+  (epa-file-enable)
+
+  ;; ======================================================================
+  ;; ** ☕ Clojure Development **
+  ;; ======================================================================
+
+  ;; clojure
+  (setq clojure-enable-fancify-symbols t)
+
+  (defalias 'u/pretty
+    (kmacro "C-w ( u / p r e t t y SPC C-y \)"))
 
   ;; ----------------------------------------------------------------------------
   ;; adding a spinner during cider--completing-read-host
@@ -925,119 +1010,35 @@ SCHEDULED: %^t
   (advice-add 'cider--completing-read-host :before #'cider--completing-read-spinner-start)
   (advice-add 'cider--completing-read-host :after #'cider--completing-read-spinner-stop)
 
-  ;; ----------------------------------------------------------------------------
-  ;; set theme based on (darwin) system from emacs-plus
-  (defun my/apply-theme (appearance)
-    "Load theme, taking current system APPEARANCE into consideration."
-    (mapc #'disable-theme custom-enabled-themes)
-    (pcase appearance
-      ('light (load-theme bds/light-theme t))
-      ('dark (load-theme bds/dark-theme t))))
-
-  (add-hook 'ns-system-appearance-change-functions #'my/apply-theme)
-  (my/apply-theme 'light)
-
-  ;; use ~/.authinfo.gpg with emacs
-  (require 'epa-file)
-  ;; (epa-file-enable) ;; already enabled by spacemacs?
-  (setq epa-file-select-keys nil)
-  (when (file-exists-p "/usr/local/MacGPG2/bin/gpg2") ;; macos at least for now
-    (custom-set-variables
-     '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")))
-  (epa-file-enable)
-
-  (use-package cody
-    :commands (cody-login cody-restart cody-chat cody-mode)
-
-    ;; Some common key bindings.
-    :bind (("C-M-n" . cody-completion-cycle-next-key-dispatch)
-           ("C-M-p" . cody-completion-cycle-prev-key-dispatch)
-           ("M-TAB" . cody-completion-accept-key-dispatch)
-           ("C-M-g" . cody-quit-key-dispatch))
-    :init
-    (setq cody--sourcegraph-host "sourcegraph.com") ; for clarity; this is the default.
-
-    ;; cody--access-token is set in my ~/.authinfo.gpg
-    (setopt cody-workspace-root "~/Repos/others/Tallyfor/balance") ; optional
-
-    ;; for now cody seems to want this version of node
-    (customize-set-variable 'cody-node-executable
-                            (expand-file-name "~/.nvm/versions/node/v20.4.0/bin/node"))
-
-    :config
-    (defalias 'cody-start 'cody-login))
-
-  ;;   (define-key copilot-completion-map (kbd "C-<tab>") 'copilot-accept-completion-by-word)
-  ;;   (copilot-node-executable (executable-find "node")))
-  ;; (add-hook 'prog-mode-hook 'copilot-mode)
-
-  (with-eval-after-load 'key-chord
-    (key-chord-define-global "hh" 'win-swap-horizontal)
-    (key-chord-define-global "vv" 'win-swap-vertical)
-    (key-chord-define-global "ww" 'toggle-window-split)
-    (key-chord-define-global "jj" 'avy-goto-char)   ; type the character rapidly
-    (key-chord-define-global "jk" 'avy-goto-char-2) ; type the first 2 characters rapidly
-    (key-chord-define-global "jl" 'avy-goto-line)
-    (key-chord-define-global "jw" 'avy-goto-word-1) ; type 1st char for beginnings of words
-    )
-  (key-chord-mode 1)
-
-  (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1)
-  (setq projectile-switch-project-action 'magit-status)
-
-  ;; clojure
-  (setq clojure-enable-fancify-symbols t)
-
-  (defalias 'u/pretty
-    (kmacro "C-w ( u / p r e t t y SPC C-y \)"))
-
-  ;; (defun jack-in-universal-cider-this-buffer ()
-  ;;   "NOT WORKING YET
-  ;;    The same commands I always seem to have to run to start up cider with the current buffer"
-  ;;   (interactive)
-  ;;   (cider-jack-in-universal 2) ;; 2 is for leiningen
-  ;;   (cider-load-buffer)
-  ;;   (cider-switch-to-repl-buffer))
-
-  ;; suppress warning from emacs27
-  (setq byte-compile-warnings '(cl-functions))
-
-  (defun insert-current-date () (interactive)
-         (insert (shell-command-to-string "echo -n $(date +%Y-%m-%d)")))
-
-  ;; 2024 how did I live so long w/out these
-  (global-set-key (kbd "M-m <") 'eyebrowse-prev-window-config)
-  (global-set-key (kbd "M-m >") 'eyebrowse-next-window-config)
-
-  ;;; key-bindings I immediately miss
-  (global-set-key (kbd "M-s s") 'helm-swoop)
-  (global-set-key (kbd "C-x b") 'helm-mini)
-  (global-set-key (kbd "M-y") 'helm-show-kill-ring)
-
-  ;;; try these new ones
-  (global-set-key (kbd "C-c f") 'select-frame-by-name)
-
-  ;;; enable easy-templates in org-mode
-  ;;; hopefully this makes '<s'+TAB create src blocks again
-  (with-eval-after-load 'org (require 'org-tempo))
-  (setq-default org-hide-leading-stars t)
-
-  ;; maybe this has the weird unicode bullet
-  ;; (with-eval-after-load 'org (global-org-modern-mode))
-
-  ;;; need to recompile all elc files to get org-archive-subtree to work
-  ;;; https://github.com/syl20bnr/spacemacs/issues/11801
-
-  ;;; Spacemacs need frame titles (helps with viewing multiple frames)
-  (setq-default frame-title-format
-                '((:eval (if (buffer-file-name)
-                             (abbreviate-file-name (buffer-file-name))
-                           "%b"))))
+  ;; ======================================================================
+  ;; ** 🐍 Python Development **
+  ;; ======================================================================
 
   (add-hook 'live-py-mode-hook (lambda ()
                                  (progn
                                    (setq-default live-py-version (executable-find "python"))
                                    (live-py-update-all))))
+
+  (defun my-after-save-actions ()
+    "Used in `after-save-hook'."
+    (if (string= "py" (file-name-extension (buffer-name)))
+        (if (member "Makefile" (projectile-current-project-files))
+            (let ((default-directory (projectile-project-root))
+                  (can-lint-p
+                   (not (string= "" (shell-command-to-string "grep lint: Makefile"))))
+                  (can-test-p
+                   (not (string= "" (shell-command-to-string "grep test: Makefile")))))
+              (if can-lint-p
+                  (comint-send-string (get-buffer-process (shell)) "make lint\n")))
+          ;; (if can-test-p
+          ;;     (Comint-send-string (get-buffer-process (shell)) "make test\n"))
+          )))
+
+  (add-hook 'after-save-hook 'my-after-save-actions)
+
+  ;; ======================================================================
+  ;; ** 🕸️ Web Development **
+  ;; ======================================================================
 
   ;; react layer and relevant to web
   (setq-default
@@ -1057,91 +1058,31 @@ SCHEDULED: %^t
             (lambda ()
               (add-hook 'before-save-hook 'prettier nil 'make-it-local)))
 
-  ;; this should already be a part of the better-defaults layer
-  ;; (use-package unfill
-  ;;   :bind ([remap fill-paragraph] . unfill-toggle))
+  ;; ======================================================================
+  ;; ** 📁 File Types & Modes **
+  ;; ======================================================================
 
+  (add-to-list 'auto-minor-mode-alist '("\\.ino\\'" . arduino-cli-mode))
   (add-to-list 'auto-mode-alist '("\\.libsonnet\\'" . jsonnet-mode))
 
-  (defun my-after-save-actions ()
-    "Used in `after-save-hook'."
-    (if (string= "py" (file-name-extension (buffer-name)))
-        (if (member "Makefile" (projectile-current-project-files))
-            (let ((default-directory (projectile-project-root))
-                  (can-lint-p
-                   (not (string= "" (shell-command-to-string "grep lint: Makefile"))))
-                  (can-test-p
-                   (not (string= "" (shell-command-to-string "grep test: Makefile")))))
-              (if can-lint-p
-                  (comint-send-string (get-buffer-process (shell)) "make lint\n")))
-          ;; (if can-test-p
-          ;;     (Comint-send-string (get-buffer-process (shell)) "make test\n"))
-          )))
+  ;; ======================================================================
+  ;; ** 🔍 Search & Navigation **
+  ;; ======================================================================
 
-  (add-hook 'after-save-hook 'my-after-save-actions)
+  ;; work-around
+  (use-package helm-rg
+    :config (setq helm-rg-default-directory 'git-root))
 
-  (push '("*shell*" :height 10 :position bottom) popwin:special-display-config)
+  ;; ======================================================================
+  ;; ** 🪟 Window & Buffer Management **
+  ;; ======================================================================
 
-  ;; to use org-link-jira-from-middle:
-  ;; paste into a new line: PTS-XYZ-link title text here
-  ;; place cursor between link and title, then run the macro
-  (fset 'org-link-jira-from-middle
-        [?\C-  ?\C-a ?\M-\\ ?\C-x ?\C-x ?\C-w ?\[ ?\[ ?\C-f ?\C-f backspace ?\C-b ?\C-y ?\C-  ?\M-b ?\M-b ?\C-w ?\C-y ?\C-f ?\[ ?\C-y ?\C-f ?\] ?\C-a tab])
+  (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1)
+  (setq projectile-switch-project-action 'magit-status)
 
-  ;; Settings
-
-  (with-eval-after-load 'prog-mode
-    ;; s- is super, aka Alt on darwin
-    (define-key prog-mode-map (kbd "s-<double-mouse-1>") 'hs-toggle-hiding))
-
-  (with-eval-after-load 'smerge-mode
-    ;; s- is super, aka Option on darwin
-    (define-key prog-mode-map (kbd "s-<up>") 'smerge-keep-upper)    ;; aka keep mine
-    (define-key prog-mode-map (kbd "s-<down>") 'smerge-keep-lower)) ;; aka keep other
-
-  (with-eval-after-load 'magit
-    ;; s- is super, aka Option on darwin
-    (define-key magit-hunk-section-map (kbd "s-<up>") 'magit-smerge-keep-upper)    ;; aka keep mine
-    (define-key magit-hunk-section-map (kbd "s-<down>") 'magit-smerge-keep-lower)) ;; aka keep other
-
-  (with-eval-after-load 'projectile
-    (setq projectile-enable-caching t)
-    (setq projectile-tags-command "ctags -e -R ."))
-
-  (global-set-key (kbd "C-M-/") 'comint-dynamic-complete-filename)
-
-  (define-key global-map (kbd "RET") 'newline-and-indent)
-
-  (when (eq system-type 'darwin)          ; mac specific settings
-    ;; ---------- REMAP KEYS ----------
-    ;; (setq mac-option-modifier 'alt)    ; not needed, I think
-    (setq mac-command-modifier 'meta)
-    (setq mac-option-modifier 'super)     ; make opt key do Super
-    (setq mac-control-modifier 'control)  ; make Control key do Control
-    (setq ns-function-modifier 'hyper)    ; make Fn key do Hyper
-    ;; ---------- SCROLLING ----------    ; for trackpads
-    (global-set-key [wheel-right] 'scroll-left)
-    (global-set-key [wheel-left] 'scroll-right))
-  (global-set-key [kp-delete] 'delete-char) ;; sets fn-delete to be right-delete
-
-  (when (eq system-type 'darwin) ; mac specific settings
-    (global-set-key "\M-`" 'other-frame)) ; act like other mac programs
-
-  ;; if placed at the beginning of dotspacemacs/user-config,
-  ;; this breaks my binding of command to Meta on mac
-  ;; (when (memq window-system '(mac ns x))
-  ;; (trying to get this to work for (executable-find ""))
-
-  ;; this shouldn't be necessary since spacemacs uses exec-path by default
-  ;; (when (eq system-type 'darwin)
-  ;;   (exec-path-from-shell-initialize))
-
-  (global-set-key [(meta down)] 'scroll-other-window)    ; C-M-v
-  (global-set-key [(meta up)] 'scroll-other-window-down) ; C-M-S-v
-
-                                        ; was just f11, bad on Darwin
-                                        ; similar to M-<f10> which is toggle-frame-maximized
-  (global-set-key (kbd "M-<f11>") 'toggle-frame-fullscreen)
+  ;; 2024 how did I live so long w/out these
+  (global-set-key (kbd "M-m <") 'eyebrowse-prev-window-config)
+  (global-set-key (kbd "M-m >") 'eyebrowse-next-window-config)
 
   (global-set-key (kbd "C-x 4 o") 'switch-to-buffer-other-window-return)
   (global-set-key (kbd "C-x 4 k") 'kill-buffer-other-window)
@@ -1210,11 +1151,79 @@ SCHEDULED: %^t
 
   (global-set-key (kbd "C-x |") 'toggle-window-split)
 
+  ;; ======================================================================
+  ;; ** ⌨️ Key Bindings & Shortcuts **
+  ;; ======================================================================
+
+  (with-eval-after-load 'key-chord
+    (key-chord-define-global "hh" 'win-swap-horizontal)
+    (key-chord-define-global "vv" 'win-swap-vertical)
+    (key-chord-define-global "ww" 'toggle-window-split)
+    (key-chord-define-global "jj" 'avy-goto-char)   ; type the character rapidly
+    (key-chord-define-global "jk" 'avy-goto-char-2) ; type the first 2 characters rapidly
+    (key-chord-define-global "jl" 'avy-goto-line)
+    (key-chord-define-global "jw" 'avy-goto-word-1) ; type 1st char for beginnings of words
+    )
+  (key-chord-mode 1)
+
+  ;;; key-bindings I immediately miss
+  (global-set-key (kbd "M-s s") 'helm-swoop)
+  (global-set-key (kbd "C-x b") 'helm-mini)
+  (global-set-key (kbd "M-y") 'helm-show-kill-ring)
+
+  ;;; try these new ones
+  (global-set-key (kbd "C-c f") 'select-frame-by-name)
+
+  (global-set-key [kp-delete] 'delete-char) ;; sets fn-delete to be right-delete
+
+  (global-set-key [(meta down)] 'scroll-other-window)    ; C-M-v
+  (global-set-key [(meta up)] 'scroll-other-window-down) ; C-M-S-v
+
+                                        ; was just f11, bad on Darwin
+                                        ; similar to M-<f10> which is toggle-frame-maximized
+  (global-set-key (kbd "M-<f11>") 'toggle-frame-fullscreen)
 
   (global-set-key [f5] 'global-whitespace-mode)
   (global-set-key [f6] 'toggle-truncate-lines)
 
   (global-set-key (kbd "C-c o") 'browse-url-at-point) ; like "o"pen
+
+  (global-set-key (kbd "C-M-/") 'comint-dynamic-complete-filename)
+
+  (define-key global-map (kbd "RET") 'newline-and-indent)
+
+  ;; ======================================================================
+  ;; ** 🔧 Mode-Specific Key Bindings **
+  ;; ======================================================================
+
+  (with-eval-after-load 'prog-mode
+    ;; s- is super, aka Alt on darwin
+    (define-key prog-mode-map (kbd "s-<double-mouse-1>") 'hs-toggle-hiding))
+
+  (with-eval-after-load 'smerge-mode
+    ;; s- is super, aka Option on darwin
+    (define-key prog-mode-map (kbd "s-<up>") 'smerge-keep-upper)    ;; aka keep mine
+    (define-key prog-mode-map (kbd "s-<down>") 'smerge-keep-lower)) ;; aka keep other
+
+  (with-eval-after-load 'magit
+    ;; s- is super, aka Option on darwin
+    (define-key magit-hunk-section-map (kbd "s-<up>") 'magit-smerge-keep-upper)    ;; aka keep mine
+    (define-key magit-hunk-section-map (kbd "s-<down>") 'magit-smerge-keep-lower)) ;; aka keep other
+
+  ;; ======================================================================
+  ;; ** 📂 Project Management **
+  ;; ======================================================================
+
+  (with-eval-after-load 'projectile
+    (setq projectile-enable-caching t)
+    (setq projectile-tags-command "ctags -e -R ."))
+
+  ;; ======================================================================
+  ;; ** 🛠️ Utility Functions **
+  ;; ======================================================================
+
+  (defun insert-current-date () (interactive)
+         (insert (shell-command-to-string "echo -n $(date +%Y-%m-%d)")))
 
   (defun my-zap-to-char ()
     "Kill up to the ARG'th occurence of CHAR, and leave CHAR. If
@@ -1223,6 +1232,10 @@ SCHEDULED: %^t
     (insert char)
     (if (< 0 arg) (forward-char -1)))
   (advice-add 'zap-to-char :after #'my-zap-to-char)
+
+  ;; ======================================================================
+  ;; ** 📦 Package Configuration **
+  ;; ======================================================================
 
   (use-package avy
     :ensure t)
@@ -1252,7 +1265,24 @@ SCHEDULED: %^t
   (use-package helm-projectile
     :ensure t)
 
-  ;; Run Last
+  ;; ======================================================================
+  ;; ** ⚙️ Miscellaneous Settings **
+  ;; ======================================================================
+
+  (setq make-backup-files t)
+
+  ;; suppress warning from emacs27
+  (setq byte-compile-warnings '(cl-functions))
+
+  ;;; Spacemacs need frame titles (helps with viewing multiple frames)
+  (setq-default frame-title-format
+                '((:eval (if (buffer-file-name)
+                             (abbreviate-file-name (buffer-file-name))
+                           "%b"))))
+
+  ;; ======================================================================
+  ;; ** 🏠 Location-Specific Configuration **
+  ;; ======================================================================
 
   (setq locations '("home" "work"))
   (dolist (loc locations)
@@ -1263,185 +1293,4 @@ SCHEDULED: %^t
             (load init-file)))))
 
   ;; END
-  )
-
-
-
-
-;; Do not write anything past this comment. This is where Emacs will
-;; auto-generate custom variable definitions.
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   (quote
-    (company-anaconda yapfify pyvenv pytest pyenv-mode py-isort pip-requirements live-py-mode hy-mode dash-functional helm-pydoc cython-mode anaconda-mode pythonic reveal-in-osx-finder pbcopy osx-trash osx-dictionary launchctl xterm-color unfill smeargle shell-pop orgit org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download mwim multi-term mmm-mode markdown-toc markdown-mode  htmlize helm-gitignore helm-company helm-c-yasnippet gnuplot gitignore-mode gitconfig-mode gitattributes-mode fringe-helper gh-md fuzzy flyspell-correct-helm flyspell-correct flycheck-pos-tip pos-tip flycheck  with-editor transient eshell-z eshell-prompt-extras esh-help diff-hl company-statistics company auto-yasnippet yasnippet auto-dictionary ac-ispell auto-complete ws-butler winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline-all-the-icons restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint indent-guide hydra lv hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-themes helm-swoop helm-projectile projectile pkg-info epl helm-mode-manager helm-make helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell smartparens iedit anzu goto-chg graphql-mode undo-tree eval-sexp-fu elisp-slime-nav dumb-jump f dash s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
-(defun dotspacemacs/emacs-custom-settings ()
-  "Emacs custom settings.
-This is an auto-generated function, do not modify its content directly, use
-Emacs customize menu instead.
-This function is called at the very end of Spacemacs initialization."
-  (custom-set-variables
-   ;; custom-set-variables was added by Custom.
-   ;; If you edit it by hand, you could mess it up, so be careful.
-   ;; Your init file should contain only one such instance.
-   ;; If there is more than one, they won't work right.
-   '(cider-enrich-classpath t)
-   '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")
-   '(ignored-local-variable-values '((cider-preferred-build-tool . "clojure-cli")))
-   '(package-selected-packages
-     '(ac-ispell ace-jump-helm-line ace-link ace-window adaptive-wrap
-                 aggressive-indent alert anaconda-mode anzu async auto-compile
-                 auto-complete auto-dictionary auto-highlight-symbol
-                 auto-minor-mode auto-yasnippet avy bind-key bind-map
-                 clean-aindent-mode column-enforce-mode company company-anaconda
-                 company-statistics cython-mode dash dash-functional define-word
-                 diff-hl diminish dumb-jump elisp-slime-nav epl esh-help
-                 eshell-prompt-extras eshell-z eval-sexp-fu exec-path-from-shell
-                 expand-region eyebrowse f fancy-battery fill-column-indicator flx
-                 flx-ido flycheck flycheck-pos-tip flyspell-correct
-                 flyspell-correct-helm fringe-helper fuzzy gh-md
-                 gitattributes-mode gitconfig-mode gitignore-mode gntp gnuplot
-                 golden-ratio google-translate goto-chg helm helm-ag
-                 helm-c-yasnippet helm-company helm-core helm-descbinds helm-flx
-                 helm-gitignore helm-make helm-mode-manager helm-projectile
-                 helm-pydoc helm-swoop helm-themes highlight-indentation
-                 highlight-numbers highlight-parentheses hl-todo htmlize
-                 hungry-delete hy-mode hydra iedit indent-guide launchctl
-                 link-hint linum-relative live-py-mode log4e lorem-ipsum lv
-                 macrostep markdown-mode markdown-toc memoize mmm-mode move-text
-                 multi-term mwim neotree open-junk-file org-bullets
-                 org-category-capture org-download org-mime org-plus-contrib
-                 org-pomodoro org-present org-projectile orgit osx-dictionary
-                 osx-trash packed paradox parent-mode pbcopy pcre2el persp-mode
-                 pip-requirements pkg-info popup popwin pos-tip projectile
-                 py-isort pyenv-mode pytest pythonic pyvenv rainbow-delimiters
-                 request restart-emacs reveal-in-osx-finder s shell-pop
-                 smartparens smeargle spaceline spinner toc-org transient
-                 undo-tree unfill use-package uuidgen vi-tilde-fringe
-                 volatile-highlights which-key winum with-editor ws-butler
-                 xterm-color yapfify yasnippet)))
-  (custom-set-faces
-   ;; custom-set-faces was added by Custom.
-   ;; If you edit it by hand, you could mess it up, so be careful.
-   ;; Your init file should contain only one such instance.
-   ;; If there is more than one, they won't work right.
-   '(comint-highlight-prompt ((t (:inherit minibuffer-prompt :foreground "gray80"))))
-   '(highlight-parentheses-highlight ((nil (:weight ultra-bold))) t))
-  )
-(defun dotspacemacs/emacs-custom-settings ()
-  "Emacs custom settings.
-This is an auto-generated function, do not modify its content directly, use
-Emacs customize menu instead.
-This function is called at the very end of Spacemacs initialization."
-  (custom-set-variables
-   ;; custom-set-variables was added by Custom.
-   ;; If you edit it by hand, you could mess it up, so be careful.
-   ;; Your init file should contain only one such instance.
-   ;; If there is more than one, they won't work right.
-   '(cider-enrich-classpath t)
-   '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")
-   '(ignored-local-variable-values '((cider-preferred-build-tool . "clojure-cli")))
-   '(org-tags-column -100)
-   '(package-selected-packages
-     '(ac-ispell ace-jump-helm-line ace-link ace-window adaptive-wrap
-                 aggressive-indent alert anaconda-mode anzu async auto-compile
-                 auto-complete auto-dictionary auto-highlight-symbol
-                 auto-minor-mode auto-yasnippet avy bind-key bind-map
-                 clean-aindent-mode column-enforce-mode company company-anaconda
-                 company-statistics cython-mode dash dash-functional define-word
-                 diff-hl diminish dumb-jump elisp-slime-nav epl esh-help
-                 eshell-prompt-extras eshell-z eval-sexp-fu exec-path-from-shell
-                 expand-region eyebrowse f fancy-battery fill-column-indicator flx
-                 flx-ido flycheck flycheck-pos-tip flyspell-correct
-                 flyspell-correct-helm fringe-helper fuzzy gh-md
-                 gitattributes-mode gitconfig-mode gitignore-mode gntp gnuplot
-                 golden-ratio google-translate goto-chg helm helm-ag
-                 helm-c-yasnippet helm-company helm-core helm-descbinds helm-flx
-                 helm-gitignore helm-make helm-mode-manager helm-projectile
-                 helm-pydoc helm-swoop helm-themes highlight-indentation
-                 highlight-numbers highlight-parentheses hl-todo htmlize
-                 hungry-delete hy-mode hydra iedit indent-guide launchctl
-                 link-hint linum-relative live-py-mode log4e lorem-ipsum lv
-                 macrostep markdown-mode markdown-toc memoize mmm-mode move-text
-                 multi-term mwim neotree open-junk-file org-bullets
-                 org-category-capture org-download org-mime org-plus-contrib
-                 org-pomodoro org-present org-projectile orgit osx-dictionary
-                 osx-trash packed paradox parent-mode pbcopy pcre2el persp-mode
-                 pip-requirements pkg-info popup popwin pos-tip projectile
-                 py-isort pyenv-mode pytest pythonic pyvenv rainbow-delimiters
-                 request restart-emacs reveal-in-osx-finder s shell-pop
-                 smartparens smeargle spaceline spinner toc-org transient
-                 undo-tree unfill use-package uuidgen vi-tilde-fringe
-                 volatile-highlights which-key winum with-editor ws-butler
-                 xterm-color yapfify yasnippet)))
-  (custom-set-faces
-   ;; custom-set-faces was added by Custom.
-   ;; If you edit it by hand, you could mess it up, so be careful.
-   ;; Your init file should contain only one such instance.
-   ;; If there is more than one, they won't work right.
-   '(comint-highlight-prompt ((t (:inherit minibuffer-prompt :foreground "gray80"))))
-   '(highlight-parentheses-highlight ((nil (:weight ultra-bold))) t))
-  )
-(defun dotspacemacs/emacs-custom-settings ()
-  "Emacs custom settings.
-This is an auto-generated function, do not modify its content directly, use
-Emacs customize menu instead.
-This function is called at the very end of Spacemacs initialization."
-  (custom-set-variables
-   ;; custom-set-variables was added by Custom.
-   ;; If you edit it by hand, you could mess it up, so be careful.
-   ;; Your init file should contain only one such instance.
-   ;; If there is more than one, they won't work right.
-   '(cider-enrich-classpath t)
-   '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")
-   '(ignored-local-variable-values '((cider-preferred-build-tool . "clojure-cli")))
-   '(org-tags-column -120)
-   '(package-selected-packages
-     '(ac-ispell ace-jump-helm-line ace-link ace-window adaptive-wrap
-                 aggressive-indent alert anaconda-mode anzu async auto-compile
-                 auto-complete auto-dictionary auto-highlight-symbol
-                 auto-minor-mode auto-yasnippet avy bind-key bind-map
-                 clean-aindent-mode column-enforce-mode company company-anaconda
-                 company-statistics cython-mode dash dash-functional define-word
-                 diff-hl diminish dumb-jump elisp-slime-nav epl esh-help
-                 eshell-prompt-extras eshell-z eval-sexp-fu exec-path-from-shell
-                 expand-region eyebrowse f fancy-battery fill-column-indicator flx
-                 flx-ido flycheck flycheck-pos-tip flyspell-correct
-                 flyspell-correct-helm fringe-helper fuzzy gh-md
-                 gitattributes-mode gitconfig-mode gitignore-mode gntp gnuplot
-                 golden-ratio google-translate goto-chg helm helm-ag
-                 helm-c-yasnippet helm-company helm-core helm-descbinds helm-flx
-                 helm-gitignore helm-make helm-mode-manager helm-projectile
-                 helm-pydoc helm-swoop helm-themes highlight-indentation
-                 highlight-numbers highlight-parentheses hl-todo htmlize
-                 hungry-delete hy-mode hydra iedit indent-guide launchctl
-                 link-hint linum-relative live-py-mode log4e lorem-ipsum lv
-                 macrostep markdown-mode markdown-toc memoize mmm-mode move-text
-                 multi-term mwim neotree open-junk-file org-bullets
-                 org-category-capture org-download org-mime org-plus-contrib
-                 org-pomodoro org-present org-projectile orgit osx-dictionary
-                 osx-trash packed paradox parent-mode pbcopy pcre2el persp-mode
-                 pip-requirements pkg-info popup popwin pos-tip projectile
-                 py-isort pyenv-mode pytest pythonic pyvenv rainbow-delimiters
-                 request restart-emacs reveal-in-osx-finder s shell-pop
-                 smartparens smeargle spaceline spinner toc-org transient
-                 undo-tree unfill use-package uuidgen vi-tilde-fringe
-                 volatile-highlights which-key winum with-editor ws-butler
-                 xterm-color yapfify yasnippet)))
-  (custom-set-faces
-   ;; custom-set-faces was added by Custom.
-   ;; If you edit it by hand, you could mess it up, so be careful.
-   ;; Your init file should contain only one such instance.
-   ;; If there is more than one, they won't work right.
-   '(comint-highlight-prompt ((t (:inherit minibuffer-prompt :foreground "gray80"))))
-   '(highlight-parentheses-highlight ((nil (:weight ultra-bold))) t))
   )
