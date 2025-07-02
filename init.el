@@ -738,10 +738,31 @@ before packages are loaded."
 
 
 
-  (setq org-capture-templates
-        '(("r" "Robotics Task" entry
-           (file+headline "~/Dropbox/home/org/robotics/summer2025.org" "Captured Tasks")
-           "* TODO %^{Task description}
+  ;; Apply theme depending on system appearance
+  (defun my/apply-theme (appearance)
+    "Load theme, taking current system APPEARANCE into consideration."
+
+    ;; testing bright colors
+    ;; these change as seen in list-faces-display
+    ;; but these aren't the faces I'm trying to change
+
+    ;; Set color overrides first
+    ;; (setq modus-themes-operandi-deuteranopia-color-overrides
+    ;;       '((bg-mode-line-active . "#ffdddd")
+    ;;         (fg-mode-line-active . "#990000")
+    ;;         (bg-mode-line-inactive . "#eeeeee")
+    ;;         (fg-mode-line-inactive . "#666666")))
+
+    ;; (disable-theme (car custom-enabled-themes))
+    ;; (pcase appearance
+    ;;   ('light (modus-themes-load-theme 'modus-operandi-deuteranopia))
+    ;;   ('dark  (modus-themes-load-theme 'modus-vivendi-deuteranopia))))
+
+    (add-hook 'ns-system-appearance-change-functions #'my/apply-theme)
+
+    ;; Manually apply theme on startup
+    (my/apply-theme 'light)
+
 
     (when (memq window-system '(mac ns x))
       (setq exec-path-from-shell-variables '("PATH" "MANPATH" "CARGO_HOME" "RUSTUP_HOME"))
@@ -759,26 +780,29 @@ before packages are loaded."
 
     (advice-add 'shell :override #'my/shell-reminder-use-vterm)
 
+    (setq org-capture-templates
+          '(("r" "Robotics Task" entry
+             (file+headline "~/Dropbox/home/org/robotics/summer2025.org" "Captured Tasks")
+             "* TODO %^{Task description}
 SCHEDULED: %^t
 :PROPERTIES:
 :CREATED: %U
 :END:
 %?"
-           :empty-lines 1)
+             :empty-lines 1)
 
-          ("j" "Robotics Journal" entry
-           (file+datetree "~/Dropbox/home/org/robotics/journal.org")
-           "* %U - %^{Brief title}
+            ("j" "Robotics Journal" entry
+             (file+datetree "~/Dropbox/home/org/robotics/journal.org")
+             "* %U - %^{Brief title}
 %?
 "
-           :empty-lines 1)
+             :empty-lines 1)
 
-          ("f" "Food" entry
-           (file+datetree "~/Dropbox/home/org/capture/food.org")
-           "* %U - %^{Brief title}
+            ("f" "Food" entry
+             (file+datetree "~/Dropbox/home/org/capture/food.org")
+             "* %U - %^{Brief title}
 %?
 "
-           :empty-lines 1)))
 
   (add-to-list 'auto-minor-mode-alist '("\\.ino\\'" . arduino-cli-mode))
 
