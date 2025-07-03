@@ -114,6 +114,7 @@ This function should only modify configuration layer settings."
      (org :variables
           org-hide-emphasis-markers t ;; like on /italics/ and *bold*
           org-enable-modern-support nil ;; has a bad unicode for ***
+          org-startup-indented t
           org-enable-valign t
           org-agenda-block-separator 8411 ;; fancy dots at top
           )
