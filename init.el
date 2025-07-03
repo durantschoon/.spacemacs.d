@@ -754,9 +754,7 @@ before packages are loaded."
         (message "🧪 Running experimental config...")
         ;; ⬇ Put new or untested code here
 
-        (add-hook 'org-mode-hook
-                  (lambda ()
-                    (add-hook 'before-save-hook 'org-align-all-tags nil 'local)))
+        (setq backup-directory-alist `(("\\." . "~/.emacs_backups/")))
 
         ;; ✅ Success message
         (message "✅ Experimental config loaded successfully."))
@@ -858,6 +856,10 @@ SCHEDULED: %^t
   ;; place cursor between link and title, then run the macro
   (fset 'org-link-jira-from-middle
         [?\C-  ?\C-a ?\M-\\ ?\C-x ?\C-x ?\C-w ?\[ ?\[ ?\C-f ?\C-f backspace ?\C-b ?\C-y ?\C-  ?\M-b ?\M-b ?\C-w ?\C-y ?\C-f ?\[ ?\C-y ?\C-f ?\] ?\C-a tab])
+
+  (add-hook 'org-mode-hook
+            (lambda ()
+              (add-hook 'before-save-hook 'org-align-all-tags nil 'local)))
 
   ;; ======================================================================
   ;; ** 🤖 LLM & AI Configuration **
