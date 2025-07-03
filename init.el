@@ -952,7 +952,7 @@ SCHEDULED: %^t
   (when (file-exists-p "/usr/local/MacGPG2/bin/gpg2") ;; macos at least for now
     (custom-set-variables
      '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")))
-  (epa-file-enable)
+  ;; (epa-file-enable) ;; this is already enabled it seems
 
   ;; ======================================================================
   ;; ** ☕ Clojure Development **
