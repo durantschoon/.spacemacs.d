@@ -754,7 +754,18 @@ before packages are loaded."
         (message "🧪 Running experimental config...")
         ;; ⬇ Put new or untested code here
 
-        (setq backup-directory-alist `(("\\." . "~/.emacs_backups/")))
+        ;; this will go in Utility Functions
+        (defun md-bold-to-h3 ()
+          "Convert a Markdown bold string (**text**) at point into a Markdown H3 heading."
+          (interactive)
+          (save-excursion
+            ;; Go to beginning of line
+            (beginning-of-line)
+            ;; Check if line starts with "**"
+            (when (looking-at "\\*\\*\\(.*?\\)\\*\\*")
+              (let ((content (match-string 1)))
+                (delete-region (point) (line-end-position))
+                (insert (concat "### " content))))))
 
         ;; ✅ Success message
         (message "✅ Experimental config loaded successfully."))
@@ -774,6 +785,8 @@ before packages are loaded."
   (setq temporary-file-directory "/tmp/")
 
   (keychain-refresh-environment)
+
+  (setq backup-directory-alist `(("\\." . "~/.emacs_backups/")))
 
   ;; ======================================================================
   ;; ** 🍎 MacOS Specific Settings **
