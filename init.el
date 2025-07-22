@@ -150,7 +150,7 @@ This function should only modify configuration layer settings."
      typescript
      (unicode-fonts :variables
                     unicode-fonts-force-multi-color-on-mac t
-                    unicode-fonts-ligature-modes '(js-mode org-mode))
+                    unicode-fonts-ligature-modes '(js-mode org-mode))b
      version-control
      yaml)
    ;; List of additional packages that will be installed without being wrapped
@@ -178,6 +178,7 @@ This function should only modify configuration layer settings."
                                       jsonrpc
                                       key-chord
                                       keychain-environment
+                                      markdown-toc
                                       multiple-cursors
                                       prettier-js
                                       rg
@@ -754,18 +755,10 @@ before packages are loaded."
         (message "🧪 Running experimental config...")
         ;; ⬇ Put new or untested code here
 
-        ;; this will go in Utility Functions
-        (defun md-bold-to-h3 ()
-          "Convert a Markdown bold string (**text**) at point into a Markdown H3 heading."
-          (interactive)
-          (save-excursion
-            ;; Go to beginning of line
-            (beginning-of-line)
-            ;; Check if line starts with "**"
-            (when (looking-at "\\*\\*\\(.*?\\)\\*\\*")
-              (let ((content (match-string 1)))
-                (delete-region (point) (line-end-position))
-                (insert (concat "### " content))))))
+        ;; this will go in 📦 Package Configuration
+        (with-eval-after-load 'markdown-mode
+          (define-key markdown-mode-map (kbd "C-c m t") #'markdown-toc-generate-toc)
+          (define-key markdown-mode-map (kbd "C-c m r") #'markdown-toc-refresh-toc))
 
         ;; ✅ Success message
         (message "✅ Experimental config loaded successfully."))
@@ -786,7 +779,15 @@ before packages are loaded."
 
   (keychain-refresh-environment)
 
-  (setq backup-directory-alist `(("\\." . "~/.emacs_backups/")))
+  (setq backup-directory-alist `(("." . "~/.emacs_backups"))
+        backup-by-copying t    ; Don't clobber symlinks
+        delete-old-versions t
+        kept-new-versions 6
+        kept-old-versions 2
+        version-control t)     ; Use versioned backups
+
+  (setq auth-sources '("~/.authinfo.gpg" "~/.authinfo" "~/.netrc"))
+
 
   ;; ======================================================================
   ;; ** 🍎 MacOS Specific Settings **
@@ -1248,6 +1249,19 @@ SCHEDULED: %^t
     (insert char)
     (if (< 0 arg) (forward-char -1)))
   (advice-add 'zap-to-char :after #'my-zap-to-char)
+
+  ;; this will go in Utility Functions
+  (defun md-bold-to-h3 ()
+    "Convert a Markdown bold string (**text**) at point into a Markdown H3 heading."
+    (interactive)
+    (save-excursion
+      ;; Go to beginning of line
+      (beginning-of-line)
+      ;; Check if line starts with "**"
+      (when (looking-at "\\*\\*\\(.*?\\)\\*\\*")
+        (let ((content (match-string 1)))
+          (delete-region (point) (line-end-position))
+          (insert (concat "### " content))))))
 
   ;; ======================================================================
   ;; ** 📦 Package Configuration **
