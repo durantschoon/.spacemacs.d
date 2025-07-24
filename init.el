@@ -150,7 +150,7 @@ This function should only modify configuration layer settings."
      typescript
      (unicode-fonts :variables
                     unicode-fonts-force-multi-color-on-mac t
-                    unicode-fonts-ligature-modes '(js-mode org-mode))b
+                    unicode-fonts-ligature-modes '(js-mode org-mode))
      version-control
      yaml)
    ;; List of additional packages that will be installed without being wrapped
@@ -485,7 +485,7 @@ It should only modify the values of Spacemacs settings."
    ;; put the most likely path on the top of `load-path' to reduce walking
    ;; through the whole `load-path'. It's an experimental feature to speedup
    ;; Spacemacs on Windows. Refer the FAQ.org "load-hints" session for details.
-   dotspacemacs-enable-load-hints nil
+   dotspacemacs-enable-load-hints t
 
    ;; If t, enable the `package-quickstart' feature to avoid full package
    ;; loading, otherwise no `package-quickstart' attemption (default nil).
@@ -709,7 +709,7 @@ This function is called immediately after `dotspacemacs/init', before layer
 configuration.
 It is mostly for variables that should be set before packages are loaded.
 If you are unsure, try setting them in `dotspacemacs/user-config' first."
-  )
+  (add-to-list 'load-path (expand-file-name "lisp" dotspacemacs-directory)))
 
 ;; =========================================================================
 ;; * dotspacemacs/user-config () *
@@ -1262,6 +1262,47 @@ SCHEDULED: %^t
         (let ((content (match-string 1)))
           (delete-region (point) (line-end-position))
           (insert (concat "### " content))))))
+
+  ;; Convert Dropbox Paper emoji markdown to its Unicode equivalent, using CLDR short name.
+
+  ;; Conditionally load dp-cldr-emoji-data if it exists
+  (let ((emoji-path (expand-file-name "lisp/dp-cldr-emoji-data.el" dotspacemacs-directory)))
+    (when (file-exists-p emoji-path)
+      (require 'dp-cldr-emoji-data)))
+
+  ;; now call dp-generate-cldr-emoji-alist
+
+
+
+  (defun dp-icon-alt-to-unicode ()
+    "Convert Dropbox Paper emoji markdown to its Unicode equivalent, using CLDR short name.
+
+Example:
+  ![check mark button](https://paper.dropboxstatic.com/...) → ✅
+
+Works when cursor is anywhere within the markdown image syntax."
+    (interactive)
+    (save-excursion
+      (let* ((bounds (bounds-of-thing-at-point 'line))
+             (start (car bounds))
+             (end (cdr bounds))
+             (found nil))
+        (goto-char start)
+        (while (and (not found)
+                    (re-search-forward
+                     "\\(!\\[\\([^]]+\\)\\](https://paper\\.dropboxstatic\\.com/static/img/ace/emoji/[^)]+)\\)"
+                     end t))
+          (let* ((full-match (match-string 1))
+                 (alt-text (match-string 2))
+                 (unicode (assoc-default (downcase alt-text) dp-cldr-emoji-alist)))
+            (when (and unicode
+                       (<= (match-beginning 1) (point))
+                       (>= (match-end 1) (point)))
+              (replace-match unicode t t nil 1)
+              (setq found t))))
+        (unless found
+          (message "No recognizable Dropbox icon found at point.")))))
+
 
   ;; ======================================================================
   ;; ** 📦 Package Configuration **
