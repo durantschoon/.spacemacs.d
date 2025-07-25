@@ -22,12 +22,14 @@ machines, e.g. home vs. work):
 | emacs-plus@27 | --with-EmacsIcon4-icon           |
 | emacs-plus@28 | --with-emacs-card-blue-deep-icon |
 | emacs-plus@29 | --with-retro-sink-icon           |
+| emacs-plus@30 | --with-spacemacs-icon            |
+| emacs-plus@31 | --with-spacemacs-icon            |
 
 ```zsh
 # uninstall old
 brew uninstall emacs-plus
 # install new
-brew install emacs-plus@29 --with-xwidgets --with-retro-sink-icon
+brew install emacs-plus@31 --with-xwidgets --with-imagemagick --with-spacemacs-icon
 # update link in /Applications in a zsh shell
 [[ -L /Applications/Emacs.app ]] && =rm /Applications/Emacs.app
 ln -si /usr/local/opt/emacs-plus/Emacs.app /Applications/
