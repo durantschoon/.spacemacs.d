@@ -709,7 +709,8 @@ This function is called immediately after `dotspacemacs/init', before layer
 configuration.
 It is mostly for variables that should be set before packages are loaded.
 If you are unsure, try setting them in `dotspacemacs/user-config' first."
-  (add-to-list 'load-path (expand-file-name "lisp" dotspacemacs-directory)))
+  (add-to-list 'load-path (expand-file-name "lisp" dotspacemacs-directory))
+  (setq native-comp-async-report-warnings-errors 'silent))
 
 ;; =========================================================================
 ;; * dotspacemacs/user-config () *
