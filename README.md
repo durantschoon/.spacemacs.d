@@ -23,13 +23,13 @@ machines, e.g. home vs. work):
 | emacs-plus@28 | --with-emacs-card-blue-deep-icon |
 | emacs-plus@29 | --with-retro-sink-icon           |
 | emacs-plus@30 | --with-spacemacs-icon            |
-| emacs-plus@31 | --with-spacemacs-icon            |
+| ~emacs-plus@31~ (gcc 15 issues on macos for now ) | ~--with-spacemacs-icon~            |  
 
 ```zsh
 # uninstall old
 brew uninstall emacs-plus
 # install new
-brew install emacs-plus@31 --with-xwidgets --with-imagemagick --with-spacemacs-icon
+brew install emacs-plus@30 --with-xwidgets --with-imagemagick --with-spacemacs-icon
 # update link in /Applications in a zsh shell
 [[ -L /Applications/Emacs.app ]] && =rm /Applications/Emacs.app
 ln -si /usr/local/opt/emacs-plus/Emacs.app /Applications/
