@@ -874,7 +874,8 @@ SCHEDULED: %^t
 
   (add-hook 'org-mode-hook
             (lambda ()
-              (add-hook 'before-save-hook 'org-align-all-tags nil 'local)))
+              (add-hook 'before-save-hook 'org-align-all-tags nil 'local)
+              (auto-fill-mode 1)))
 
   ;; ======================================================================
   ;; ** 🤖 LLM & AI Configuration **
@@ -1342,6 +1343,8 @@ Works when cursor is anywhere within the markdown image syntax."
   ;; ======================================================================
 
   (setq make-backup-files t)
+
+  (setq fill-column 99)
 
   ;; suppress warning from emacs27
   (setq byte-compile-warnings '(cl-functions))
