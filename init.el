@@ -2,6 +2,10 @@
 ;; This file is loaded by Spacemacs at startup.
 ;; It must be stored in your home directory.
 
+
+
+
+
 (defcustom bds/light-theme 'modus-operandi-deuteranopia
   "The theme to use when the background is set to light."
   :type 'symbol
@@ -1240,6 +1244,8 @@ SCHEDULED: %^t
   ;; ======================================================================
   ;; ** 🛠️ Utility Functions **
   ;; ======================================================================
+
+
 
   (defun insert-current-date () (interactive)
          (insert (shell-command-to-string "echo -n $(date +%Y-%m-%d)")))
