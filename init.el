@@ -2,10 +2,6 @@
 ;; This file is loaded by Spacemacs at startup.
 ;; It must be stored in your home directory.
 
-
-
-
-
 (defcustom bds/light-theme 'modus-operandi-deuteranopia
   "The theme to use when the background is set to light."
   :type 'symbol
@@ -364,7 +360,7 @@ It should only modify the values of Spacemacs settings."
    ;; Press `SPC T n' to cycle to the next theme in the list (works great
    ;; with 2 themes variants, one dark and one light)
    ;; dotspacemacs-themes '(spacemacs-dark spacemacs-light)
-   dotspacemacs-themes (list bds/light-theme bds/dark-theme)
+   dotspacemacs-themes (list bds/dark-theme bds/light-theme)
 
    ;; Set the theme for the Spaceline. Supported themes are `spacemacs',
    ;; `all-the-icons', `custom', `doom', `vim-powerline' and `vanilla'. The
@@ -708,12 +704,12 @@ It should only modify the values of Spacemacs settings."
 
    ;; If non-nil then byte-compile some of Spacemacs files.
    dotspacemacs-byte-compile nil
-   
+
    ;; Suppress deprecation warnings from outdated packages
    ;; This must be set early to catch warnings during package loading
-   warning-suppress-types '((defadvice obsolete deprecated callf destructuring-bind 
+   warning-suppress-types '((defadvice obsolete deprecated callf destructuring-bind
                               define-minor-mode case invalid-face))
-   warning-suppress-log-types '((defadvice obsolete deprecated callf destructuring-bind 
+   warning-suppress-log-types '((defadvice obsolete deprecated callf destructuring-bind
                                   define-minor-mode case invalid-face))
    warning-minimum-level :emergency
    byte-compile-warnings '(cl-functions)))
@@ -977,11 +973,26 @@ SCHEDULED: %^t
     "Load theme, taking current system APPEARANCE into consideration."
     (mapc #'disable-theme custom-enabled-themes)
     (pcase appearance
-      ('light (load-theme bds/light-theme t))
-      ('dark (load-theme bds/dark-theme t))))
+      ('light (condition-case err
+                  (load-theme bds/light-theme t)
+                (error (message "Failed to load light theme: %s" err))))
+      ('dark (condition-case err
+                 (load-theme bds/dark-theme t)
+               (error (message "Failed to load dark theme: %s" err))))))
 
   (add-hook 'ns-system-appearance-change-functions #'my/apply-theme)
   (my/apply-theme 'light)
+
+  (defun my/fontify-after-change (beg end len)
+    "Refontify the changed region or buffer."
+    (when font-lock-mode
+      (font-lock-ensure beg end)))
+
+  (defun my/add-fontify-on-change ()
+    "Add auto-refontify hook if font-lock is enabled."
+    (add-hook 'after-change-functions #'my/fontify-after-change nil t))
+
+  (add-hook 'after-change-major-mode-hook #'my/add-fontify-on-change)
 
   ;; ======================================================================
   ;; ** 🔐 Security & Authentication **
@@ -1122,7 +1133,8 @@ SCHEDULED: %^t
 
   (add-hook 'emacs-startup-hook 'toggle-frame-fullscreen)
 
-  (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1)
+  ;; Use a more reliable Magit display function
+  (setq magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1)
   (setq projectile-switch-project-action 'magit-status)
 
   ;; 2024 how did I live so long w/out these
@@ -1372,14 +1384,31 @@ Works when cursor is anywhere within the markdown image syntax."
   ;; Suppress startup messages and warnings
   (setq inhibit-startup-message t)
   (setq inhibit-startup-echo-area-message t)
-  
+
   ;; Reduce verbosity in messages buffer
   (setq message-log-max 1000)
-  
-  ;; Suppress font-lock verbose output
+
+  ;; Font-lock configuration for proper syntax highlighting
   (setq font-lock-verbose nil)
   (setq font-lock-support-mode 'jit-lock-mode)
-  
+  (setq font-lock-maximum-decoration t)
+  (setq font-lock-global-modes '(not shell-mode))
+
+  ;; Ensure font-lock is enabled
+  (global-font-lock-mode t)
+
+  ;; Ensure proper fontification for Emacs Lisp files
+  (add-hook 'emacs-lisp-mode-hook
+            (lambda ()
+              (font-lock-mode t)
+              (font-lock-ensure)))
+
+  ;; Force fontification for current buffer if it's an Emacs Lisp file
+  (when (and (buffer-file-name)
+             (string-match "\\.el\\'" (buffer-file-name)))
+    (font-lock-mode t)
+    (font-lock-ensure))
+
   ;; Create a dummy 'quote' face to prevent warnings
   (defface quote nil
     "Dummy face to prevent 'Invalid face reference: quote' warnings."
@@ -1409,3 +1438,78 @@ Works when cursor is anywhere within the markdown image syntax."
 
   ;; END
   )
+(defun dotspacemacs/emacs-custom-settings ()
+  "Emacs custom settings.
+This is an auto-generated function, do not modify its content directly, use
+Emacs customize menu instead.
+This function is called at the very end of Spacemacs initialization."
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")
+ '(package-selected-packages
+   '(ace-link aggressive-indent arduino-mode attrap auto-compile
+              auto-highlight-symbol auto-minor-mode auto-yasnippet
+              avy-jump-helm-line blacken browse-at-remote buffer-move
+              centered-cursor-mode cider-eval-sexp-fu clean-aindent-mode
+              clj-refactor clojure-snippets cmm-mode code-cells code-review
+              color-identifiers-mode column-enforce-mode command-log-mode
+              company-c-headers company-cabal company-emoji company-quickhelp
+              company-statistics company-terraform company-web cpp-auto-include
+              csv-mode cython-mode dante dap-mode devdocs diff-hl diminish
+              dired-quick-sort disable-mouse disaster docker dockerfile-mode
+              dotenv-mode drag-stuff dumb-jump eat ebuild-mode edit-indirect
+              elisp-def elisp-demos elisp-slime-nav ellama emmet-mode
+              emoji-cheat-sheet-plus emr engine-mode esh-help
+              eshell-prompt-extras eshell-z evil-anzu evil-args
+              evil-cleverparens evil-escape evil-evilified-state evil-exchange
+              evil-goggles evil-iedit-state evil-indent-plus evil-lion
+              evil-lisp-state evil-matchit evil-mc evil-nerd-commenter
+              evil-numbers evil-org evil-surround evil-textobj-line evil-tutor
+              evil-unimpaired evil-visual-mark-mode evil-visualstar
+              exec-path-from-shell expand-region eyebrowse fancy-battery
+              flycheck-clj-kondo flycheck-elsa flycheck-haskell flycheck-package
+              flycheck-pos-tip flyspell-correct-helm gemini-mode gendoxy gh-md
+              git-link git-messenger git-modes git-timemachine
+              gitignore-templates gnuplot golden-ratio google-c-style
+              google-translate gptel graphql-mode haskell-snippets helm-ag
+              helm-c-yasnippet helm-cider helm-comint helm-company helm-css-scss
+              helm-descbinds helm-git-grep helm-hoogle helm-ls-git helm-lsp
+              helm-make helm-mode-manager helm-org helm-org-rifle
+              helm-projectile helm-purpose helm-pydoc helm-rg helm-swoop
+              helm-themes helm-xref helpful hide-comnt highlight-indentation
+              highlight-numbers highlight-parentheses hl-todo hlint-refactor
+              holy-mode hoon-mode hungry-delete hybrid-mode impatient-mode
+              indent-guide info+ inspector js-doc js2-refactor json-mode
+              json-navigator json-reformat jsonnet-mode key-chord keycast
+              keychain-environment launchctl link-hint live-py-mode livid-mode
+              logcat lorem-ipsum lsp-haskell lsp-origami lsp-ui macrostep
+              markdown-toc matlab-mode multi-line multi-term multi-vterm mwim
+              nameless nodejs-repl npm-mode nyan-mode open-junk-file
+              org-cliplink org-contrib org-download org-mime org-pomodoro
+              org-present org-projectile org-rich-yank org-superstar orgit-forge
+              osx-clipboard osx-dictionary osx-trash overseer page-break-lines
+              paradox password-generator pcre2el pip-requirements pipenv pippel
+              pkgbuild-mode poetry popwin prettier-js pug-mode py-isort pydoc
+              pyenv-mode pylookup pytest qml-mode quickrun rainbow-delimiters
+              rainbow-identifiers rainbow-mode restart-emacs
+              reveal-in-osx-finder rg rjsx-mode ron-mode rustic sass-mode sayid
+              scad-mode scss-mode shell-pop slim-mode smeargle space-doc
+              spaceline-all-the-icons spacemacs-purpose-popwin
+              spacemacs-whitespace-cleanup sphinx-doc sql-indent stan-mode
+              string-edit-at-point string-inflection symbol-overlay symon
+              tagedit term-cursor terminal-here tern thrift toc-org toml-mode
+              transient treemacs-icons-dired treemacs-magit treemacs-persp
+              treemacs-projectile typescript-mode undo-fu undo-fu-session unfill
+              unicode-fonts vala-mode vala-snippets valign vi-tilde-fringe
+              volatile-highlights vundo web-beautify web-mode winum wolfram-mode
+              writeroom-mode ws-butler yaml-mode yasnippet-snippets)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+)
