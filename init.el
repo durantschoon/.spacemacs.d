@@ -1120,6 +1120,8 @@ SCHEDULED: %^t
   ;; ** 🪟 Window & Buffer Management **
   ;; ======================================================================
 
+  (add-hook 'emacs-startup-hook 'toggle-frame-fullscreen)
+
   (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1)
   (setq projectile-switch-project-action 'magit-status)
 
