@@ -207,6 +207,17 @@ This function should only modify configuration layer settings."
 This function is called at the very beginning of Spacemacs startup,
 before layer configuration.
 It should only modify the values of Spacemacs settings."
+  
+  ;; Set warning suppression as early as possible to catch package loading warnings
+  (setq warning-suppress-types
+        '((defadvice obsolete deprecated callf destructuring-bind 
+            define-minor-mode case invalid-face)))
+  (setq warning-suppress-log-types
+        '((defadvice obsolete deprecated callf destructuring-bind 
+            define-minor-mode case invalid-face)))
+  (setq warning-minimum-level :emergency)
+  (setq byte-compile-warnings '(cl-functions))
+  
   ;; This setq-default sexp is an exhaustive list of all the supported
   ;; spacemacs settings.
   (setq-default
@@ -696,7 +707,16 @@ It should only modify the values of Spacemacs settings."
    dotspacemacs-home-shorten-agenda-source nil
 
    ;; If non-nil then byte-compile some of Spacemacs files.
-   dotspacemacs-byte-compile nil))
+   dotspacemacs-byte-compile nil
+   
+   ;; Suppress deprecation warnings from outdated packages
+   ;; This must be set early to catch warnings during package loading
+   warning-suppress-types '((defadvice obsolete deprecated callf destructuring-bind 
+                              define-minor-mode case invalid-face))
+   warning-suppress-log-types '((defadvice obsolete deprecated callf destructuring-bind 
+                                  define-minor-mode case invalid-face))
+   warning-minimum-level :emergency
+   byte-compile-warnings '(cl-functions)))
 
 (defun dotspacemacs/user-env ()
   "Environment variables setup.
@@ -1281,7 +1301,6 @@ SCHEDULED: %^t
   ;; now call dp-generate-cldr-emoji-alist
 
 
-
   (defun dp-icon-alt-to-unicode ()
     "Convert Dropbox Paper emoji markdown to its Unicode equivalent, using CLDR short name.
 
@@ -1348,12 +1367,25 @@ Works when cursor is anywhere within the markdown image syntax."
   ;; ** ⚙️ Miscellaneous Settings **
   ;; ======================================================================
 
+  ;; Suppress startup messages and warnings
+  (setq inhibit-startup-message t)
+  (setq inhibit-startup-echo-area-message t)
+  
+  ;; Reduce verbosity in messages buffer
+  (setq message-log-max 1000)
+  
+  ;; Suppress font-lock verbose output
+  (setq font-lock-verbose nil)
+  (setq font-lock-support-mode 'jit-lock-mode)
+  
+  ;; Create a dummy 'quote' face to prevent warnings
+  (defface quote nil
+    "Dummy face to prevent 'Invalid face reference: quote' warnings."
+    :group 'basic-faces)
+
   (setq make-backup-files t)
 
   (setq fill-column 99)
-
-  ;; suppress warning from emacs27
-  (setq byte-compile-warnings '(cl-functions))
 
   ;;; Spacemacs need frame titles (helps with viewing multiple frames)
   (setq-default frame-title-format
