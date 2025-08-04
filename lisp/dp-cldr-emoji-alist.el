@@ -1,40 +1,33 @@
-s(defun dp-generate-full-cldr-emoji-alist ()
-   "Fetch emoji-test.txt and generate dp-cldr-emoji-alist."
-   (interactive)
-   (let ((url "https://unicode.org/Public/emoji/latest/emoji-test.txt")
-         (bufname "*dp-emoji-alist*")
-         (alist '()))
-     (message "Downloading emoji data from Unicode.org...")
-     (with-current-buffer (url-retrieve-synchronously url t)
-       ;; Force UTF-8 decoding
-       (set-buffer-file-coding-system 'utf-8)
-       (set-buffer-multibyte t)
-       (goto-char (point-min))
-       ;; Skip HTTP headers
-       (re-search-forward "^$" nil 'move)
-       (forward-line)
-       (while (not (eobp))
-         (let ((line (buffer-substring-no-properties
-                      (line-beginning-position) (line-end-position))))
-           (when (string-match
-                  "^\\([0-9A-F ]+\\)\\s-*;\\s-*fully-qualified\\s-*#\\s-*\\([[:graph:] ]+\\)\\s-*E[0-9.]+\\s-*\\(.*\\)$"
-                  line)
-             (let ((emoji (match-string 2 line))
-                   (name (match-string 3 line)))
-               (push (cons name emoji) alist))))
-         (forward-line)))
-     (message "Download and parse complete. Writing output buffer...")
-     ;; Output result buffer
-     (with-current-buffer (get-buffer-create bufname)
-       (erase-buffer)
-       (insert "(defvar dp-cldr-emoji-alist\n  '(\n")
-       (dolist (pair (reverse alist))
-         (insert (format "    (\"%s\" . \"%s\")\n" (car pair) (cdr pair))))
-       (insert "  )\n  \"Alist mapping CLDR short names to emojis.\")\n")
-       (emacs-lisp-mode)
-       (goto-char (point-min))
-       (message "Done. Buffer '%s' contains %d entries." bufname (length alist))
-       (display-buffer (current-buffer)))))
+(defun dp-generate-full-cldr-emoji-alist-to-file (outfile)
+  "Fetch emoji-test.txt and save CLDR short name → emoji list as sequential setqs to OUTFILE."
+  (interactive "FSave emoji data to file: ")
+  (let ((url "https://unicode.org/Public/emoji/latest/emoji-test.txt")
+        (url-request-extra-headers '(("Accept-Encoding" . "identity")))
+        (alist '()))
+    (message "Downloading emoji data from Unicode.org...")
+    (with-current-buffer (url-retrieve-synchronously url t t)
+      ;; Skip HTTP headers
+      (goto-char (point-min))
+      (re-search-forward "^$" nil 'move)
+      (let ((body-start (point)))
+        ;; Must make buffer multibyte before narrowing
+        (set-buffer-multibyte t)
+        (narrow-to-region body-start (point-max))
+        ;; Decode only the body as UTF-8
+        (decode-coding-region (point-min) (point-max) 'utf-8)
+        ;; Parse each fully-qualified emoji line
+        (while (re-search-forward
+                "^\\([0-9A-F ]+\\)\\s-*;\\s-*fully-qualified\\s-*#\\s-*\\(.+?\\)\\s-+E[0-9.]+\\s-+\\(.+\\)$"
+                nil t)
+          (let ((emoji (string-trim (match-string 2)))
+                (name  (string-trim (match-string 3))))
+            (push (cons (downcase name) emoji) alist)))))
+    ;; Write as sequential setqs to avoid deep nesting
+    (with-temp-file outfile
+      (insert "(setq dp-cldr-emoji-alist nil)\n")
+      (dolist (pair (reverse alist))
+        (insert (format "(setq dp-cldr-emoji-alist (cons '%S dp-cldr-emoji-alist))\n" pair))))
+    (message "✅ Saved %d entries to %s" (length alist) outfile)))
 
 (defun dp-validate-cldr-emoji-alist ()
   "Sanity check on dp-cldr-emoji-alist."
