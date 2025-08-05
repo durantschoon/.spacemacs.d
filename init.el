@@ -1320,10 +1320,10 @@ SCHEDULED: %^t
     ("cross mark" . "cross mark button")
     ("check mark" . "check mark button")
     ("exclamation mark" . "red exclamation mark")
-    ("down arrow" . "downwards button")
-    ("left arrow" . "leftwards button")
-    ("right arrow" . "rightwards button")
-    ("up arrow" . "upwards button")
+    ;; ("down arrow" . "downwards button")
+    ;; ("left arrow" . "leftwards button")
+    ;; ("right arrow" . "rightwards button")
+    ;; ("up arrow" . "upwards button")
     ("info" . "information")
 
     ;; Objects
