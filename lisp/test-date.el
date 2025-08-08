@@ -1,5 +1,5 @@
 ;; Test file for date adjustment function
-;; Run this with: emacs -Q -l lisp/test-date.el
+;; Run this with: emacs -Q -l lisp/date-utils.el -l lisp/test-date.el
 
 (defun test-all-date-formats ()
   "Test all date formats"
