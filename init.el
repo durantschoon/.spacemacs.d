@@ -1309,8 +1309,11 @@ SCHEDULED: %^t
           (delete-region (point) (line-end-position))
           (insert (concat "### " content))))))
 
-  ;; Load Dropbox Paper utilities
-  (load-file (expand-file-name "lisp/dropbox-paper-utils.el" dotspacemacs-directory))
+  ;; -- Load Dropbox Paper utilities --------------------------------------
+  ;; Main benefits are:
+  ;; s-<up>   (Alt) change date later
+  ;; s-<down> (Alt) change date earlier
+(load-file (expand-file-name "lisp/dropbox-paper-utils.el" dotspacemacs-directory))
 
   ;; ======================================================================
   ;; ** 📦 Package Configuration **
