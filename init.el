@@ -182,7 +182,9 @@ This function should only modify configuration layer settings."
                                       multiple-cursors
                                       prettier-js
                                       rg
-                                      spinner)
+                                      spinner
+                                      visual-regexp-steroids
+                                      pcre2el)
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
 
@@ -1534,6 +1536,19 @@ Uses `dp-icon-alt-to-unicode` for each line so alias mapping and unmatched repor
            ("s-r"         . mc/mark-all-in-region)
            ("s-d"         . mc/mark-all-dwim)))
 
+  (use-package visual-regexp-steroids
+    :ensure t
+    :config
+    (setq vr/engine 'pcre2el)  ; Use pcre2el for better regex support
+    :bind (("M-%" . vr/replace)
+           ("C-M-%" . vr/query-replace)))
+
+  (use-package pcre2el
+    :ensure t
+    :config
+    ;; Enable PCRE syntax in regex patterns
+    (pcre-mode 1))
+
   (use-package helm-projectile
     :ensure t)
 
@@ -1664,8 +1679,9 @@ This function is called at the very end of Spacemacs initialization."
               transient treemacs-icons-dired treemacs-magit treemacs-persp
               treemacs-projectile typescript-mode undo-fu undo-fu-session unfill
               unicode-fonts vala-mode vala-snippets valign vi-tilde-fringe
-              volatile-highlights vundo web-beautify web-mode winum wolfram-mode
-              writeroom-mode ws-butler yaml-mode yasnippet-snippets)))
+              visual-regexp visual-regexp-steroids volatile-highlights vundo
+              web-beautify web-mode winum wolfram-mode writeroom-mode ws-butler
+              yaml-mode yasnippet-snippets)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
