@@ -995,7 +995,9 @@ SCHEDULED: %^t
                (error (message "Failed to load dark theme: %s" err))))))
 
   (add-hook 'ns-system-appearance-change-functions #'my/apply-theme)
-  (my/apply-theme 'light)
+  ;; Apply theme based on current system appearance
+  (when (and (eq system-type 'darwin) window-system)
+    (my/apply-theme (if (and (boundp 'ns-appearance) (eq (ns-appearance) 'dark)) 'dark 'light)))
 
   (defun my/fontify-after-change (beg end len)
     "Refontify the changed region or buffer."
