@@ -375,8 +375,7 @@ It should only modify the values of Spacemacs settings."
    ;; (default '(spacemacs :separator wave :separator-scale 1.5))
    ;; Note 'all-the-icons requires fonts to be installed, use
    ;; M-x all-the-icons-install-fonts
-   ;; Temporarily use vanilla to test if all-the-icons is causing "spec" error
-   dotspacemacs-mode-line-theme 'vanilla
+   dotspacemacs-mode-line-theme 'all-the-icons
 
    ;; If non-nil the cursor color matches the state color in GUI Emacs.
    ;; (default t)
