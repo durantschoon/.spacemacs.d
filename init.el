@@ -773,15 +773,20 @@ before packages are loaded."
 
   ;; I add new code here and move it below when it seems to be working
   ;; or at least when I add the next new code
+  ;;
+  ;; WORKFLOW FOR NEW EXPERIMENTAL FEATURES:
+  ;; 1. Add new experimental code in the condition-case block below
+  ;; 2. Test the feature thoroughly
+  ;; 3. When stable, move the code to its proper section in user-config
+  ;; 4. Create a new section if needed (e.g., "📦 Package Configuration")
+  ;; 5. Update commit message to note what was moved out and into Testing Zone
+  ;; 6. Keep the condition-case wrapper for safety during testing
   (condition-case err
       (progn
         (message "🧪 Running experimental config...")
         ;; ⬇ Put new or untested code here
 
-        ;; this will go in 📦 Package Configuration
-        (with-eval-after-load 'markdown-mode
-          (define-key markdown-mode-map (kbd "C-c m t") #'markdown-toc-generate-toc)
-          (define-key markdown-mode-map (kbd "C-c m r") #'markdown-toc-refresh-toc))
+        ;; ⬇ Put new or untested code here
 
         ;; ✅ Success message
         (message "✅ Experimental config loaded successfully."))
@@ -1296,7 +1301,6 @@ SCHEDULED: %^t
     (if (< 0 arg) (forward-char -1)))
   (advice-add 'zap-to-char :after #'my-zap-to-char)
 
-  ;; this will go in Utility Functions
   (defun md-bold-to-h3 ()
     "Convert a Markdown bold string (**text**) at point into a Markdown H3 heading."
     (interactive)
@@ -1321,6 +1325,11 @@ SCHEDULED: %^t
 
   ;; Load defadvice-patch-advanced to eliminate defadvice warnings
   (require 'defadvice-patch-advanced)
+
+  ;; Markdown mode configuration
+  (with-eval-after-load 'markdown-mode
+    (define-key markdown-mode-map (kbd "C-c m t") #'markdown-toc-generate-toc)
+    (define-key markdown-mode-map (kbd "C-c m r") #'markdown-toc-refresh-toc))
 
   (use-package avy
     :ensure t)
