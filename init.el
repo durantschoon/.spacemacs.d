@@ -1319,6 +1319,9 @@ SCHEDULED: %^t
   ;; ** 📦 Package Configuration **
   ;; ======================================================================
 
+  ;; Load defadvice-patch-advanced to eliminate defadvice warnings
+  (require 'defadvice-patch-advanced)
+
   (use-package avy
     :ensure t)
 
@@ -1433,7 +1436,7 @@ This function is called at the very end of Spacemacs initialization."
  ;; If there is more than one, they won't work right.
  '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")
  '(package-selected-packages
-   '(ace-link aggressive-indent arduino-mode attrap auto-compile
+   '(ace-link aggressive-indent anzu arduino-mode attrap auto-compile
               auto-highlight-symbol auto-minor-mode auto-yasnippet
               avy-jump-helm-line blacken browse-at-remote buffer-move
               centered-cursor-mode cider-eval-sexp-fu clean-aindent-mode
@@ -1461,8 +1464,8 @@ This function is called at the very end of Spacemacs initialization."
               helm-c-yasnippet helm-cider helm-comint helm-company helm-css-scss
               helm-descbinds helm-git-grep helm-hoogle helm-ls-git helm-lsp
               helm-make helm-mode-manager helm-org helm-org-rifle
-              helm-projectile helm-purpose helm-pydoc helm-rg helm-swoop
-              helm-themes helm-xref helpful hide-comnt highlight-indentation
+              helm-projectile helm-purpose helm-pydoc helm-rg helm-themes
+              helm-xref helpful hide-comnt highlight-indentation
               highlight-numbers highlight-parentheses hl-todo hlint-refactor
               holy-mode hoon-mode hungry-delete hybrid-mode impatient-mode
               indent-guide info+ inspector js-doc js2-refactor json-mode
