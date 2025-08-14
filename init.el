@@ -216,6 +216,8 @@ It should only modify the values of Spacemacs settings."
   (setq warning-minimum-level :emergency)
   (setq byte-compile-warnings '(cl-functions))
   
+
+  
   ;; This setq-default sexp is an exhaustive list of all the supported
   ;; spacemacs settings.
   (setq-default
@@ -790,11 +792,11 @@ before packages are loaded."
         (message "🧪 Running experimental config...")
         ;; ⬇ Put new or untested code here
 
-        ;; ⬇ Put new or untested code here
-
         ;; Load defadvice-patch-advanced to eliminate defadvice warnings
         ;; TODO: Move to 📦 Package Configuration when stable
-        (require 'defadvice-patch-advanced)
+        (condition-case load-err
+            (require 'defadvice-patch-advanced)
+          (error (message "⚠️ Failed to load defadvice-patch-advanced: %S" load-err)))
 
         ;; ✅ Success message
         (message "✅ Experimental config loaded successfully."))
