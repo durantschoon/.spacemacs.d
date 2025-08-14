@@ -216,6 +216,11 @@ It should only modify the values of Spacemacs settings."
   (setq warning-minimum-level :emergency)
   (setq byte-compile-warnings '(cl-functions))
   
+  ;; Auto-compile packages without asking
+  (setq package-quickstart t)
+  (setq package-native-compile t)
+  (setq native-comp-async-report-warnings-errors 'silent)
+  
 
   
   ;; This setq-default sexp is an exhaustive list of all the supported
@@ -786,22 +791,21 @@ before packages are loaded."
   ;;
   ;; CURRENT EXPERIMENTS:
   ;; - defadvice-patch-advanced: Should move to 📦 Package Configuration when stable
-  ;; Temporarily disabled to debug "spec" error
-  ;; (condition-case err
-  ;;     (progn
-  ;;       (message "🧪 Running experimental config...")
-  ;;       ;; ⬇ Put new or untested code here
+  (condition-case err
+      (progn
+        (message "🧪 Running experimental config...")
+        ;; ⬇ Put new or untested code here
 
-  ;;       ;; Load defadvice-patch-advanced to eliminate defadvice warnings
-  ;;       ;; TODO: Move to 📦 Package Configuration when stable
-  ;;       (condition-case load-err
-  ;;           (require 'defadvice-patch-advanced)
-  ;;         (error (message "⚠️ Failed to load defadvice-patch-advanced: %S" load-err)))
+        ;; Load defadvice-patch-advanced to eliminate defadvice warnings
+        ;; TODO: Move to 📦 Package Configuration when stable
+        (condition-case load-err
+            (require 'defadvice-patch-advanced)
+          (error (message "⚠️ Failed to load defadvice-patch-advanced: %S" load-err)))
 
-  ;;       ;; ✅ Success message
-  ;;       (message "✅ Experimental config loaded successfully."))
-  ;;   (error
-  ;;    (message "⚠️ Error in experimental config: %S" err)))
+        ;; ✅ Success message
+        (message "✅ Experimental config loaded successfully."))
+    (error
+     (message "⚠️ Error in experimental config: %S" err)))
 
   ;; ======================================================================
   ;; ** 🌍 System Environment & Paths **
