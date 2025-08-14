@@ -373,7 +373,8 @@ It should only modify the values of Spacemacs settings."
    ;; (default '(spacemacs :separator wave :separator-scale 1.5))
    ;; Note 'all-the-icons requires fonts to be installed, use
    ;; M-x all-the-icons-install-fonts
-   dotspacemacs-mode-line-theme 'all-the-icons
+   ;; Temporarily use vanilla mode-line to avoid spaceline-compile errors
+   dotspacemacs-mode-line-theme 'vanilla
 
    ;; If non-nil the cursor color matches the state color in GUI Emacs.
    ;; (default t)
