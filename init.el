@@ -997,8 +997,9 @@ SCHEDULED: %^t
   ;; Set up automatic theme switching based on system appearance
   (when (and (eq system-type 'darwin) window-system)
     (add-hook 'ns-system-appearance-change-functions #'my/apply-theme)
-    ;; Apply initial theme
-    (my/apply-theme (ns-appearance)))
+    ;; Apply initial theme if ns-appearance is available
+    (when (fboundp 'ns-appearance)
+      (my/apply-theme (ns-appearance))))
 
   (defun my/fontify-after-change (beg end len)
     "Refontify the changed region or buffer."
