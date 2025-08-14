@@ -375,7 +375,8 @@ It should only modify the values of Spacemacs settings."
    ;; (default '(spacemacs :separator wave :separator-scale 1.5))
    ;; Note 'all-the-icons requires fonts to be installed, use
    ;; M-x all-the-icons-install-fonts
-   dotspacemacs-mode-line-theme 'all-the-icons
+   ;; Temporarily use vanilla to test if all-the-icons is causing "spec" error
+   dotspacemacs-mode-line-theme 'vanilla
 
    ;; If non-nil the cursor color matches the state color in GUI Emacs.
    ;; (default t)
@@ -786,21 +787,22 @@ before packages are loaded."
   ;;
   ;; CURRENT EXPERIMENTS:
   ;; - defadvice-patch-advanced: Should move to 📦 Package Configuration when stable
-  (condition-case err
-      (progn
-        (message "🧪 Running experimental config...")
-        ;; ⬇ Put new or untested code here
+  ;; Temporarily disabled to debug "spec" error
+  ;; (condition-case err
+  ;;     (progn
+  ;;       (message "🧪 Running experimental config...")
+  ;;       ;; ⬇ Put new or untested code here
 
-        ;; Load defadvice-patch-advanced to eliminate defadvice warnings
-        ;; TODO: Move to 📦 Package Configuration when stable
-        (condition-case load-err
-            (require 'defadvice-patch-advanced)
-          (error (message "⚠️ Failed to load defadvice-patch-advanced: %S" load-err)))
+  ;;       ;; Load defadvice-patch-advanced to eliminate defadvice warnings
+  ;;       ;; TODO: Move to 📦 Package Configuration when stable
+  ;;       (condition-case load-err
+  ;;           (require 'defadvice-patch-advanced)
+  ;;         (error (message "⚠️ Failed to load defadvice-patch-advanced: %S" load-err)))
 
-        ;; ✅ Success message
-        (message "✅ Experimental config loaded successfully."))
-    (error
-     (message "⚠️ Error in experimental config: %S" err)))
+  ;;       ;; ✅ Success message
+  ;;       (message "✅ Experimental config loaded successfully."))
+  ;;   (error
+  ;;    (message "⚠️ Error in experimental config: %S" err)))
 
   ;; ======================================================================
   ;; ** 🌍 System Environment & Paths **
