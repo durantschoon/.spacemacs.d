@@ -781,12 +781,19 @@ before packages are loaded."
   ;; 4. Create a new section if needed (e.g., "📦 Package Configuration")
   ;; 5. Update commit message to note what was moved out and into Testing Zone
   ;; 6. Keep the condition-case wrapper for safety during testing
+  ;;
+  ;; CURRENT EXPERIMENTS:
+  ;; - defadvice-patch-advanced: Should move to 📦 Package Configuration when stable
   (condition-case err
       (progn
         (message "🧪 Running experimental config...")
         ;; ⬇ Put new or untested code here
 
         ;; ⬇ Put new or untested code here
+
+        ;; Load defadvice-patch-advanced to eliminate defadvice warnings
+        ;; TODO: Move to 📦 Package Configuration when stable
+        (require 'defadvice-patch-advanced)
 
         ;; ✅ Success message
         (message "✅ Experimental config loaded successfully."))
@@ -1322,9 +1329,6 @@ SCHEDULED: %^t
   ;; ======================================================================
   ;; ** 📦 Package Configuration **
   ;; ======================================================================
-
-  ;; Load defadvice-patch-advanced to eliminate defadvice warnings
-  (require 'defadvice-patch-advanced)
 
   ;; Markdown mode configuration
   (with-eval-after-load 'markdown-mode
