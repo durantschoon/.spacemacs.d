@@ -397,6 +397,9 @@ It should only modify the values of Spacemacs settings."
                                :width normal
                                :powerline-scale 1.1)
 
+   ;; Default icons font, it can be `all-the-icons' or `nerd-icons'.
+   dotspacemacs-default-icons-font 'all-the-icons
+
    ;; The leader key (default "SPC")
    dotspacemacs-leader-key "SPC"
 
