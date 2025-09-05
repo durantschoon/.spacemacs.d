@@ -128,7 +128,7 @@ This function should only modify configuration layer settings."
              python-format-on-save t
              python-backend 'lsp ;; new trying this
              python-sort-imports-on-save t)
-     react
+     ;; react
      (rust :variables
            rust-backend 'lsp
            lsp-rust-analyzer-cargo-auto-reload t
