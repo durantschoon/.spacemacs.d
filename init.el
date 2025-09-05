@@ -205,24 +205,24 @@ This function should only modify configuration layer settings."
 This function is called at the very beginning of Spacemacs startup,
 before layer configuration.
 It should only modify the values of Spacemacs settings."
-  
+
   ;; Set warning suppression as early as possible to catch package loading warnings
   (setq warning-suppress-types
-        '((defadvice obsolete deprecated callf destructuring-bind 
+        '((defadvice obsolete deprecated callf destructuring-bind
             define-minor-mode case invalid-face)))
   (setq warning-suppress-log-types
-        '((defadvice obsolete deprecated callf destructuring-bind 
+        '((defadvice obsolete deprecated callf destructuring-bind
             define-minor-mode case invalid-face)))
   (setq warning-minimum-level :emergency)
   (setq byte-compile-warnings '(cl-functions))
-  
+
   ;; Auto-compile packages without asking
   (setq package-quickstart t)
   (setq package-native-compile t)
   (setq native-comp-async-report-warnings-errors 'silent)
-  
 
-  
+
+
   ;; This setq-default sexp is an exhaustive list of all the supported
   ;; spacemacs settings.
   (setq-default
