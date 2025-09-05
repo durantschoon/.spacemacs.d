@@ -756,6 +756,14 @@ Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
   ;; =======================================================================
+  ;; ** 🔧 Configuration Flags **
+  ;; =======================================================================
+  
+  ;; Set to t to enable experimental/testing features, nil to disable
+  (defvar bds/enable-experiments nil
+    "Enable experimental features in the testing zone.")
+
+  ;; =======================================================================
   ;; ** 📋 Meta (use outline minor mode in elisp especially for user-config) **
   ;; =======================================================================
 
@@ -794,21 +802,24 @@ before packages are loaded."
   ;;
   ;; CURRENT EXPERIMENTS:
   ;; - defadvice-patch-advanced: Should move to 📦 Package Configuration when stable
-  (condition-case err
-      (progn
-        (message "🧪 Running experimental config...")
-        ;; ⬇ Put new or untested code here
+  
+  (if bds/enable-experiments
+      (condition-case err
+          (progn
+            (message "🧪 Running experimental config...")
+            ;; ⬇ Put new or untested code here
 
-        ;; Load defadvice-patch-advanced to eliminate defadvice warnings
-        ;; TODO: Move to 📦 Package Configuration when stable
-        (condition-case load-err
-            (require 'defadvice-patch-advanced)
-          (error (message "⚠️ Failed to load defadvice-patch-advanced: %S" load-err)))
+            ;; Load defadvice-patch-advanced to eliminate defadvice warnings
+            ;; TODO: Move to 📦 Package Configuration when stable
+            (condition-case load-err
+                (require 'defadvice-patch-advanced)
+              (error (message "⚠️ Failed to load defadvice-patch-advanced: %S" load-err)))
 
-        ;; ✅ Success message
-        (message "✅ Experimental config loaded successfully."))
-    (error
-     (message "⚠️ Error in experimental config: %S" err)))
+            ;; ✅ Success message
+            (message "✅ Experimental config loaded successfully."))
+        (error
+         (message "⚠️ Error in experimental config: %S" err)))
+    (message "🧪 Experimental features disabled (set bds/enable-experiments to t to enable)"))
 
   ;; ======================================================================
   ;; ** 🌍 System Environment & Paths **
