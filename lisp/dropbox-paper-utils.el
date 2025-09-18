@@ -22,6 +22,7 @@
     ;; Punctuation / symbols
     ("question mark" . "red question mark")
     ("cross mark" . "cross mark button")
+    ("multiplication sign" . "cross mark button")
     ("check mark" . "check mark button")
     ("exclamation mark" . "red exclamation mark")
     ;; ("down arrow" . "downwards button")
