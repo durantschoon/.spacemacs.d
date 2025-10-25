@@ -42,8 +42,7 @@ This function should only modify configuration layer settings."
 
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
-   '(
-     ;; ----------------------------------------------------------------
+   '(;; ----------------------------------------------------------------
      ;; Example of useful layers you may want to use right away.
      ;; Uncomment some layer names and press `SPC f e R' (Vim style) or
      ;; `M-m f e R' (Emacs style) to install them.
@@ -79,6 +78,7 @@ This function should only modify configuration layer settings."
      emacs-lisp
      emoji
      git
+     go
      graphql
      ;; gtags ;; see layer for set up first, modify install emacs script
      haskell
@@ -133,11 +133,13 @@ This function should only modify configuration layer settings."
            rust-backend 'lsp
            lsp-rust-analyzer-cargo-auto-reload t
            rustic-format-on-save t)
+     scheme
      search-engine
      ;; user `M-m '` like vscode to open/hide a shell
      (shell :variables
             shell-default-height 30
             shell-default-position 'bottom)
+     sml ;; Standard ML ... why do I need this again?
      spell-checking
      sql
      syntax-checking
