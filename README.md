@@ -1,4 +1,5 @@
 # .spacemacs.d
+
 spacemacs dot file(s)
 
 These days, I use emacs mostly on a mac (but also windows and linux). I have updated my [dot_files repo](https://github.com/durantschoon/dot_files/) so that when I run `make` on a new machine from that repo, it should install emacs/spacemacs with this custom directory so I don't have to manually run the commands listed below under "Install Emacs"
@@ -43,14 +44,14 @@ Or (linux/windows):
 
 Make sure you don't already have ~/.spacemacs.d before running this (but you should get a warning if you do):
 
-```
+```sh
 cd
 git clone https://github.com/durantschoon/.spacemacs.d.git .
 ```
 
 Here's how to try using spacemacs if you already have a .emacs.d/ folder (from the [FAQ](https://github.com/syl20bnr/spacemacs/blob/develop/doc/FAQ.org#try-spacemacs-without-modifying-my-existing-emacs-configuration)):
 
-```
+```sh
 mkdir ~/spacemacs
 git clone https://github.com/syl20bnr/spacemacs.git ~/spacemacs/.emacs.d
 HOME=~/spacemacs emacs
@@ -58,7 +59,7 @@ HOME=~/spacemacs emacs
 
 Or just install it to your ~/.emacs.d folder. Refer to the [original repo](https://github.com/syl20bnr/spacemacs).
 
-```
+```sh
 git clone https://github.com/syl20bnr/spacemacs ~/.emacs.d
 ```
 
