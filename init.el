@@ -764,7 +764,7 @@ before packages are loaded."
   ;; Set to t to enable experimental/testing features, nil to disable
   ;; These are currently off because of some infinite macro-evaluation(?)
   ;; from the defadvice patching
-  (defvar bds/enable-experiments nil
+  (defvar bds/enable-experiments t
     "Enable experimental features in the testing zone.")
 
   ;; =======================================================================
@@ -806,6 +806,7 @@ before packages are loaded."
   ;;
   ;; CURRENT EXPERIMENTS:
   ;; - defadvice-patch-advanced: Should move to 📦 Package Configuration when stable
+  ;; - LLM section changes: Recent updates to LLM configuration (seems stable)
 
   (if bds/enable-experiments
       (condition-case err
@@ -816,7 +817,9 @@ before packages are loaded."
             ;; Load defadvice-patch-advanced to eliminate defadvice warnings
             ;; TODO: Move to 📦 Package Configuration when stable
             (condition-case load-err
-                (require 'defadvice-patch-advanced)
+                (progn
+                  (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
+                  (require 'defadvice-patch-advanced))
               (error (message "⚠️ Failed to load defadvice-patch-advanced: %S" load-err)))
 
             ;; ✅ Success message
