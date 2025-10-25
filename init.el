@@ -872,7 +872,7 @@ before packages are loaded."
   (defun my/shell-reminder-use-vterm ()
     "Reminder to use vterm instead of shell, then runs vterm."
     (interactive)
-    (message "⚠️ You're using `M-x shell`. Using vterm, `M-x vterm`, for better performance.")
+    (message "⚠️ You're trying to use `M-x shell`. Giving you vterm instead, `M-x vterm`, for better performance.")
     (vterm))
 
   (advice-add 'shell :override #'my/shell-reminder-use-vterm)
