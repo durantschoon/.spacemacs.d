@@ -938,25 +938,48 @@ SCHEDULED: %^t
   ;; ** 🤖 LLM & AI Configuration **
   ;; ======================================================================
 
-  ;; add llm options
-  (gptel-make-ollama "Ollama Local"       ; Any name of your choosing
-    :host "localhost:11434"               ; Where it's running
-    :stream t                             ; Stream responses
-    :models '(codellama:latest
-              qwen2.5:latest))            ; List of models
-
-  ;; set default
-  (setq
-   gptel-model 'codellama:latest
-   gptel-backend (gptel-make-ollama "Ollama Local Codellama or Qwen"
-                   :host "localhost:11434"
-                   :stream t
-                   :models '(codellama:latest
-                             qwen2.5:latest)))
-
-  ;; useful to remember this in gptel-mode
+  ;; Useful to remember this in gptel-mode
   ;; C-c RET					gptel-send
 
+  ;; Below
+  ;; first model is default
+  (let ((ollama-models '(qwen2.5-coder:14b-instruct-q4_k_m
+                         deepseek-coder-v2))
+        (ollama-host "localhost:11434")) ;; yes, it spells llama
+    (gptel-make-ollama "Ollama Local"
+      :host ollama-host
+      :stream t
+      :models ollama-models)
+
+    (setq
+     gptel-model (car ollama-models)
+     gptel-backend (gptel-make-ollama
+                       (format "Ollama Local %s"
+                               (mapconcat #'symbol-name ollama-models " or "))
+                     :host ollama-host
+                     :stream t
+                     :models ollama-models))
+
+    (defun gptel-unfill-or-fill ()
+      "Toggle fill or unfill the paragraph at point."
+      (interactive)
+      (when (eq major-mode 'gptel-mode)
+        (save-excursion
+          ;; Move to the end of the buffer and toggle unfill-paragraph
+          (goto-char (point-max))
+          (unless (bolp) (newline))  ; Ensure we're at a line beginning
+          (while (< (point-min) (point))
+            (unfill-paragraph)
+            (forward-paragraph)))))
+
+    (add-hook 'gptel-mode-hook
+              (lambda ()
+                (add-hook 'after-change-functions
+                          (lambda (_ _ _)
+                            (gptel-unfill-or-fill))
+                          nil t))))
+
+  ;; cody
   (use-package cody
     :commands (cody-login cody-restart cody-chat cody-mode)
 
