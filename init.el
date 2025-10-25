@@ -942,11 +942,14 @@ SCHEDULED: %^t
 
   ;; Useful to remember this in gptel-mode
   ;; C-c RET					gptel-send
+  ;; for gptel, to format a new response, I just format everything manually:
+  ;;   C-x h followed by M-q
+  ;; ellama seems better at that, but these are slow compared to claude code
 
-  ;; Below
-  ;; first model is default
+  ;; ollama-models: first model is default
   (let ((ollama-models '(qwen2.5-coder:14b-instruct-q4_k_m
-                         deepseek-coder-v2))
+                         deepseek-coder-v2
+                         nous-hermes2-mixtral))
         (ollama-host "localhost:11434")) ;; yes, it spells llama
     (gptel-make-ollama "Ollama Local"
       :host ollama-host
@@ -960,26 +963,7 @@ SCHEDULED: %^t
                                (mapconcat #'symbol-name ollama-models " or "))
                      :host ollama-host
                      :stream t
-                     :models ollama-models))
-
-    (defun gptel-unfill-or-fill ()
-      "Toggle fill or unfill the paragraph at point."
-      (interactive)
-      (when (eq major-mode 'gptel-mode)
-        (save-excursion
-          ;; Move to the end of the buffer and toggle unfill-paragraph
-          (goto-char (point-max))
-          (unless (bolp) (newline))  ; Ensure we're at a line beginning
-          (while (< (point-min) (point))
-            (unfill-paragraph)
-            (forward-paragraph)))))
-
-    (add-hook 'gptel-mode-hook
-              (lambda ()
-                (add-hook 'after-change-functions
-                          (lambda (_ _ _)
-                            (gptel-unfill-or-fill))
-                          nil t))))
+                     :models ollama-models)))
 
   ;; cody
   (use-package cody
