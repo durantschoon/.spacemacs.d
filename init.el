@@ -1374,7 +1374,19 @@ SCHEDULED: %^t
   ;; Main benefits are:
   ;; s-<up>   (Alt) change date later
   ;; s-<down> (Alt) change date earlier
-(load-file (expand-file-name "lisp/dropbox-paper-utils.el" dotspacemacs-directory))
+  (load-file (expand-file-name "lisp/dropbox-paper-utils.el" dotspacemacs-directory))
+
+  (defun convert-dp-to-md ()
+    "Clean up whitespace, collapse double newlines, and run dp-icon-convert-buffer-to-unicode."
+    (interactive)
+    (whitespace-cleanup)
+    (save-excursion
+      (goto-char (point-min))
+      (replace-string
+       (concat "\C-j\C-j")   ; two newlines
+       "\C-j"                ; one newline
+       nil))                 ; don’t ask for confirmation
+    (dp-icon-convert-buffer-to-unicode))
 
   ;; ======================================================================
   ;; ** 📦 Package Configuration **
@@ -1520,33 +1532,34 @@ This function is called at the very end of Spacemacs initialization."
               evil-unimpaired evil-visual-mark-mode evil-visualstar
               exec-path-from-shell expand-region eyebrowse fancy-battery
               flycheck-clj-kondo flycheck-elsa flycheck-haskell flycheck-package
-              flycheck-pos-tip flyspell-correct-helm gemini-mode gendoxy gh-md
-              git-link git-messenger git-modes git-timemachine
-              gitignore-templates gnuplot golden-ratio google-c-style
-              google-translate gptel graphql-mode haskell-snippets helm-ag
-              helm-c-yasnippet helm-cider helm-comint helm-company helm-css-scss
-              helm-descbinds helm-git-grep helm-hoogle helm-ls-git helm-lsp
-              helm-make helm-mode-manager helm-org helm-org-rifle
-              helm-projectile helm-purpose helm-pydoc helm-rg helm-themes
-              helm-xref helpful hide-comnt highlight-indentation
-              highlight-numbers highlight-parentheses hl-todo hlint-refactor
-              holy-mode hoon-mode hungry-delete hybrid-mode impatient-mode
-              indent-guide info+ inspector js-doc js2-refactor json-mode
-              json-navigator json-reformat jsonnet-mode key-chord keycast
-              keychain-environment launchctl link-hint live-py-mode livid-mode
-              logcat lorem-ipsum lsp-haskell lsp-origami lsp-ui macrostep
-              markdown-toc matlab-mode multi-line multi-term multi-vterm mwim
-              nameless nodejs-repl npm-mode nyan-mode open-junk-file
-              org-cliplink org-contrib org-download org-mime org-pomodoro
-              org-present org-projectile org-rich-yank org-superstar orgit-forge
-              osx-clipboard osx-dictionary osx-trash overseer page-break-lines
-              paradox password-generator pcre2el pip-requirements pipenv pippel
+              flycheck-pos-tip flyspell-correct-helm geiser gemini-mode gendoxy
+              gh-md git-link git-messenger git-modes git-timemachine
+              gitignore-templates gnuplot go-fill-struct go-gen-test go-mode
+              godoctor golden-ratio google-c-style google-translate gptel
+              graphql-mode haskell-snippets helm-ag helm-c-yasnippet helm-cider
+              helm-comint helm-company helm-css-scss helm-descbinds
+              helm-git-grep helm-hoogle helm-ls-git helm-lsp helm-make
+              helm-mode-manager helm-org helm-org-rifle helm-projectile
+              helm-purpose helm-pydoc helm-rg helm-themes helm-xref helpful
+              hide-comnt highlight-indentation highlight-numbers
+              highlight-parentheses hl-todo hlint-refactor holy-mode hoon-mode
+              hungry-delete hybrid-mode impatient-mode indent-guide info+
+              inspector js-doc js2-refactor json-mode json-navigator
+              json-reformat jsonnet-mode key-chord keycast keychain-environment
+              launchctl link-hint live-py-mode livid-mode logcat lorem-ipsum
+              lsp-haskell lsp-origami lsp-ui macrostep markdown-toc matlab-mode
+              multi-line multi-term multi-vterm mwim nameless nodejs-repl
+              npm-mode nyan-mode open-junk-file org-cliplink org-contrib
+              org-download org-mime org-pomodoro org-present org-projectile
+              org-rich-yank org-superstar orgit-forge osx-clipboard
+              osx-dictionary osx-trash overseer page-break-lines paradox
+              password-generator pcre2el pip-requirements pipenv pippel
               pkgbuild-mode poetry popwin prettier-js pug-mode py-isort pydoc
               pyenv-mode pylookup pytest qml-mode quickrun rainbow-delimiters
               rainbow-identifiers rainbow-mode restart-emacs
               reveal-in-osx-finder rg rjsx-mode ron-mode rustic sass-mode sayid
-              scad-mode scss-mode shell-pop slim-mode smeargle space-doc
-              spaceline-all-the-icons spacemacs-purpose-popwin
+              scad-mode scss-mode shell-pop slim-mode smeargle sml-mode
+              space-doc spaceline-all-the-icons spacemacs-purpose-popwin
               spacemacs-whitespace-cleanup sphinx-doc sql-indent stan-mode
               string-edit-at-point string-inflection symbol-overlay symon
               tagedit term-cursor terminal-here tern thrift toc-org toml-mode
