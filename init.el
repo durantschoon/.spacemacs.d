@@ -760,8 +760,10 @@ before packages are loaded."
   ;; =======================================================================
   ;; ** 🔧 Configuration Flags **
   ;; =======================================================================
-  
+
   ;; Set to t to enable experimental/testing features, nil to disable
+  ;; These are currently off because of some infinite macro-evaluation(?)
+  ;; from the defadvice patching
   (defvar bds/enable-experiments nil
     "Enable experimental features in the testing zone.")
 
@@ -804,7 +806,7 @@ before packages are loaded."
   ;;
   ;; CURRENT EXPERIMENTS:
   ;; - defadvice-patch-advanced: Should move to 📦 Package Configuration when stable
-  
+
   (if bds/enable-experiments
       (condition-case err
           (progn
