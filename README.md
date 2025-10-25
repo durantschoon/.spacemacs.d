@@ -23,7 +23,7 @@ machines, e.g. home vs. work):
 | emacs-plus@28 | --with-emacs-card-blue-deep-icon |
 | emacs-plus@29 | --with-retro-sink-icon           |
 | emacs-plus@30 | --with-spacemacs-icon            |
-| ~emacs-plus@31~ (gcc 15 issues on macos for now ) | ~--with-spacemacs-icon~            |  
+| ~emacs-plus@31~ (gcc 15 issues on macos for now ) | ~--with-spacemacs-icon~            |
 
 ```zsh
 # uninstall old
