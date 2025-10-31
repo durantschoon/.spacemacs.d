@@ -894,6 +894,13 @@ before packages are loaded."
 
   (push '("*shell*" :height 10 :position bottom) popwin:special-display-config)
 
+  ;; do not allow vterm to rebind C-d (I still want to delete forward)
+  (with-eval-after-load 'vterm
+    (setq vterm-keymap-exceptions
+          (remove "C-d" vterm-keymap-exceptions))
+    (define-key vterm-mode-map (kbd "C-d") #'delete-forward-char))
+
+
   ;; ======================================================================
   ;; ** 📝 Org Mode Configuration **
   ;; ======================================================================
