@@ -865,7 +865,17 @@ before packages are loaded."
     (setq ns-function-modifier 'hyper)    ; make Fn key do Hyper
     ;; ---------- SCROLLING ----------    ; for trackpads
     (global-set-key [wheel-right] 'scroll-left)
-    (global-set-key [wheel-left] 'scroll-right))
+    (global-set-key [wheel-left] 'scroll-right)
+    ;; Enable smooth pixel scrolling
+    (pixel-scroll-precision-mode 1)
+
+    ;; Make scrolling "natural" (like macOS)
+    (setq pixel-scroll-precision-use-momentum t)
+    (setq mouse-wheel-scroll-amount '(1))  ;; fine-grained scroll
+    (setq mouse-wheel-tilt-scroll t)
+
+    ;; Invert the direction for "natural" scrolling
+    (setq mouse-wheel-flip-direction t))
 
   (when (eq system-type 'darwin) ; mac specific settings
     (global-set-key "\M-`" 'other-frame)) ; act like other mac programs
