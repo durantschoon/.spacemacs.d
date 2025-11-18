@@ -805,7 +805,6 @@ before packages are loaded."
   ;; 6. Keep the condition-case wrapper for safety during testing
   ;;
   ;; CURRENT EXPERIMENTS:
-  ;; - defadvice-patch-advanced: Should move to 📦 Package Configuration when stable
   ;; - LLM section changes: Recent updates to LLM configuration (seems stable)
 
   (if bds/enable-experiments
@@ -814,13 +813,20 @@ before packages are loaded."
             (message "🧪 Running experimental config...")
             ;; ⬇ Put new or untested code here
 
-            ;; Load defadvice-patch-advanced to eliminate defadvice warnings
-            ;; TODO: Move to 📦 Package Configuration when stable
-            (condition-case load-err
-                (progn
-                  (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
-                  (require 'defadvice-patch-advanced))
-              (error (message "⚠️ Failed to load defadvice-patch-advanced: %S" load-err)))
+            ;; Once accepted, this will move to
+            ;; ** 🪟 Window & Buffer Management **
+            (defun dotspacemacs/user-config ()
+              ;; Add perspective.el
+              (use-package perspective
+                :ensure t
+                :init
+                (persp-mode)
+                :config
+                ;; Optional: Configure keybindings or other settings here
+                ;; Example: Bind perspective commands to a custom prefix
+                ;; (general-define-key :prefix "SPC p" 'perspective-map)
+                ))
+
 
             ;; ✅ Success message
             (message "✅ Experimental config loaded successfully."))
@@ -1322,6 +1328,7 @@ SCHEDULED: %^t
   ;; ======================================================================
 
   (with-eval-after-load 'prog-mode
+    ;; code folding
     ;; s- is super, aka Alt on darwin
     (define-key prog-mode-map (kbd "s-<double-mouse-1>") 'hs-toggle-hiding))
 
@@ -1397,6 +1404,14 @@ SCHEDULED: %^t
   ;; ======================================================================
   ;; ** 📦 Package Configuration **
   ;; ======================================================================
+
+  ;; Load defadvice-patch-advanced to eliminate defadvice warnings
+  ;; This uses functional package readiness detection instead of crude timeouts
+  (condition-case load-err
+      (progn
+        (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
+        (require 'defadvice-patch-advanced))
+    (error (message "⚠️ Failed to load defadvice-patch-advanced: %S" load-err)))
 
   ;; Markdown mode configuration
   (with-eval-after-load 'markdown-mode
