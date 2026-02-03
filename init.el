@@ -941,10 +941,10 @@ SCHEDULED: %^t
            "* %?\nEntered on %U\n"
            :empty-lines 1)))
 
-  (setq org-agenda-files '("~/Dropbox/home/org/agenda/tasks.org"
-                           "~/Dropbox/home/org/agenda/personal.org"
-                           "~/Dropbox/home/org/robotics/summer2025.org"
-                           "~/Dropbox/home/org/capture/inbox.org"))
+  (setq org-agenda-files '("~/Org/home/agenda/tasks.org"
+                           "~/Org/home/agenda/personal.org"
+                           "~/Org/home/robotics/summer2025.org"
+                           "~/Org/home/capture/inbox.org"))
 
   ;;; enable easy-templates in org-mode
   ;;; hopefully this makes '<s'+TAB create src blocks again
