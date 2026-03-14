@@ -741,7 +741,28 @@ configuration.
 It is mostly for variables that should be set before packages are loaded.
 If you are unsure, try setting them in `dotspacemacs/user-config' first."
   (add-to-list 'load-path (expand-file-name "lisp" dotspacemacs-directory))
-  (setq native-comp-async-report-warnings-errors 'silent))
+  (setq native-comp-async-report-warnings-errors 'silent)
+  ;; Redirect package install messages to echo area/*Messages* so they don't
+  ;; overlap with the release note in the spacemacs buffer
+  (eval-after-load 'core-spacemacs-buffer
+    '(progn
+       (defun bds/package-install-message-p (msg)
+         (and (stringp msg)
+              (or (string-match-p "Found.*new package.*to install" msg)
+                  (string-match-p "refreshing package archive" msg)
+                  (string-match-p "installing package" msg)
+                  (string-match-p "package(s) to update" msg)
+                  (string-match-p "All packages are up to date" msg))))
+       (defun bds/spacemacs-buffer-append-advice (orig-fun msg &optional messagebuf)
+         (if (bds/package-install-message-p msg)
+             (message "(Spacemacs) %s" (string-trim msg))
+           (funcall orig-fun msg messagebuf)))
+       (defun bds/spacemacs-buffer-replace-last-line-advice (orig-fun msg &optional messagebuf)
+         (if (bds/package-install-message-p msg)
+             (message "(Spacemacs) %s" (string-trim msg))
+           (funcall orig-fun msg messagebuf)))
+       (advice-add 'spacemacs-buffer/append :around #'bds/spacemacs-buffer-append-advice)
+       (advice-add 'spacemacs-buffer/replace-last-line :around #'bds/spacemacs-buffer-replace-last-line-advice))))
 
 ;; =========================================================================
 ;; * dotspacemacs/user-config () *
