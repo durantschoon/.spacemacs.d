@@ -33,7 +33,10 @@
   
   ;; Use package hooks with smart detection
   (add-hook 'package-post-install-hook #'defadvice-patch--smart-after-package)
-  (add-hook 'package-post-update-hook #'defadvice-patch--smart-after-package))
+  (add-hook 'package-post-update-hook #'defadvice-patch--smart-after-package)
+  ;; Ensure package state is properly persisted after install (fixes org reinstall loop)
+  (add-hook 'package-post-install-hook #'defadvice-patch--ensure-package-state-persisted)
+  (add-hook 'package-post-update-hook #'defadvice-patch--ensure-package-state-persisted))
 
 (defun defadvice-patch--packages-fully-loaded-p ()
   "Check if packages are fully loaded using comprehensive checks."
@@ -61,6 +64,63 @@
   "Smart package hook that waits for true readiness."
   (unless defadvice-patch--processing
     (defadvice-patch--wait-for-packages-ready)))
+
+(defvar defadvice-patch--persist-timer nil
+  "Timer for polling package/compilation readiness.")
+(defvar defadvice-patch--persist-start-time nil
+  "When we started polling for package state persistence.")
+(defconst defadvice-patch--persist-poll-interval 0.5
+  "Seconds between readiness checks.")
+(defconst defadvice-patch--persist-max-wait 30
+  "Max seconds to wait before running anyway (timeout fallback).")
+
+(defun defadvice-patch--persist-package-state-now ()
+  "Run package-quickstart-refresh and org activation. Called when ready or on timeout."
+  (when (and (boundp 'package-quickstart)
+             package-quickstart
+             (fboundp 'package-quickstart-refresh))
+    (condition-case err
+        (package-quickstart-refresh)
+      (error (message "package-quickstart-refresh: %s" err))))
+  (when (assq 'org package-alist)
+    (unless (memq 'org package-activated-list)
+      (condition-case err
+          (package-activate 'org)
+        (error (message "package-activate org: %s" err)))))
+
+(defun defadvice-patch--persist-compilation-done-p ()
+  "Non-nil if async native compilation appears finished."
+  (and (defadvice-patch--packages-fully-loaded-p)
+       (defadvice-patch--file-system-stable)
+       ;; comp-async-compilation is nil when no async native compile in progress
+       (or (not (boundp 'comp-async-compilation))
+           (not comp-async-compilation))))
+
+(defun defadvice-patch--persist-check-and-run ()
+  "Check if package/compilation is done; run persist logic when ready or on timeout."
+  (let ((elapsed (when defadvice-patch--persist-start-time
+                  (- (float-time) defadvice-patch--persist-start-time)))
+        (ready (defadvice-patch--persist-compilation-done-p)))
+    (when (or ready (and elapsed (>= elapsed defadvice-patch--persist-max-wait)))
+      (when defadvice-patch--persist-timer
+        (cancel-timer defadvice-patch--persist-timer)
+        (setq defadvice-patch--persist-timer nil))
+      (when (and elapsed (>= elapsed defadvice-patch--persist-max-wait))
+        (message "Package state persist: timeout after %.0fs, running anyway" elapsed))
+      (defadvice-patch--persist-package-state-now))))
+
+(defun defadvice-patch--ensure-package-state-persisted ()
+  "Ensure package state is properly marked and persisted after install/update.
+Polls until package ops and native compilation are done, then runs
+package-quickstart-refresh. Timeout after 30s if compilation never finishes.
+Fixes org reinstall loop where Spacemacs thinks org needs reinstalling every startup."
+  (when defadvice-patch--persist-timer
+    (cancel-timer defadvice-patch--persist-timer))
+  (setq defadvice-patch--persist-start-time (float-time))
+  (setq defadvice-patch--persist-timer
+        (run-with-timer defadvice-patch--persist-poll-interval
+                        defadvice-patch--persist-poll-interval
+                        #'defadvice-patch--persist-check-and-run)))
 
 ;; Set up the smart hooks
 (defadvice-patch--setup-smart-hooks)
