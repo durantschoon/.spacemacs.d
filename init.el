@@ -167,6 +167,13 @@ This function should only modify configuration layer settings."
    dotspacemacs-additional-packages '(auto-minor-mode
                                       avy
                                       buffer-move
+                                      ;; 🧪 see Testing Zone; deps listed
+                                      ;; explicitly per the note above
+                                      (claude-code-ide :location (recipe
+                                                                  :fetcher github
+                                                                  :repo "manzaltu/claude-code-ide.el"))
+                                      websocket
+                                      transient
                                       ;; copilot off, trying to use cody instead
                                       ;; (copilot :location (recipe
                                       ;;                     :fetcher github
@@ -824,6 +831,7 @@ before packages are loaded."
   ;;
   ;; CURRENT EXPERIMENTS:
   ;; - LLM section changes: Recent updates to LLM configuration (seems stable)
+  ;; - claude-code-ide: MCP-backed Claude Code integration (new, untested)
 
   (if bds/enable-experiments
       (condition-case err
@@ -832,19 +840,28 @@ before packages are loaded."
             ;; ⬇ Put new or untested code here
 
             ;; Once accepted, this will move to
-            ;; ** 🪟 Window & Buffer Management **
-            (defun dotspacemacs/user-config ()
-              ;; Add perspective.el
-              (use-package perspective
-                :ensure t
-                :init
-                (persp-mode)
-                :config
-                ;; Optional: Configure keybindings or other settings here
-                ;; Example: Bind perspective commands to a custom prefix
-                ;; (general-define-key :prefix "SPC p" 'perspective-map)
-                ))
-
+            ;; ** 🤖 LLM & AI Configuration **
+            ;;
+            ;; Claude Code in Emacs via the same MCP "IDE" protocol the
+            ;; VS Code extension uses -- so Claude sees the active region,
+            ;; lsp/flycheck diagnostics, and can call xref/imenu instead of
+            ;; grepping. Diffs land in ediff rather than scrolling past in
+            ;; the terminal buffer.
+            (use-package claude-code-ide
+              :config
+              ;; eat, not vterm: less redraw flicker in the Claude buffer.
+              ;; vterm stays the default everywhere else (see Shell section).
+              (setq claude-code-ide-terminal-backend 'eat)
+              ;; Exposes xref/imenu/project as MCP tools to Claude
+              (claude-code-ide-emacs-tools-setup)
+              ;; SPC o is the prefix Spacemacs reserves for user bindings;
+              ;; SPC a c is already the built-in chat prefix (slack/irc/jabber)
+              (spacemacs/declare-prefix "oc" "claude-code")
+              (spacemacs/set-leader-keys
+                "occ" #'claude-code-ide
+                "ocr" #'claude-code-ide-resume
+                "ocm" #'claude-code-ide-menu
+                "ocs" #'claude-code-ide-send-prompt))
 
             ;; ✅ Success message
             (message "✅ Experimental config loaded successfully."))
@@ -1543,75 +1560,75 @@ SCHEDULED: %^t
 This is an auto-generated function, do not modify its content directly, use
 Emacs customize menu instead.
 This function is called at the very end of Spacemacs initialization."
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")
- '(package-selected-packages
-   '(ace-link aggressive-indent anzu arduino-mode attrap auto-compile
-              auto-highlight-symbol auto-minor-mode auto-yasnippet
-              avy-jump-helm-line blacken browse-at-remote buffer-move
-              centered-cursor-mode cider-eval-sexp-fu clean-aindent-mode
-              clj-refactor clojure-snippets cmm-mode code-cells code-review
-              color-identifiers-mode column-enforce-mode command-log-mode
-              company-c-headers company-cabal company-emoji company-quickhelp
-              company-statistics company-terraform company-web cpp-auto-include
-              csv-mode cython-mode dante dap-mode devdocs diff-hl diminish
-              dired-quick-sort disable-mouse disaster docker dockerfile-mode
-              dotenv-mode drag-stuff dumb-jump eat ebuild-mode edit-indirect
-              elisp-def elisp-demos elisp-slime-nav ellama emmet-mode
-              emoji-cheat-sheet-plus emr engine-mode esh-help
-              eshell-prompt-extras eshell-z evil-anzu evil-args
-              evil-cleverparens evil-escape evil-evilified-state evil-exchange
-              evil-goggles evil-iedit-state evil-indent-plus evil-lion
-              evil-lisp-state evil-matchit evil-mc evil-nerd-commenter
-              evil-numbers evil-org evil-surround evil-textobj-line evil-tutor
-              evil-unimpaired evil-visual-mark-mode evil-visualstar
-              exec-path-from-shell expand-region eyebrowse fancy-battery
-              flycheck-clj-kondo flycheck-elsa flycheck-haskell flycheck-package
-              flycheck-pos-tip flyspell-correct-helm geiser gemini-mode gendoxy
-              gh-md git-link git-messenger git-modes git-timemachine
-              gitignore-templates gnuplot go-fill-struct go-gen-test go-mode
-              godoctor golden-ratio google-c-style google-translate gptel
-              graphql-mode haskell-snippets helm-ag helm-c-yasnippet helm-cider
-              helm-comint helm-company helm-css-scss helm-descbinds
-              helm-git-grep helm-hoogle helm-ls-git helm-lsp helm-make
-              helm-mode-manager helm-org helm-org-rifle helm-projectile
-              helm-purpose helm-pydoc helm-rg helm-themes helm-xref helpful
-              hide-comnt highlight-indentation highlight-numbers
-              highlight-parentheses hl-todo hlint-refactor holy-mode hoon-mode
-              hungry-delete hybrid-mode impatient-mode indent-guide info+
-              inspector js-doc js2-refactor json-mode json-navigator
-              json-reformat jsonnet-mode key-chord keycast keychain-environment
-              launchctl link-hint live-py-mode livid-mode logcat lorem-ipsum
-              lsp-haskell lsp-origami lsp-ui macrostep markdown-toc matlab-mode
-              multi-line multi-term multi-vterm mwim nameless nodejs-repl
-              npm-mode nyan-mode open-junk-file org-cliplink org-contrib
-              org-download org-mime org-pomodoro org-present org-projectile
-              org-rich-yank org-superstar orgit-forge osx-clipboard
-              osx-dictionary osx-trash overseer page-break-lines paradox
-              password-generator pcre2el pip-requirements pipenv pippel
-              pkgbuild-mode poetry popwin prettier-js pug-mode py-isort pydoc
-              pyenv-mode pylookup pytest qml-mode quickrun rainbow-delimiters
-              rainbow-identifiers rainbow-mode restart-emacs
-              reveal-in-osx-finder rg rjsx-mode ron-mode rustic sass-mode sayid
-              scad-mode scss-mode shell-pop slim-mode smeargle sml-mode
-              space-doc spaceline-all-the-icons spacemacs-purpose-popwin
-              spacemacs-whitespace-cleanup sphinx-doc sql-indent stan-mode
-              string-edit-at-point string-inflection symbol-overlay symon
-              tagedit term-cursor terminal-here tern thrift toc-org toml-mode
-              transient treemacs-icons-dired treemacs-magit treemacs-persp
-              treemacs-projectile typescript-mode undo-fu undo-fu-session unfill
-              unicode-fonts vala-mode vala-snippets valign vi-tilde-fringe
-              visual-regexp visual-regexp-steroids volatile-highlights vundo
-              web-beautify web-mode winum wolfram-mode writeroom-mode ws-butler
-              yaml-mode yasnippet-snippets)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
-)
+  (custom-set-variables
+   ;; custom-set-variables was added by Custom.
+   ;; If you edit it by hand, you could mess it up, so be careful.
+   ;; Your init file should contain only one such instance.
+   ;; If there is more than one, they won't work right.
+   '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")
+   '(package-selected-packages
+     '(ace-link aggressive-indent anzu arduino-mode attrap auto-compile
+                auto-highlight-symbol auto-minor-mode auto-yasnippet
+                avy-jump-helm-line blacken browse-at-remote buffer-move
+                centered-cursor-mode cider-eval-sexp-fu clean-aindent-mode
+                clj-refactor clojure-snippets cmm-mode code-cells code-review
+                color-identifiers-mode column-enforce-mode command-log-mode
+                company-c-headers company-cabal company-emoji company-quickhelp
+                company-statistics company-terraform company-web cpp-auto-include
+                csv-mode cython-mode dante dap-mode devdocs diff-hl diminish
+                dired-quick-sort disable-mouse disaster docker dockerfile-mode
+                dotenv-mode drag-stuff dumb-jump eat ebuild-mode edit-indirect
+                elisp-def elisp-demos elisp-slime-nav ellama emmet-mode
+                emoji-cheat-sheet-plus emr engine-mode esh-help
+                eshell-prompt-extras eshell-z evil-anzu evil-args
+                evil-cleverparens evil-escape evil-evilified-state evil-exchange
+                evil-goggles evil-iedit-state evil-indent-plus evil-lion
+                evil-lisp-state evil-matchit evil-mc evil-nerd-commenter
+                evil-numbers evil-org evil-surround evil-textobj-line evil-tutor
+                evil-unimpaired evil-visual-mark-mode evil-visualstar
+                exec-path-from-shell expand-region eyebrowse fancy-battery
+                flycheck-clj-kondo flycheck-elsa flycheck-haskell flycheck-package
+                flycheck-pos-tip flyspell-correct-helm geiser gemini-mode gendoxy
+                gh-md git-link git-messenger git-modes git-timemachine
+                gitignore-templates gnuplot go-fill-struct go-gen-test go-mode
+                godoctor golden-ratio google-c-style google-translate gptel
+                graphql-mode haskell-snippets helm-ag helm-c-yasnippet helm-cider
+                helm-comint helm-company helm-css-scss helm-descbinds
+                helm-git-grep helm-hoogle helm-ls-git helm-lsp helm-make
+                helm-mode-manager helm-org helm-org-rifle helm-projectile
+                helm-purpose helm-pydoc helm-rg helm-themes helm-xref helpful
+                hide-comnt highlight-indentation highlight-numbers
+                highlight-parentheses hl-todo hlint-refactor holy-mode hoon-mode
+                hungry-delete hybrid-mode impatient-mode indent-guide info+
+                inspector js-doc js2-refactor json-mode json-navigator
+                json-reformat jsonnet-mode key-chord keycast keychain-environment
+                launchctl link-hint live-py-mode livid-mode logcat lorem-ipsum
+                lsp-haskell lsp-origami lsp-ui macrostep markdown-toc matlab-mode
+                multi-line multi-term multi-vterm mwim nameless nodejs-repl
+                npm-mode nyan-mode open-junk-file org-cliplink org-contrib
+                org-download org-mime org-pomodoro org-present org-projectile
+                org-rich-yank org-superstar orgit-forge osx-clipboard
+                osx-dictionary osx-trash overseer page-break-lines paradox
+                password-generator pcre2el pip-requirements pipenv pippel
+                pkgbuild-mode poetry popwin prettier-js pug-mode py-isort pydoc
+                pyenv-mode pylookup pytest qml-mode quickrun rainbow-delimiters
+                rainbow-identifiers rainbow-mode restart-emacs
+                reveal-in-osx-finder rg rjsx-mode ron-mode rustic sass-mode sayid
+                scad-mode scss-mode shell-pop slim-mode smeargle sml-mode
+                space-doc spaceline-all-the-icons spacemacs-purpose-popwin
+                spacemacs-whitespace-cleanup sphinx-doc sql-indent stan-mode
+                string-edit-at-point string-inflection symbol-overlay symon
+                tagedit term-cursor terminal-here tern thrift toc-org toml-mode
+                transient treemacs-icons-dired treemacs-magit treemacs-persp
+                treemacs-projectile typescript-mode undo-fu undo-fu-session unfill
+                unicode-fonts vala-mode vala-snippets valign vi-tilde-fringe
+                visual-regexp visual-regexp-steroids volatile-highlights vundo
+                web-beautify web-mode websocket winum wolfram-mode writeroom-mode
+                ws-butler yaml-mode yasnippet-snippets)))
+  (custom-set-faces
+   ;; custom-set-faces was added by Custom.
+   ;; If you edit it by hand, you could mess it up, so be careful.
+   ;; Your init file should contain only one such instance.
+   ;; If there is more than one, they won't work right.
+   )
+  )
