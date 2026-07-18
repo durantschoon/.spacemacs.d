@@ -829,15 +829,74 @@ before packages are loaded."
   ;; 4. Create a new section if needed (e.g., "📦 Package Configuration")
   ;; 5. Update commit message to note what was moved out and into Testing Zone
   ;; 6. Keep the condition-case wrapper for safety during testing
+  ;; 7. If the experiment needs a package, call `bds/experiment-verify' after
+  ;;    it -- and list every dependency from the package's Package-Requires
+  ;;    header in `dotspacemacs-additional-packages', which does not resolve
+  ;;    them for you
   ;;
   ;; CURRENT EXPERIMENTS:
   ;; - LLM section changes: Recent updates to LLM configuration (seems stable)
   ;; - claude-code-ide: MCP-backed Claude Code integration (new, untested)
 
+  ;; --- Verification helpers ---
+  ;;
+  ;; The condition-case below only catches code that *signals*. A
+  ;; `use-package' form for a package that was never installed does not
+  ;; signal: the :config body simply never runs, and the block still
+  ;; reports success. Verify installation explicitly instead of trusting
+  ;; the absence of an error.
+
+  (defvar bds/experiment-failures nil
+    "Experiments that did not take effect, newest first.
+Each entry is a cons of (LABEL . REASON), populated by
+`bds/experiment-verify' and drained by `bds/experiment-report'.")
+
+  (defun bds/experiment-verify (label library &rest symbols)
+    "Verify that experiment LABEL actually took effect.
+
+LIBRARY is a string naming a library that must be installed and on
+`load-path', e.g. \"claude-code-ide\". SYMBOLS are symbols expected to be
+bound once LIBRARY loads; they are checked lazily via
+`with-eval-after-load', so this never forces a deferred package to load
+and never slows startup.
+
+Records failures in `bds/experiment-failures' rather than signalling, so
+one unverified experiment does not abort the others. Returns non-nil when
+LIBRARY is installed."
+    (if (not (locate-library library))
+        (progn
+          (push (cons label (format "package `%s' is not installed" library))
+                bds/experiment-failures)
+          nil)
+      (when symbols
+        (with-eval-after-load (intern library)
+          (let ((missing (seq-remove (lambda (sym) (or (fboundp sym) (boundp sym)))
+                                     symbols)))
+            (when missing
+              (message "⚠️ Experiment %s loaded but these are unbound: %s"
+                       label
+                       (mapconcat #'symbol-name missing ", "))))))
+      t))
+
+  (defun bds/experiment-report ()
+    "Report the outcome of this run's experiments.
+Succeeds loudly or fails loudly -- never silently."
+    (if bds/experiment-failures
+        (progn
+          (dolist (failure (reverse bds/experiment-failures))
+            (message "⚠️ Experiment %s did not take effect: %s"
+                     (car failure) (cdr failure)))
+          (message "⚠️ Experimental config finished with %d unverified experiment(s)."
+                   (length bds/experiment-failures)))
+      (message "✅ Experimental config loaded successfully.")))
+
   (if bds/enable-experiments
       (condition-case err
           (progn
             (message "🧪 Running experimental config...")
+            ;; Fresh slate, so re-evaluating this file does not accumulate
+            ;; stale failures from a previous run
+            (setq bds/experiment-failures nil)
             ;; ⬇ Put new or untested code here
 
             ;; Once accepted, this will move to
@@ -864,8 +923,13 @@ before packages are loaded."
                 "ocm" #'claude-code-ide-menu
                 "ocs" #'claude-code-ide-send-prompt))
 
-            ;; ✅ Success message
-            (message "✅ Experimental config loaded successfully."))
+            (bds/experiment-verify "claude-code-ide" "claude-code-ide"
+                                   'claude-code-ide
+                                   'claude-code-ide-terminal-backend
+                                   'claude-code-ide-emacs-tools-setup)
+
+            ;; ✅ / ⚠️ Outcome
+            (bds/experiment-report))
         (error
          (message "⚠️ Error in experimental config: %S" err)))
     (message "🧪 Experimental features disabled (set bds/enable-experiments to t to enable)"))
