@@ -174,6 +174,7 @@ This function should only modify configuration layer settings."
                                                                   :repo "manzaltu/claude-code-ide.el"))
                                       websocket
                                       transient
+                                      web-server
                                       ;; copilot off, trying to use cody instead
                                       ;; (copilot :location (recipe
                                       ;;                     :fetcher github
@@ -1623,8 +1624,8 @@ This function is called at the very end of Spacemacs initialization."
                 treemacs-projectile typescript-mode undo-fu undo-fu-session unfill
                 unicode-fonts vala-mode vala-snippets valign vi-tilde-fringe
                 visual-regexp visual-regexp-steroids volatile-highlights vundo
-                web-beautify web-mode websocket winum wolfram-mode writeroom-mode
-                ws-butler yaml-mode yasnippet-snippets)))
+                web-beautify web-mode web-server websocket winum wolfram-mode
+                writeroom-mode ws-butler yaml-mode yasnippet-snippets)))
   (custom-set-faces
    ;; custom-set-faces was added by Custom.
    ;; If you edit it by hand, you could mess it up, so be careful.
