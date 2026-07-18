@@ -788,8 +788,9 @@ before packages are loaded."
   ;; =======================================================================
 
   ;; Set to t to enable experimental/testing features, nil to disable
-  ;; These are currently off because of some infinite macro-evaluation(?)
-  ;; from the defadvice patching
+  ;; (An older note here blamed infinite macro-evaluation from the defadvice
+  ;; patching. That code never actually loaded -- see lisp/README-defadvice-patch.md
+  ;; -- so it was not the cause. Root cause unknown; experiments are on.)
   (defvar bds/enable-experiments t
     "Enable experimental features in the testing zone.")
 
@@ -1505,13 +1506,9 @@ SCHEDULED: %^t
   ;; ** 📦 Package Configuration **
   ;; ======================================================================
 
-  ;; Load defadvice-patch-advanced to eliminate defadvice warnings
-  ;; This uses functional package readiness detection instead of crude timeouts
-  (condition-case load-err
-      (progn
-        (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
-        (require 'defadvice-patch-advanced))
-    (error (message "⚠️ Failed to load defadvice-patch-advanced: %S" load-err)))
+  ;; Clears byte-obsolete-info for defadvice/destructuring-bind/callf on
+  ;; emacs-startup-hook. lisp/ is already on load-path (see above).
+  (require 'defadvice-patch-advanced)
 
   ;; Markdown mode configuration
   (with-eval-after-load 'markdown-mode
