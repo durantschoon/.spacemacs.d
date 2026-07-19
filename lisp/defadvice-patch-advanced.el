@@ -40,8 +40,15 @@
   (put 'destructuring-bind 'byte-obsolete-info nil)
   (put 'callf 'byte-obsolete-info nil))
 
-;; Deferred to startup completion so it cannot race package initialization
+;; Applied in three places, because once is not enough. `defadvice' is marked
+;; obsolete by advice.el and `destructuring-bind'/`callf' by obsolete/cl.el;
+;; both libraries call `make-obsolete' at load time, and both load lazily --
+;; typically after `emacs-startup-hook' has already run. A single startup pass
+;; is silently undone the moment either one is pulled in, so re-apply after
+;; each. `with-eval-after-load' runs immediately if the library is already up.
 (add-hook 'emacs-startup-hook #'defadvice-patch--suppress-warnings)
+(with-eval-after-load 'advice (defadvice-patch--suppress-warnings))
+(with-eval-after-load 'cl (defadvice-patch--suppress-warnings))
 
 (provide 'defadvice-patch-advanced)
 

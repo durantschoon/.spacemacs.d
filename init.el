@@ -167,11 +167,32 @@ This function should only modify configuration layer settings."
    dotspacemacs-additional-packages '(auto-minor-mode
                                       avy
                                       buffer-move
-                                      ;; 🧪 see Testing Zone; deps listed
-                                      ;; explicitly per the note above
-                                      (claude-code-ide :location (recipe
-                                                                  :fetcher github
-                                                                  :repo "manzaltu/claude-code-ide.el"))
+                                      ;; Vendored clone, not a recipe:
+                                      ;; installing this from our own config
+                                      ;; dies with an infinite eager
+                                      ;; macro-expansion
+                                      ;; (excessive-lisp-nesting) triggered by
+                                      ;; something in this file -- the package
+                                      ;; itself installs cleanly under emacs -Q.
+                                      ;; Kept out of elpa because Spacemacs
+                                      ;; prunes anything there it did not
+                                      ;; install. clean-install.sh clones it
+                                      ;; into local/ on a new machine.
+                                      ;;
+                                      ;; The location must be a STRING path,
+                                      ;; not the symbol `local': for packages
+                                      ;; owned by the dotfile (not a layer),
+                                      ;; `configuration-layer/get-location-directory'
+                                      ;; resolves `local' to
+                                      ;; ~/.emacs.d/private/local/<pkg>/, so a
+                                      ;; clone in ~/.spacemacs.d/local/ never
+                                      ;; reaches `load-path' and use-package
+                                      ;; silently no-ops. A string path is
+                                      ;; added to `load-path' verbatim.
+                                      (claude-code-ide
+                                       :location "~/.spacemacs.d/local/claude-code-ide/")
+                                      ;; deps for claude-code-ide, which does
+                                      ;; not resolve them from local/
                                       websocket
                                       transient
                                       web-server
@@ -838,6 +859,25 @@ before packages are loaded."
   ;; CURRENT EXPERIMENTS:
   ;; - LLM section changes: Recent updates to LLM configuration (seems stable)
   ;; - claude-code-ide: MCP-backed Claude Code integration (new, untested)
+  ;;
+  ;;   How claude-code-ide gets loaded (each link verified to work):
+  ;;   1. clean-install.sh clones the repo into ~/.spacemacs.d/local/
+  ;;      (gitignored; ELPA is off-limits because Spacemacs prunes
+  ;;      packages it did not install, and recipe/package-vc installs
+  ;;      from inside this config hit eager macro-expansion recursion).
+  ;;   2. `dotspacemacs-additional-packages' declares it with a string
+  ;;      :location pointing at that clone -- NOT the symbol `local',
+  ;;      which for dotfile-owned packages resolves to
+  ;;      ~/.emacs.d/private/local/ and silently never reaches load-path.
+  ;;      Spacemacs adds the string path to `load-path' before
+  ;;      user-config runs.
+  ;;   3. Deps (websocket, transient, web-server -- from Package-Requires)
+  ;;      are declared alongside it, since local packages get no
+  ;;      dependency resolution. The eat terminal backend is installed
+  ;;      via the shell layer.
+  ;;   4. The use-package block below requires it (claude-code-ide.el
+  ;;      itself requires claude-code-ide-emacs-tools, so the :config
+  ;;      calls are all available) and `bds/experiment-verify' confirms.
 
   ;; --- Verification helpers ---
   ;;
