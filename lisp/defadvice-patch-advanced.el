@@ -38,7 +38,14 @@
   "Suppress obsolete-macro warnings from packages still using old forms."
   (put 'defadvice 'byte-obsolete-info nil)
   (put 'destructuring-bind 'byte-obsolete-info nil)
-  (put 'callf 'byte-obsolete-info nil))
+  (put 'callf 'byte-obsolete-info nil)
+  ;; Spacemacs deprecates this one itself. Note this does NOT silence the
+  ;; hybrid-mode-autoloads.el warnings: those fire while init.el is still
+  ;; being loaded, before any hook here can run. They need hybrid-mode
+  ;; upgraded, not suppressed -- its own source still expands the macro, so
+  ;; reinstalling the same version regenerates the same autoloads. Kept for
+  ;; any package that expands it later, once hooks are live.
+  (put 'spacemacs|dotspacemacs-backward-compatibility 'byte-obsolete-info nil))
 
 ;; Applied in three places, because once is not enough. `defadvice' is marked
 ;; obsolete by advice.el and `destructuring-bind'/`callf' by obsolete/cl.el;

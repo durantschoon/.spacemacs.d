@@ -239,18 +239,40 @@ This function is called at the very beginning of Spacemacs startup,
 before layer configuration.
 It should only modify the values of Spacemacs settings."
 
-  ;; Set warning suppression as early as possible to catch package loading warnings
+  ;; Suppress the deprecation warnings older packages raise through
+  ;; `display-warning'. Note this does NOT cover byte-compiler warnings --
+  ;; those go through `byte-compile-warn' and ignore these variables
+  ;; entirely, which is why suppressing harder here never silenced the
+  ;; "is an obsolete macro" noise. See `package-quickstart' below for that.
+  ;;
+  ;; `warning-minimum-level' is deliberately NOT set to :emergency here.
+  ;; It used to be, in three separate places, and it hid genuine errors --
+  ;; a config that fails loudly is the whole point of the Testing Zone.
   (setq warning-suppress-types
         '((defadvice obsolete deprecated callf destructuring-bind
             define-minor-mode case invalid-face)))
   (setq warning-suppress-log-types
         '((defadvice obsolete deprecated callf destructuring-bind
             define-minor-mode case invalid-face)))
-  (setq warning-minimum-level :emergency)
-  (setq byte-compile-warnings '(cl-functions))
+  ;; Exclude the obsolete category rather than allow-listing one category:
+  ;; `(cl-functions)' is a positive list, so it silently dropped every other
+  ;; warning too, including ones worth reading.
+  (setq byte-compile-warnings '(not obsolete))
 
   ;; Auto-compile packages without asking
-  (setq package-quickstart t)
+  ;;
+  ;; `package-quickstart' is nil (2026-07-19). It was t here while
+  ;; `dotspacemacs-enable-package-quickstart' was nil below -- the two
+  ;; contradicted, and the raw variable won, so a ~1.2MB generated
+  ;; package-quickstart.el was rebuilt and byte-compiled on every start.
+  ;; Compiling it is the sole source of the "'spacemacs|dotspacemacs-
+  ;; backward-compatibility' is an obsolete macro" warnings that used to
+  ;; flood *Messages*: the macro is one Spacemacs deprecated itself, and
+  ;; the generated file splices in every package's autoload forms, so the
+  ;; warning repeats for each. Turning the feature off removes the file,
+  ;; the compile, and the warnings. Costs a little startup time -- that
+  ;; speedup was the only thing quickstart bought.
+  (setq package-quickstart nil)
   (setq package-native-compile t)
   (setq native-comp-async-report-warnings-errors 'silent)
 
@@ -760,16 +782,12 @@ It should only modify the values of Spacemacs settings."
    dotspacemacs-home-shorten-agenda-source nil
 
    ;; If non-nil then byte-compile some of Spacemacs files.
-   dotspacemacs-byte-compile nil
+   dotspacemacs-byte-compile nil))
 
-   ;; Suppress deprecation warnings from outdated packages
-   ;; This must be set early to catch warnings during package loading
-   warning-suppress-types '((defadvice obsolete deprecated callf destructuring-bind
-                              define-minor-mode case invalid-face))
-   warning-suppress-log-types '((defadvice obsolete deprecated callf destructuring-bind
-                                  define-minor-mode case invalid-face))
-   warning-minimum-level :emergency
-   byte-compile-warnings '(cl-functions)))
+;; The warning-suppression settings that used to be repeated here are set
+;; once at the top of `dotspacemacs/init'. They were duplicated verbatim,
+;; and this copy ran later, so it quietly reinstated
+;; `warning-minimum-level :emergency' no matter what the first copy said.
 
 (defun dotspacemacs/user-env ()
   "Environment variables setup.
