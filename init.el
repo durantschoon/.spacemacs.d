@@ -259,6 +259,17 @@ It should only modify the values of Spacemacs settings."
   ;; warning too, including ones worth reading.
   (setq byte-compile-warnings '(not obsolete))
 
+  ;; If "'spacemacs|dotspacemacs-backward-compatibility' is an obsolete
+  ;; macro" ever returns, it is an ELPA staleness problem, not a config one,
+  ;; and no amount of suppression here will touch it -- it fires while
+  ;; init.el is still loading. hybrid-mode is built by quelpa from
+  ;; layers/+distributions/spacemacs-bootstrap/local/hybrid-mode/ in the
+  ;; Spacemacs tree. That source dropped the macro, but an incrementally
+  ;; updated checkout keeps serving the old build. Fix by forcing a rebuild:
+  ;;   rm -rf ~/.emacs.d/elpa/*/develop/hybrid-mode-* \
+  ;;          ~/.emacs.d/.cache/quelpa/build/hybrid-mode
+  ;; then restart. clean-install.sh already covers this by wiping elpa.
+
   ;; Auto-compile packages without asking
   ;;
   ;; `package-quickstart' is nil (2026-07-19). It was t here while
