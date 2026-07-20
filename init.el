@@ -883,9 +883,11 @@ before packages are loaded."
   ;;
   ;; CURRENT EXPERIMENTS:
   ;; - LLM section changes: Recent updates to LLM configuration (seems stable)
-  ;; - claude-code-ide: MCP-backed Claude Code integration (new, untested)
+  ;; - (none pending)
   ;;
-  ;;   How claude-code-ide gets loaded (each link verified to work):
+  ;; GRADUATED:
+  ;; - claude-code-ide (2026-07-19): accepted after the load-hints fix; now
+  ;;   in ** 🤖 LLM & AI Configuration **. It loads from a vendored clone:
   ;;   1. clean-install.sh clones the repo into ~/.spacemacs.d/local/
   ;;      (gitignored; ELPA is off-limits because Spacemacs prunes
   ;;      packages it did not install, and recipe/package-vc installs
@@ -900,9 +902,6 @@ before packages are loaded."
   ;;      are declared alongside it, since local packages get no
   ;;      dependency resolution. The eat terminal backend is installed
   ;;      via the shell layer.
-  ;;   4. The use-package block below requires it (claude-code-ide.el
-  ;;      itself requires claude-code-ide-emacs-tools, so the :config
-  ;;      calls are all available) and `bds/experiment-verify' confirms.
 
   ;; --- Verification helpers ---
   ;;
@@ -990,58 +989,8 @@ Succeeds loudly or fails loudly -- never silently."
             ;; stale failures from a previous run
             (setq bds/experiment-failures nil)
             ;; ⬇ Put new or untested code here
-
-            ;; Once accepted, this will move to
-            ;; ** 🤖 LLM & AI Configuration **
-            ;;
-            ;; Claude Code in Emacs via the same MCP "IDE" protocol the
-            ;; VS Code extension uses -- so Claude sees the active region,
-            ;; lsp/flycheck diagnostics, and can call xref/imenu instead of
-            ;; grepping. Diffs land in ediff rather than scrolling past in
-            ;; the terminal buffer.
-            (use-package claude-code-ide
-              :config
-              ;; Absolute path, because `claude' is a zsh *alias* here, not
-              ;; anything on PATH. `claude-code-ide-cli-path' is handed to
-              ;; `call-process', which spawns the binary directly and so never
-              ;; expands shell aliases -- exec-path-from-shell does not help
-              ;; either, since it copies PATH and the alias is not in it.
-              ;; Symptom when this is wrong: "Claude Code CLI not available".
-              ;; Prefer a real PATH entry if one ever appears -- the install
-              ;; location is Claude's to change, so treat it as the fallback
-              ;; rather than the source of truth.
-              (setq claude-code-ide-cli-path
-                    (or (executable-find "claude")
-                        (expand-file-name "~/.claude/local/claude")))
-              ;; eat, not vterm: less redraw flicker in the Claude buffer.
-              ;; vterm stays the default everywhere else (see Shell section).
-              (setq claude-code-ide-terminal-backend 'eat)
-              ;; Exposes xref/imenu/project as MCP tools to Claude
-              (claude-code-ide-emacs-tools-setup)
-              ;; SPC o is the prefix Spacemacs reserves for user bindings;
-              ;; SPC a c is already the built-in chat prefix (slack/irc/jabber)
-              (spacemacs/declare-prefix "oc" "claude-code")
-              (spacemacs/set-leader-keys
-                "occ" #'claude-code-ide
-                "ocr" #'claude-code-ide-resume
-                "ocm" #'claude-code-ide-menu
-                "ocs" #'claude-code-ide-send-prompt))
-
-            ;; Guarded: the CLI check reads `claude-code-ide-cli-path', which
-            ;; is only bound once the library has loaded. Nesting it keeps a
-            ;; missing package reported as one clear failure instead of an
-            ;; unbound-variable error that aborts the whole block.
-            (when (bds/experiment-verify "claude-code-ide" "claude-code-ide"
-                                         'claude-code-ide
-                                         'claude-code-ide-terminal-backend
-                                         'claude-code-ide-emacs-tools-setup)
-              ;; Loading the library is not enough: claude-code-ide shells out
-              ;; to the CLI, so a missing or misresolved binary only surfaces
-              ;; on first use as "Claude Code CLI not available". Check at
-              ;; startup instead, reading back from the variable rather than
-              ;; repeating the path, so this cannot drift from :config above.
-              (bds/experiment-require-executable
-               "claude-code-ide" claude-code-ide-cli-path))
+            ;; (empty -- claude-code-ide graduated to
+            ;; ** 🤖 LLM & AI Configuration ** on 2026-07-19)
 
             ;; ✅ / ⚠️ Outcome
             (bds/experiment-report))
@@ -1227,6 +1176,49 @@ SCHEDULED: %^t
 
     :config
     (defalias 'cody-start 'cody-login))
+
+  ;; Claude Code in Emacs via the same MCP "IDE" protocol the VS Code
+  ;; extension uses -- so Claude sees the active region, lsp/flycheck
+  ;; diagnostics, and can call xref/imenu instead of grepping. Diffs land
+  ;; in ediff rather than scrolling past in the terminal buffer.
+  ;;
+  ;; Loaded from a vendored clone in ~/.spacemacs.d/local/, declared in
+  ;; `dotspacemacs-additional-packages' with a string :location. See the
+  ;; comment there for why it is not an ELPA recipe and why the location
+  ;; must be a string rather than the symbol `local'.
+  (use-package claude-code-ide
+    :config
+    ;; Absolute path, because `claude' is a zsh *alias* here, not anything
+    ;; on PATH. `claude-code-ide-cli-path' is handed to `call-process',
+    ;; which spawns the binary directly and so never expands shell aliases
+    ;; -- exec-path-from-shell does not help either, since it copies PATH
+    ;; and the alias is not in it. Symptom when this is wrong: "Claude Code
+    ;; CLI not available". Prefer a real PATH entry if one ever appears --
+    ;; the install location is Claude's to change, so treat it as the
+    ;; fallback rather than the source of truth.
+    (setq claude-code-ide-cli-path
+          (or (executable-find "claude")
+              (expand-file-name "~/.claude/local/claude")))
+    ;; Loading the library is not enough: claude-code-ide shells out to the
+    ;; CLI, so a missing or moved binary otherwise only surfaces on first
+    ;; use, far from its cause. Warn at startup instead, reading back from
+    ;; the variable so this cannot drift from the setq above.
+    (unless (file-executable-p claude-code-ide-cli-path)
+      (message "⚠️ claude-code-ide: CLI not executable at %s"
+               claude-code-ide-cli-path))
+    ;; eat, not vterm: less redraw flicker in the Claude buffer.
+    ;; vterm stays the default everywhere else (see Shell section).
+    (setq claude-code-ide-terminal-backend 'eat)
+    ;; Exposes xref/imenu/project as MCP tools to Claude
+    (claude-code-ide-emacs-tools-setup)
+    ;; SPC o is the prefix Spacemacs reserves for user bindings;
+    ;; SPC a c is already the built-in chat prefix (slack/irc/jabber)
+    (spacemacs/declare-prefix "oc" "claude-code")
+    (spacemacs/set-leader-keys
+      "occ" #'claude-code-ide
+      "ocr" #'claude-code-ide-resume
+      "ocm" #'claude-code-ide-menu
+      "ocs" #'claude-code-ide-send-prompt))
 
   ;; ======================================================================
   ;; ** 🌐 Web Browser Configuration **
