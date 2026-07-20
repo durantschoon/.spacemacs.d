@@ -167,11 +167,32 @@ This function should only modify configuration layer settings."
    dotspacemacs-additional-packages '(auto-minor-mode
                                       avy
                                       buffer-move
-                                      ;; 🧪 see Testing Zone; deps listed
-                                      ;; explicitly per the note above
-                                      (claude-code-ide :location (recipe
-                                                                  :fetcher github
-                                                                  :repo "manzaltu/claude-code-ide.el"))
+                                      ;; Vendored clone, not a recipe:
+                                      ;; installing this from our own config
+                                      ;; dies with an infinite eager
+                                      ;; macro-expansion
+                                      ;; (excessive-lisp-nesting) triggered by
+                                      ;; something in this file -- the package
+                                      ;; itself installs cleanly under emacs -Q.
+                                      ;; Kept out of elpa because Spacemacs
+                                      ;; prunes anything there it did not
+                                      ;; install. clean-install.sh clones it
+                                      ;; into local/ on a new machine.
+                                      ;;
+                                      ;; The location must be a STRING path,
+                                      ;; not the symbol `local': for packages
+                                      ;; owned by the dotfile (not a layer),
+                                      ;; `configuration-layer/get-location-directory'
+                                      ;; resolves `local' to
+                                      ;; ~/.emacs.d/private/local/<pkg>/, so a
+                                      ;; clone in ~/.spacemacs.d/local/ never
+                                      ;; reaches `load-path' and use-package
+                                      ;; silently no-ops. A string path is
+                                      ;; added to `load-path' verbatim.
+                                      (claude-code-ide
+                                       :location "~/.spacemacs.d/local/claude-code-ide/")
+                                      ;; deps for claude-code-ide, which does
+                                      ;; not resolve them from local/
                                       websocket
                                       transient
                                       web-server
@@ -516,7 +537,24 @@ It should only modify the values of Spacemacs settings."
    ;; put the most likely path on the top of `load-path' to reduce walking
    ;; through the whole `load-path'. It's an experimental feature to speedup
    ;; Spacemacs on Windows. Refer the FAQ.org "load-hints" session for details.
-   dotspacemacs-enable-load-hints t
+   ;;
+   ;; DISABLED (2026-07-19): this feature installs an *interpreted*
+   ;; :filter-args advice on `require' (require@LOAD-HINTS in
+   ;; core-spacemacs.el). Interpreted closures are macroexpanded at call
+   ;; time, so when macro expansion itself calls `require' -- as
+   ;; obsolete/cl.el's `lexical-let' does via `cl--function-convert' --
+   ;; the advice body is expanded under the still-active expansion
+   ;; environment and recurses forever:
+   ;;   "Eager macro-expansion failure: (excessive-lisp-nesting 1601)".
+   ;; Trigger in practice: ANY package install. Autoload generation opens
+   ;; package .el files in `emacs-lisp-mode', our hook loads eval-sexp-fu
+   ;; (which uses `lexical-let'), and the install dies, leaving the
+   ;; package half-installed (no autoloads file -- websocket and
+   ;; web-server were both found in that state). This is also what broke
+   ;; the original claude-code-ide recipe install; `emacs -Q' worked
+   ;; because the advice does not exist there.
+   ;; See also the (defvar load-hints) in `dotspacemacs/user-init'.
+   dotspacemacs-enable-load-hints nil
 
    ;; If t, enable the `package-quickstart' feature to avoid full package
    ;; loading, otherwise no `package-quickstart' attemption (default nil).
@@ -750,6 +788,14 @@ It is mostly for variables that should be set before packages are loaded.
 If you are unsure, try setting them in `dotspacemacs/user-config' first."
   (add-to-list 'load-path (expand-file-name "lisp" dotspacemacs-directory))
   (setq native-comp-async-report-warnings-errors 'silent)
+  ;; `dotspacemacs-enable-load-hints' is nil (see the comment there), but
+  ;; autoloads files generated while it was enabled still contain
+  ;; (add-to-list 'load-hints ...) forms. With the feature off, Spacemacs
+  ;; never defvars `load-hints', so every one of those files would fail to
+  ;; load with (void-variable load-hints) -- and a package whose autoloads
+  ;; fail never reaches `load-path'. This defvar makes the stale forms
+  ;; harmless no-ops; freshly generated autoloads will not contain them.
+  (defvar load-hints nil)
   ;; Redirect package install messages to echo area/*Messages* so they don't
   ;; overlap with the release note in the spacemacs buffer
   (eval-after-load 'core-spacemacs-buffer
@@ -838,6 +884,25 @@ before packages are loaded."
   ;; CURRENT EXPERIMENTS:
   ;; - LLM section changes: Recent updates to LLM configuration (seems stable)
   ;; - claude-code-ide: MCP-backed Claude Code integration (new, untested)
+  ;;
+  ;;   How claude-code-ide gets loaded (each link verified to work):
+  ;;   1. clean-install.sh clones the repo into ~/.spacemacs.d/local/
+  ;;      (gitignored; ELPA is off-limits because Spacemacs prunes
+  ;;      packages it did not install, and recipe/package-vc installs
+  ;;      from inside this config hit eager macro-expansion recursion).
+  ;;   2. `dotspacemacs-additional-packages' declares it with a string
+  ;;      :location pointing at that clone -- NOT the symbol `local',
+  ;;      which for dotfile-owned packages resolves to
+  ;;      ~/.emacs.d/private/local/ and silently never reaches load-path.
+  ;;      Spacemacs adds the string path to `load-path' before
+  ;;      user-config runs.
+  ;;   3. Deps (websocket, transient, web-server -- from Package-Requires)
+  ;;      are declared alongside it, since local packages get no
+  ;;      dependency resolution. The eat terminal backend is installed
+  ;;      via the shell layer.
+  ;;   4. The use-package block below requires it (claude-code-ide.el
+  ;;      itself requires claude-code-ide-emacs-tools, so the :config
+  ;;      calls are all available) and `bds/experiment-verify' confirms.
 
   ;; --- Verification helpers ---
   ;;
@@ -852,6 +917,34 @@ before packages are loaded."
 Each entry is a cons of (LABEL . REASON), populated by
 `bds/experiment-verify' and drained by `bds/experiment-report'.")
 
+  (defun bds/experiment--record-failure (label reason)
+    "Record that experiment LABEL did not take effect, because REASON.
+Single point of entry for `bds/experiment-failures', so the shape of an
+entry is defined in exactly one place. Always returns nil, which is the
+useful value for the callers below."
+    (push (cons label reason) bds/experiment-failures)
+    nil)
+
+  (defun bds/experiment-require-executable (label program)
+    "Verify that experiment LABEL has PROGRAM available to `call-process'.
+
+PROGRAM is either an absolute path or a bare name looked up on
+`exec-path'. This is deliberately stricter than \"the shell can run it\":
+Emacs spawns binaries directly, so a shell *alias* or function -- which
+only exists inside an interactive shell -- is invisible here, and a
+package that shells out will fail at first use with a message far from
+the real cause.
+
+Records a failure rather than signalling, and returns non-nil when
+PROGRAM is executable."
+    (let ((resolved (if (file-name-absolute-p program)
+                        (and (file-executable-p program) program)
+                      (executable-find program))))
+      (or resolved
+          (bds/experiment--record-failure
+           label (format "executable `%s' not found or not executable"
+                         program)))))
+
   (defun bds/experiment-verify (label library &rest symbols)
     "Verify that experiment LABEL actually took effect.
 
@@ -865,10 +958,8 @@ Records failures in `bds/experiment-failures' rather than signalling, so
 one unverified experiment does not abort the others. Returns non-nil when
 LIBRARY is installed."
     (if (not (locate-library library))
-        (progn
-          (push (cons label (format "package `%s' is not installed" library))
-                bds/experiment-failures)
-          nil)
+        (bds/experiment--record-failure
+         label (format "package `%s' is not installed" library))
       (when symbols
         (with-eval-after-load (intern library)
           (let ((missing (seq-remove (lambda (sym) (or (fboundp sym) (boundp sym)))
@@ -910,6 +1001,18 @@ Succeeds loudly or fails loudly -- never silently."
             ;; the terminal buffer.
             (use-package claude-code-ide
               :config
+              ;; Absolute path, because `claude' is a zsh *alias* here, not
+              ;; anything on PATH. `claude-code-ide-cli-path' is handed to
+              ;; `call-process', which spawns the binary directly and so never
+              ;; expands shell aliases -- exec-path-from-shell does not help
+              ;; either, since it copies PATH and the alias is not in it.
+              ;; Symptom when this is wrong: "Claude Code CLI not available".
+              ;; Prefer a real PATH entry if one ever appears -- the install
+              ;; location is Claude's to change, so treat it as the fallback
+              ;; rather than the source of truth.
+              (setq claude-code-ide-cli-path
+                    (or (executable-find "claude")
+                        (expand-file-name "~/.claude/local/claude")))
               ;; eat, not vterm: less redraw flicker in the Claude buffer.
               ;; vterm stays the default everywhere else (see Shell section).
               (setq claude-code-ide-terminal-backend 'eat)
@@ -924,10 +1027,21 @@ Succeeds loudly or fails loudly -- never silently."
                 "ocm" #'claude-code-ide-menu
                 "ocs" #'claude-code-ide-send-prompt))
 
-            (bds/experiment-verify "claude-code-ide" "claude-code-ide"
-                                   'claude-code-ide
-                                   'claude-code-ide-terminal-backend
-                                   'claude-code-ide-emacs-tools-setup)
+            ;; Guarded: the CLI check reads `claude-code-ide-cli-path', which
+            ;; is only bound once the library has loaded. Nesting it keeps a
+            ;; missing package reported as one clear failure instead of an
+            ;; unbound-variable error that aborts the whole block.
+            (when (bds/experiment-verify "claude-code-ide" "claude-code-ide"
+                                         'claude-code-ide
+                                         'claude-code-ide-terminal-backend
+                                         'claude-code-ide-emacs-tools-setup)
+              ;; Loading the library is not enough: claude-code-ide shells out
+              ;; to the CLI, so a missing or misresolved binary only surfaces
+              ;; on first use as "Claude Code CLI not available". Check at
+              ;; startup instead, reading back from the variable rather than
+              ;; repeating the path, so this cannot drift from :config above.
+              (bds/experiment-require-executable
+               "claude-code-ide" claude-code-ide-cli-path))
 
             ;; ✅ / ⚠️ Outcome
             (bds/experiment-report))

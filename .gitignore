@@ -7,3 +7,8 @@
 .lsp/
 .clj-kondo/
 **/.portal
+# Vendored GitHub-only packages, cloned by clean-install.sh
+/local/
+
+# Claude Code session-local state
+/.claude/
