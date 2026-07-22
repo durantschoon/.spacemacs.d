@@ -1238,6 +1238,11 @@ SCHEDULED: %^t
     ;; eat, not vterm: less redraw flicker in the Claude buffer.
     ;; vterm stays the default everywhere else (see Shell section).
     (setq claude-code-ide-terminal-backend 'eat)
+    ;; Sets CLAUDE_CODE_NO_FLICKER=1 in the CLI's launch environment, which
+    ;; switches Claude to its flicker-free renderer. Kills the spinner/status
+    ;; line jitter where a single cycling leading character at exactly the
+    ;; window width reflows the line and bumps everything below it.
+    (setq claude-code-ide-no-flicker t)
     ;; Exposes xref/imenu/project as MCP tools to Claude
     (claude-code-ide-emacs-tools-setup)
     ;; SPC o is the prefix Spacemacs reserves for user bindings;
