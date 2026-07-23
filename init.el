@@ -1239,10 +1239,18 @@ SCHEDULED: %^t
     ;; vterm stays the default everywhere else (see Shell section).
     (setq claude-code-ide-terminal-backend 'eat)
     ;; Sets CLAUDE_CODE_NO_FLICKER=1 in the CLI's launch environment, which
-    ;; switches Claude to its flicker-free renderer. Kills the spinner/status
-    ;; line jitter where a single cycling leading character at exactly the
-    ;; window width reflows the line and bumps everything below it.
+    ;; switches Claude to its flicker-free renderer. Necessary but not
+    ;; sufficient: the remaining jitter is eat's, not Claude's -- the same
+    ;; output is smooth in iTerm2 but flickers in eat, so the culprit is
+    ;; eat's redraw rate faithfully painting every spinner frame.
     (setq claude-code-ide-no-flicker t)
+    ;; eat repaints up to 1/eat-maximum-latency times a second (default
+    ;; 0.033 ~= 30fps). Slowing it to ~10fps coalesces the intermediate
+    ;; spinner frames so the reflow never reaches the screen. eat owns this
+    ;; var, so set it once eat is actually loaded rather than racing its
+    ;; defcustom default.
+    (with-eval-after-load 'eat
+      (setq eat-maximum-latency 0.1))
     ;; Exposes xref/imenu/project as MCP tools to Claude
     (claude-code-ide-emacs-tools-setup)
     ;; SPC o is the prefix Spacemacs reserves for user bindings;
