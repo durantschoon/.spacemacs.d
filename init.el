@@ -1136,7 +1136,7 @@ SCHEDULED: %^t
 
   (setq org-agenda-files '("~/Org/home/agenda/tasks.org"
                            "~/Org/home/agenda/personal.org"
-                           "~/Org/home/robotics/summer2026R.org"
+                           "~/Org/home/robotics/summer2026.org"
                            "~/Org/home/capture/inbox.org"))
 
   ;;; enable easy-templates in org-mode
