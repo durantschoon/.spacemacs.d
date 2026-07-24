@@ -250,10 +250,10 @@ It should only modify the values of Spacemacs settings."
   ;; a config that fails loudly is the whole point of the Testing Zone.
   (setq warning-suppress-types
         '((defadvice obsolete deprecated callf destructuring-bind
-            define-minor-mode case invalid-face)))
+                     define-minor-mode case invalid-face)))
   (setq warning-suppress-log-types
         '((defadvice obsolete deprecated callf destructuring-bind
-            define-minor-mode case invalid-face)))
+                     define-minor-mode case invalid-face)))
   ;; Exclude the obsolete category rather than allow-listing one category:
   ;; `(cl-functions)' is a positive list, so it silently dropped every other
   ;; warning too, including ones worth reading.
@@ -1106,7 +1106,7 @@ Succeeds loudly or fails loudly -- never silently."
 
   (setq org-capture-templates
         '(("r" "Robotics Task" entry
-           (file+headline "~/Dropbox/home/org/robotics/summer2025.org" "Captured Tasks")
+           (file+headline "~/Org/home/robotics/summer2026.org" "Captured Tasks")
            "* TODO %^{Task description}
 SCHEDULED: %^t
 :PROPERTIES:
@@ -1116,14 +1116,14 @@ SCHEDULED: %^t
            :empty-lines 1)
 
           ("j" "Robotics Journal" entry
-           (file+datetree "~/Dropbox/home/org/robotics/journal.org")
+           (file+datetree "~/Org/home/robotics/journal.org")
            "* %U - %^{Brief title}
 %?
 "
            :empty-lines 1)
 
           ("f" "Food" entry
-           (file+datetree "~/Dropbox/home/org/capture/food.org")
+           (file+datetree "~/Org/home/capture/food.org")
            "* %U - %^{Brief title}
 %?
 "
@@ -1136,7 +1136,7 @@ SCHEDULED: %^t
 
   (setq org-agenda-files '("~/Org/home/agenda/tasks.org"
                            "~/Org/home/agenda/personal.org"
-                           "~/Org/home/robotics/summer2025.org"
+                           "~/Org/home/robotics/summer2026R.org"
                            "~/Org/home/capture/inbox.org"))
 
   ;;; enable easy-templates in org-mode
@@ -1613,7 +1613,7 @@ SCHEDULED: %^t
   (defun insert-current-date () (interactive)
          (insert (shell-command-to-string "echo -n $(date +%Y-%m-%d)")))
 
-    ;; Load date utilities
+  ;; Load date utilities
   (load-file (expand-file-name "lisp/date-utils.el" dotspacemacs-directory))
 
   (global-set-key (kbd "s-<up>") (lambda () (interactive) (adjust-date-on-line 1)))
