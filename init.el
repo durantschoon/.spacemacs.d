@@ -1246,11 +1246,18 @@ SCHEDULED: %^t
     (setq claude-code-ide-no-flicker t)
     ;; eat repaints up to 1/eat-maximum-latency times a second (default
     ;; 0.033 ~= 30fps). Slowing it to ~10fps coalesces the intermediate
-    ;; spinner frames so the reflow never reaches the screen. eat owns this
-    ;; var, so set it once eat is actually loaded rather than racing its
-    ;; defcustom default.
+    ;; spinner frames so the reflow never reaches the screen. eat owns these
+    ;; vars, so set them once eat is actually loaded rather than racing its
+    ;; defcustom defaults.
+    ;;
+    ;; eat-maximum-latency alone wasn't enough: eat-minimum-latency is the
+    ;; floor between redisplays (default 0.008), so short output bursts still
+    ;; slipped through and flickered. Raising it to 0.02 makes eat wait a
+    ;; touch longer before the first repaint, batching those bursts too. Both
+    ;; docstrings explicitly say to increase these when the terminal flickers.
     (with-eval-after-load 'eat
-      (setq eat-maximum-latency 0.1))
+      (setq eat-minimum-latency 0.02
+            eat-maximum-latency 0.1))
     ;; Exposes xref/imenu/project as MCP tools to Claude
     (claude-code-ide-emacs-tools-setup)
     ;; SPC o is the prefix Spacemacs reserves for user bindings;
