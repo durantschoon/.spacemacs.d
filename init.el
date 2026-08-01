@@ -859,6 +859,83 @@ Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
   ;; =======================================================================
+  ;; ** 🩹 Shell Sanity (must stay first) **
+  ;; =======================================================================
+  ;;
+  ;; A `shell-file-name' pointing at a binary that no longer exists is the
+  ;; failure behind "Process shell exited abnormally with code 127". It is
+  ;; not confined to terminals: the FIRST form in this function that shells
+  ;; out signals `Searching for program: No such file or directory', which
+  ;; Spacemacs catches as "Error in dotspacemacs/user-config" and then
+  ;; SKIPS EVERYTHING BELOW IT. On this config that trap is
+  ;; `keychain-refresh-environment' (see 🌍 System Environment), and the
+  ;; visible symptom is not a shell error at all -- it is that none of the
+  ;; personal key bindings exist, e.g. `SPC o' comes up empty. Hence
+  ;; "must stay first": this has to run before the first shell-spawning
+  ;; form, or it never runs at all.
+  ;;
+  ;; On Guix this is a standing hazard rather than a one-off. /etc/passwd
+  ;; -- and therefore the SHELL that `.spacemacs.env' captured from it --
+  ;; can name the shell by its /gnu/store/<hash>-profile path. Store paths
+  ;; are per-generation, so the next `guix home reconfigure' followed by
+  ;; `guix gc' deletes that exact binary while the passwd entry keeps
+  ;; pointing at it. ~/.guix-home/profile is a symlink that follows
+  ;; generations, so it is the only spelling that survives a reconfigure --
+  ;; prefer it over any store path.
+  ;;
+  ;; This is also why the repair cannot live in `dotspacemacs/user-init':
+  ;; Spacemacs loads `.spacemacs.env' AFTER user-init and before this
+  ;; function, so a fix applied there would be overwritten by the stale
+  ;; SHELL in that file.
+
+  (defvar bds/shell-fallbacks
+    (list (expand-file-name "~/.guix-home/profile/bin/zsh") ; guix, generation-stable
+          "/opt/homebrew/bin/zsh"                           ; darwin, apple silicon
+          "/usr/local/bin/zsh"                              ; darwin, intel
+          "/bin/zsh"
+          "/bin/bash")
+    "Shells to fall back to, best first, when the configured one is missing.")
+
+  (defun bds/repair-shell-file-name ()
+    "Ensure Emacs and its subprocesses agree on a shell that exists.
+
+Checks `shell-file-name' and the SHELL environment variable before
+falling back to `bds/shell-fallbacks'. Both are checked because they can
+disagree: Emacs derives `shell-file-name' from the environment it was
+launched in, while `.spacemacs.env' calls `setenv' long afterwards, so
+either one alone can be the dead one.
+
+Sets all three of `shell-file-name', `explicit-shell-file-name' and SHELL
+to the same value, so term/vterm/eat -- which consult different ones --
+cannot arrive at different answers. This repairs rather than hardcodes: a
+configured shell that is executable is left untouched, so machines with a
+healthy passwd entry are unaffected. Returns the shell in use, or nil if
+nothing was executable."
+    (if (and (file-executable-p shell-file-name)
+             (equal (getenv "SHELL") shell-file-name))
+        ;; Healthy: touch nothing. Deliberately including the no-op case --
+        ;; assigning even the value already in use would pin
+        ;; `explicit-shell-file-name', which `shell' consults ahead of
+        ;; $ESHELL, and quietly change behaviour on machines that never had
+        ;; the problem.
+        shell-file-name
+      (let* ((candidates (append (list shell-file-name (getenv "SHELL"))
+                                 bds/shell-fallbacks))
+             (usable (seq-find (lambda (s) (and s (file-executable-p s)))
+                               candidates)))
+        (if (null usable)
+            (message "⚠️ No usable shell found; tried: %s"
+                     (mapconcat #'identity (delq nil candidates) ", "))
+          (message "⚠️ Repaired shell to %s (was shell-file-name=%s SHELL=%s)"
+                   usable shell-file-name (getenv "SHELL"))
+          (setq shell-file-name usable
+                explicit-shell-file-name usable)
+          (setenv "SHELL" usable)
+          usable))))
+
+  (bds/repair-shell-file-name)
+
+  ;; =======================================================================
   ;; ** 🔧 Configuration Flags **
   ;; =======================================================================
 
@@ -1782,7 +1859,15 @@ This function is called at the very end of Spacemacs initialization."
    ;; If you edit it by hand, you could mess it up, so be careful.
    ;; Your init file should contain only one such instance.
    ;; If there is more than one, they won't work right.
-   '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")
+   ;;
+   ;; NOTE: `epg-gpg-program' was removed from this block by hand. Customize
+   ;; had recorded the MacGPG2 path unconditionally, and this function runs
+   ;; at the very END of startup -- so on non-macOS machines it overrode the
+   ;; guarded setting in ** 🔐 Security & Authentication ** and left
+   ;; `epg-gpg-program' pointing at a binary that does not exist there. That
+   ;; guarded form is the one source of truth now; leave this out. If
+   ;; Customize ever writes it back, delete it again rather than adding a
+   ;; second guard.
    '(package-selected-packages
      '(ace-link aggressive-indent anzu arduino-mode attrap auto-compile
                 auto-highlight-symbol auto-minor-mode auto-yasnippet
