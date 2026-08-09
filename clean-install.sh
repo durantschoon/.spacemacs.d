@@ -1,4 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# Not #!/bin/bash: Guix System has no /bin/bash -- /bin/sh and /usr/bin/env
+# are the only FHS paths it provides.  The kernel does not search PATH for
+# the interpreter, so a bare `#! env bash' cannot work either; /usr/bin/env
+# has to be spelled absolutely, and it then finds bash on PATH.
 set -u
 
 echo "🧹 Cleaning Emacs packages and cache..."
