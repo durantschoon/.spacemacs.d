@@ -817,6 +817,22 @@ It is mostly for variables that should be set before packages are loaded.
 If you are unsure, try setting them in `dotspacemacs/user-config' first."
   (add-to-list 'load-path (expand-file-name "lisp" dotspacemacs-directory))
   (setq native-comp-async-report-warnings-errors 'silent)
+
+  ;; Pre-empt origami's broken defface (daemon only).  Its spec interpolates
+  ;; (face-attribute 'highlight :background) at LOAD time; under the daemon
+  ;; there is no graphical frame yet, so that yields `unspecified', which is
+  ;; not a legal :box colour, and layer load reports:
+  ;;   Error (use-package): origami/:init: Invalid face box:
+  ;;   :line-width, 1, :color, unspecified
+  ;;
+  ;; A Custom setting takes precedence over `face-defface-spec', so declaring
+  ;; the face here -- user-init runs before layers load -- means origami's
+  ;; spec is recorded but never applied, and the error never fires.  The
+  ;; grey50 is only a placeholder to keep the face legal during startup;
+  ;; `bds/fix-origami-fold-header-face' in user-config recomputes the real
+  ;; theme colour as soon as a graphical frame exists.
+  (custom-set-faces
+   '(origami-fold-header-face ((t (:box (:line-width 1 :color "grey50"))))))
   ;; `dotspacemacs-enable-load-hints' is nil (see the comment there), but
   ;; autoloads files generated while it was enabled still contain
   ;; (add-to-list 'load-hints ...) forms. With the feature off, Spacemacs
@@ -1402,6 +1418,45 @@ SCHEDULED: %^t
     (add-hook 'after-change-functions #'my/fontify-after-change nil t))
 
   (add-hook 'after-change-major-mode-hook #'my/add-fontify-on-change)
+
+  ;; --- Repair origami's fold-header face under the daemon ---------------
+  ;;
+  ;; Symptom, in the emacs daemon's log at every startup:
+  ;;   Error (use-package): origami/:init: Invalid face box:
+  ;;   :line-width, 1, :color, unspecified
+  ;;
+  ;; Cause: origami's defface interpolates the CURRENT value of
+  ;; (face-attribute 'highlight :background) into a :box spec at LOAD time.
+  ;; A daemon starts with no graphical frame -- (frame-list) holds a single
+  ;; text-terminal frame, `framep' => t -- so the theme's colours are not
+  ;; realized yet and that lookup returns `unspecified'.  `unspecified' is
+  ;; not a legal :box colour, so the defface is baked permanently broken:
+  ;;   (:box (:line-width 1 :color unspecified) :background unspecified)
+  ;; Nothing recomputes it later, so every frame thereafter inherits it.
+  ;;
+  ;; This only bites the daemon.  A plain `emacs' has a real frame before
+  ;; origami loads, so `highlight' resolves and the spec is fine -- which is
+  ;; why it never showed up before the shepherd emacs service existed.
+  ;;
+  ;; Fix: recompute the face the first time a graphical frame appears, when
+  ;; the theme is finally realized.  Both hooks are needed -- the server one
+  ;; covers `emacsclient -c', the general one covers frames made any other
+  ;; way -- and the guards make it a no-op on terminal frames and idempotent
+  ;; across the many frames a session creates.
+  (defun bds/fix-origami-fold-header-face (&optional frame)
+    "Recompute `origami-fold-header-face' for FRAME once colours are real.
+Does nothing on a text terminal, or before `highlight' resolves."
+    (let ((frame (or frame (selected-frame))))
+      (when (and (facep 'origami-fold-header-face)
+                 (display-graphic-p frame))
+        (let ((bg (face-attribute 'highlight :background frame)))
+          (unless (eq bg 'unspecified)
+            (set-face-attribute 'origami-fold-header-face frame
+                                :box (list :line-width 1 :color bg)
+                                :background bg))))))
+
+  (add-hook 'server-after-make-frame-hook #'bds/fix-origami-fold-header-face)
+  (add-hook 'after-make-frame-functions #'bds/fix-origami-fold-header-face)
 
   ;; ======================================================================
   ;; ** 🔐 Security & Authentication **
