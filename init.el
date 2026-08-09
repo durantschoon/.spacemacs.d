@@ -1124,9 +1124,38 @@ Succeeds loudly or fails loudly -- never silently."
   ;; ** 🌍 System Environment & Paths **
   ;; ======================================================================
 
-  (when (memq window-system '(mac ns x))
+  ;; Emacs inherits only the session's PATH, so anything the shell adds is
+  ;; invisible to `call-process' unless copied in. The old guard here was
+  ;; `(memq window-system '(mac ns x))', which is dead code on this machine:
+  ;; a pgtk build under Wayland reports `pgtk', and in a daemon
+  ;; `window-system' is nil until a frame exists. Cover both.
+  (when (or (memq window-system '(mac ns x pgtk)) (daemonp))
     (setq exec-path-from-shell-variables '("PATH" "MANPATH" "CARGO_HOME" "RUSTUP_HOME"))
     (exec-path-from-shell-initialize))
+
+  (defun bds/prepend-to-exec-path (directory)
+    "Put DIRECTORY at the front of `exec-path' and of the PATH Emacs exports.
+Both are needed: `exec-path' is what `executable-find' and `call-process'
+consult, while the PATH environment variable is what subprocesses -- and
+any shell they spawn -- inherit. Does nothing when DIRECTORY is missing
+or already present, so this is harmless on machines that lack it and safe
+to re-evaluate. Returns the expanded directory when it was added."
+    (let ((expanded (directory-file-name (expand-file-name directory))))
+      (when (and (file-directory-p expanded)
+                 (not (member expanded exec-path)))
+        (setq exec-path (cons expanded exec-path))
+        (setenv "PATH" (concat expanded path-separator (getenv "PATH")))
+        expanded)))
+
+  ;; exec-path-from-shell alone is not enough on Guix. It asks a *login*
+  ;; shell, and ~/.config/zsh/.zprofile sources /etc/profile and ~/.profile,
+  ;; both of which rebuild PATH from the Guix profiles -- discarding the
+  ;; ~/.local/bin and ~/bin entries that ~/.config/zsh/.zshenv prepended
+  ;; earlier. Interactive non-login shells never hit .zprofile and so keep
+  ;; them, which is why a binary like `claude' runs fine in a terminal yet
+  ;; `executable-find' returns nil for it. Re-add the directories here
+  ;; instead of depending on shell startup order.
+  (mapc #'bds/prepend-to-exec-path '("~/.local/bin" "~/bin"))
 
   ;; this helps on macos to avoid using /var/folders
   (setenv "TMPDIR" "/tmp")
@@ -1310,17 +1339,25 @@ SCHEDULED: %^t
   ;; must be a string rather than the symbol `local'.
   (use-package claude-code-ide
     :config
-    ;; Absolute path, because `claude' is a zsh *alias* here, not anything
-    ;; on PATH. `claude-code-ide-cli-path' is handed to `call-process',
-    ;; which spawns the binary directly and so never expands shell aliases
-    ;; -- exec-path-from-shell does not help either, since it copies PATH
-    ;; and the alias is not in it. Symptom when this is wrong: "Claude Code
-    ;; CLI not available". Prefer a real PATH entry if one ever appears --
-    ;; the install location is Claude's to change, so treat it as the
-    ;; fallback rather than the source of truth.
+    ;; `claude-code-ide-cli-path' is handed to `call-process', which spawns
+    ;; the binary directly -- no shell, so no aliases and no PATH lookup
+    ;; beyond `exec-path'. `executable-find' is therefore the source of
+    ;; truth, and it only works because the System Environment section above
+    ;; puts ~/.local/bin on `exec-path' (see the note there on Guix's
+    ;; .zprofile clobbering PATH). Symptom when this is wrong: "Claude Code
+    ;; CLI not available".
+    ;;
+    ;; The fallbacks are the two install locations Claude has used, newest
+    ;; first: ~/.local/bin/claude is where the installer puts it now (on Guix
+    ;; a launcher script, since there is no FHS /lib64 loader), and
+    ;; ~/.claude/local/claude is the older layout still live on the Mac.
     (setq claude-code-ide-cli-path
           (or (executable-find "claude")
-              (expand-file-name "~/.claude/local/claude")))
+              (seq-find #'file-executable-p
+                        (mapcar #'expand-file-name
+                                '("~/.local/bin/claude"
+                                  "~/.claude/local/claude")))
+              (expand-file-name "~/.local/bin/claude")))
     ;; Loading the library is not enough: claude-code-ide shells out to the
     ;; CLI, so a missing or moved binary otherwise only surfaces on first
     ;; use, far from its cause. Warn at startup instead, reading back from
