@@ -39,8 +39,10 @@ no evil), on Guix System.
    absent:
 
    ```elisp
-   ;; emacs-guix: installed via `guix install emacs-guix`, NOT via package.el.
+   ;; emacs-guix: installed via `guix install emacs-guix', NOT via package.el.
    ;; Guard the require so this config still loads on non-Guix machines.
+   ;; MUST come after the System Environment section -- see the exec-path
+   ;; note below; `executable-find' is unreliable before it runs.
    (when (executable-find "guix")
      (require 'guix nil t)
      ;; Scheme buffers under a Guix checkout get guix-devel-mode.
@@ -51,6 +53,38 @@ no evil), on Guix System.
    `share/emacs/site-lisp` to be picked up automatically (Guix's
    `guix-emacs-autoload-packages` handles this). If Emacs came from somewhere
    else, add the profile path to `load-path` by hand first.
+
+## What that machine's `init.el` already does — read commit `f7a399a`
+
+`f7a399a fix(env): put ~/.local/bin and ~/bin on exec-path under Guix` landed on
+2026-08-09 and changes two assumptions this note would otherwise get wrong:
+
+- **`executable-find` is not trustworthy early in `user-config` on Guix.**
+  `exec-path-from-shell` asks a *login* shell, and `~/.config/zsh/.zprofile`
+  sources `/etc/profile` and `~/.profile`, both of which rebuild `PATH` from the
+  Guix profiles and discard what `.zshenv` prepended. The config compensates in
+  its "🌍 System Environment & Paths" section (around `init.el:1124`) with
+  `bds/prepend-to-exec-path`. **The `(when (executable-find "guix") ...)` guard
+  above therefore has an ordering requirement: it must sit after that section.**
+  `guix` itself should survive the clobbering, since the Guix profiles are
+  exactly what `/etc/profile` rebuilds `PATH` *from* — but verify rather than
+  assume, especially under a daemon.
+
+- **That Emacs is a pgtk build under Wayland, and may be running as a daemon.**
+  The same commit widened a `(memq window-system '(mac ns x))` guard to
+  `(or (memq window-system '(mac ns x pgtk)) (daemonp))` precisely because
+  `window-system` is `pgtk` there, and is nil in a daemon until a frame exists.
+  Any `emacs-guix` setup that keys off `window-system`, or that assumes a frame
+  exists at load time, needs the same treatment. Note also that a sibling commit
+  (`686b806`) fixes an origami face that *hangs pgtk frames* — so pgtk-specific
+  rendering fragility is a live theme on this machine, worth remembering if BUI
+  list buffers misbehave.
+
+There is also a house idiom worth following: the `claude-code-ide` block
+resolves its binary with `executable-find` plus ordered fallbacks, and warns at
+startup rather than failing on first use ("Succeeds loudly or fails loudly --
+never silently"). If `emacs-guix` needs a path or a profile located, do it the
+same way.
 
 4. **Verify:** `M-x guix` should open the main interface. Then check
    `M-x guix-packages-by-name`, `M-x guix-installed-user-packages`, and
@@ -112,4 +146,10 @@ Latest Guix release as of writing: **1.5.0** (2026-01-22).
 2. Is the Spacemacs `scheme` layer enabled on that machine? If so, resolve the
    Geiser overlap before installing.
 3. Should the config live in `init.el`'s `user-config`, or in a Guix Home
-   declaration that installs the package and the Emacs together?
+   declaration that installs the package and the Emacs together? (Partly
+   answered: `init.el` already has a Guix-aware environment section as of
+   `f7a399a`, so `user-config` is a reasonable home — but the package install
+   itself still wants to be declarative if a Guix Home config exists.)
+4. Does `guix` survive the `/etc/profile` PATH rebuild described above, under
+   both a normal frame and a daemon? That determines whether the
+   `executable-find` guard is enough or needs a fallback path.
