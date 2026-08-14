@@ -1174,6 +1174,32 @@ to re-evaluate. Returns the expanded directory when it was added."
 
 
   ;; ======================================================================
+  ;; ** 📦 Guix Integration (emacs-guix) **
+  ;; ======================================================================
+
+  ;; emacs-guix comes from the Guix Home profile (home/wayland.scm installs
+  ;; "emacs-guix"), NOT from package.el: upstream warns a mixed Guix+MELPA
+  ;; install desyncs the Scheme sources from the compiled .go files, and the
+  ;; Guix build stays in ABI lockstep with guix itself. The Guix-installed
+  ;; emacs-pgtk autoloads the profile's share/emacs/site-lisp, so no
+  ;; load-path setup is needed here.
+  ;;
+  ;; MUST stay after the 🌍 System Environment section: `executable-find'
+  ;; is only trustworthy once `bds/prepend-to-exec-path' has run. Guarded so
+  ;; this same config still loads on machines without Guix (the Mac).
+  ;; Succeeds loudly or fails loudly -- never silently. Full handoff notes
+  ;; in docs/emacs-guix-setup.md.
+  (if (executable-find "guix")
+      (if (require 'guix nil t)
+          ;; Editing Guix package definitions (.scm) gets the devel
+          ;; commands (guix-devel-build-package-definition etc.).
+          (add-hook 'scheme-mode-hook #'guix-devel-mode)
+        (warn "emacs-guix: `guix' is on PATH but (require 'guix) failed.
+Is emacs-guix in the home profile, and is this the Guix-installed Emacs?"))
+    (message "emacs-guix: no `guix' on PATH; skipping (expected on macOS)"))
+
+
+  ;; ======================================================================
   ;; ** 🍎 MacOS Specific Settings **
   ;; ======================================================================
 

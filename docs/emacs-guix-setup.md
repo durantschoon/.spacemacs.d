@@ -1,6 +1,7 @@
 # Handoff: set up `emacs-guix` in this Spacemacs config
 
-**Status:** not started. **Do this on the Guix System machine, not the Mac.**
+**Status:** DONE 2026-08-13 on the Guix System box (`geeeks`) — see "Outcome"
+at the bottom for what was learned; the plan below is kept as written.
 **Written:** 2026-08-13, from the macOS side of this same dotfiles repo.
 
 ## Why this note exists
@@ -153,3 +154,35 @@ Latest Guix release as of writing: **1.5.0** (2026-01-22).
 4. Does `guix` survive the `/etc/profile` PATH rebuild described above, under
    both a normal frame and a daemon? That determines whether the
    `executable-find` guard is enough or needs a fallback path.
+
+## Outcome (2026-08-13, on `geeeks`)
+
+Answers to the open questions, in order:
+
+1. **Still packaged and working.** Guix 1.5.0-era master ships `emacs-guix`
+   0.7.0 built against its own current `guix`, which neutralizes the ABI
+   hazard by construction. Verified end to end: the deployed Guix Home
+   `emacs-pgtk` loads `guix.el` and a `guix-eval-read` round-trip through the
+   Guile REPL counted the full package set (32,944). Upstream alezost repo is
+   dormant (open issues 2019–2023, a maintainership handoff after an
+   abandonware period), but Guix itself keeps it building — which is the
+   maintenance that matters for a Guix-only tool.
+2. **The Spacemacs `scheme` layer IS enabled**, and installs its own Geiser
+   from MELPA while the Guix package pulls `emacs-geiser` 0.33.1 +
+   `emacs-geiser-guile` 0.28.5 (post-split, so the split hazard is packaged
+   away). Both copies are current-generation; no conflict observed in batch
+   tests, but Spacemacs was not loaded there. **Watch item:** if `M-x guix`
+   misbehaves inside Spacemacs, suspect load-path order handing `require`
+   the MELPA Geiser first.
+3. **Both, as the note guessed:** the package is declared in Guix Home —
+   `%wayland-packages` in `dot_files/home/common.scm` (the Wayland session is
+   the Guix System box; the foreign session has no daemon to drive) — and the
+   elisp lives in `init.el`'s "📦 Guix Integration" section, directly after
+   the 🌍 System Environment section per the ordering requirement.
+4. **Yes, `guix` survives the PATH rebuild** (it lives in the profiles
+   `/etc/profile` rebuilds PATH from), so the `executable-find` guard
+   sufficed; the config warns loudly if `guix` exists but the require fails.
+
+Not yet verified: `M-x guix-packages-by-name` etc. rendering BUI buffers in an
+interactive pgtk frame (the batch REPL test covers the plumbing beneath them,
+not the rendering; recall the pgtk fragility note above).
