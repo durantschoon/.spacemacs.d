@@ -32,7 +32,8 @@ emacs --batch \
 #      itself gets pruned on the next start ("--> deleting claude-code-ide").
 #
 # local/ sidesteps both. The clones are gitignored, so this is what puts them
-# on a new machine.
+# on a new machine. On Guix Home machines the spacemacs-activation service in
+# dot_files/home/base.scm mirrors this clone list -- keep the two in sync.
 
 LOCAL_DIR="$HOME/.spacemacs.d/local"
 mkdir -p "$LOCAL_DIR"
