@@ -1643,9 +1643,12 @@ Does nothing on a text terminal, or before `highlight' resolves."
   ;; ** 📁 File Types & Modes **
   ;; ======================================================================
 
-  (add-to-list 'auto-minor-mode-alist '("\\.ino\\'" . arduino-cli-mode))
+  ;; Major modes
   (add-to-list 'auto-mode-alist '("\\.libsonnet\\'" . jsonnet-mode))
   (add-to-list 'auto-mode-alist '("\\.scm\\'" . scheme-mode))
+
+  ;; Minor modes
+  (add-to-list 'auto-minor-mode-alist '("\\.ino\\'" . arduino-cli-mode))
 
   ;; ======================================================================
   ;; ** 🔍 Search & Navigation **
