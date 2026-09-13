@@ -1645,7 +1645,7 @@ Does nothing on a text terminal, or before `highlight' resolves."
 
   ;; Major modes
   (add-to-list 'auto-mode-alist '("\\.libsonnet\\'" . jsonnet-mode))
-  (add-to-list 'auto-mode-alist '("\\.scm\\'" . scheme-mode))
+  (add-to-list 'auto-mode-alist '("\\.scm\\'" . lisp-mode))
 
   ;; Minor modes
   (add-to-list 'auto-minor-mode-alist '("\\.ino\\'" . arduino-cli-mode))
