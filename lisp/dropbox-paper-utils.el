@@ -1,4 +1,4 @@
-;; Dropbox Paper utilities for Spacemacs
+;; Dropbox Paper utilities for Spacemacs  -*- lexical-binding: t; -*-
 ;; 
 ;; This file contains utilities for working with Dropbox Paper content in Emacs.
 ;; The dp- prefix stands for "Dropbox Paper".

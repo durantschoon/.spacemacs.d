@@ -1,3 +1,4 @@
+;; CLDR emoji name → character data  -*- lexical-binding: t; -*-
 (setq dp-cldr-emoji-alist nil)
 (setq dp-cldr-emoji-alist (cons '("grinning face" . "😀") dp-cldr-emoji-alist))
 (setq dp-cldr-emoji-alist (cons '("grinning face with big eyes" . "😃") dp-cldr-emoji-alist))

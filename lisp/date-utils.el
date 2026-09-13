@@ -1,4 +1,4 @@
-;; Date adjustment utilities for Spacemacs
+;; Date adjustment utilities for Spacemacs  -*- lexical-binding: t; -*-
 ;; Provides functions to adjust dates on the current line while preserving format
 
 (defun find-date-on-line ()
