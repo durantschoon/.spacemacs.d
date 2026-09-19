@@ -1306,10 +1306,25 @@ SCHEDULED: %^t
            "* %?\nEntered on %U\n"
            :empty-lines 1)))
 
-  (setq org-agenda-files '("~/Org/home/agenda/tasks.org"
-                           "~/Org/home/agenda/personal.org"
-                           "~/Org/home/robotics/summer2026.org"
-                           "~/Org/home/capture/inbox.org"))
+  ;; Only hand org the agenda files that actually exist.  A missing entry
+  ;; makes the agenda scan signal "No such file", and that error escapes into
+  ;; whatever triggered the scan -- notably the *spacemacs* startup lists,
+  ;; where `(agenda . 7)' aborts `spacemacs-buffer//do-insert-startupify-lists'
+  ;; mid-render.  The abort skips the To-Do list, the footer, and
+  ;; `spacemacs-buffer//center-startup-lists', which is why the splash lists
+  ;; end up flush against the left margin (see the daemon re-centring fix
+  ;; above for the other half of that story).
+  ;;
+  ;; The full intended set is kept below as the source of truth; the filter
+  ;; runs once at startup, so after creating one of these files, restart Emacs
+  ;; (or re-evaluate this form) for it to join the agenda.
+  (setq org-agenda-files
+        (seq-filter #'file-exists-p
+                    (mapcar #'expand-file-name
+                            '("~/Org/home/agenda/tasks.org"
+                              "~/Org/home/agenda/personal.org"
+                              "~/Org/home/robotics/summer2026.org"
+                              "~/Org/home/capture/inbox.org"))))
 
   ;;; enable easy-templates in org-mode
   ;;; hopefully this makes '<s'+TAB create src blocks again
@@ -1646,6 +1661,42 @@ Does nothing on a text terminal, or before `highlight' resolves."
 
   (add-hook 'server-after-make-frame-hook #'bds/fix-origami-fold-header-face)
   (add-hook 'after-make-frame-functions #'bds/fix-origami-fold-header-face)
+
+  ;; --- Re-center the startup buffer under the daemon --------------------
+  ;;
+  ;; Symptom: the *spacemacs* splash -- banner, title, version line, startup
+  ;; lists -- hugs the left of the window instead of being centred.
+  ;;
+  ;; Cause: the splash is not centred by any display property; Spacemacs
+  ;; bakes literal padding spaces into the buffer, sized from
+  ;; `spacemacs-buffer--window-width', i.e. the width of the window that
+  ;; existed when the buffer was drawn.  In a daemon that is the invisible
+  ;; text-terminal frame F1, so the padding is computed for 80 columns and
+  ;; stays that way in every (much wider) `emacsclient -c' frame.
+  ;;
+  ;; Spacemacs normally self-heals: `core-spacemacs-buffer.el' uses
+  ;; `window-setup-hook' to install `spacemacs-buffer//resize-on-hook' on
+  ;; `window-configuration-change-hook', which redraws the buffer at the new
+  ;; width whenever a window is resized (`dotspacemacs-startup-buffer-
+  ;; responsive' is t above).  But `window-setup-hook' never runs in a
+  ;; daemon, so that hook is never installed and nothing recomputes the
+  ;; padding when a real frame finally appears.
+  ;;
+  ;; Fix: install the resize hook ourselves, and redraw once per new client
+  ;; frame.  `add-hook' is idempotent for a symbol, so the repeated add is
+  ;; harmless; the `get-buffer-window' guard looks only at the new frame, so
+  ;; we refresh only when the splash is actually on screen there and never
+  ;; yank the user away from whatever buffer they asked for.
+  (defun bds/recenter-spacemacs-buffer-on-new-frame ()
+    "Redraw the *spacemacs* splash for the frame that just appeared."
+    (add-hook 'window-configuration-change-hook
+              #'spacemacs-buffer//resize-on-hook)
+    (when (get-buffer-window spacemacs-buffer-name)
+      (spacemacs-buffer/refresh)))
+
+  (when (daemonp)
+    (add-hook 'server-after-make-frame-hook
+              #'bds/recenter-spacemacs-buffer-on-new-frame))
 
   ;; ======================================================================
   ;; ** 🔐 Security & Authentication **
