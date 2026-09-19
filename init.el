@@ -153,7 +153,8 @@ This function should only modify configuration layer settings."
      typescript
      (unicode-fonts :variables
                     unicode-fonts-force-multi-color-on-mac t
-                    unicode-fonts-ligature-modes '(js-mode org-mode))
+                    unicode-fonts-enable-ligatures t
+                    unicode-fonts-ligature-modes '(prog-mode org-mode))
      version-control
      yaml)
    ;; List of additional packages that will be installed without being wrapped
@@ -457,8 +458,8 @@ It should only modify the values of Spacemacs settings."
    ;; fixed-pitch faces. The `:size' can be specified as
    ;; a non-negative integer (pixel size), or a floating-point (point size).
    ;; Point size is recommended, because it's device independent. (default 10.0)
-   dotspacemacs-default-font '("Fira Code"
-                               :height 140
+   dotspacemacs-default-font '("Cascadia Code NF"
+                               :height 130
                                :weight normal
                                :width normal
                                :powerline-scale 1.1)
@@ -1981,15 +1982,6 @@ This function is called at the very end of Spacemacs initialization."
    ;; If you edit it by hand, you could mess it up, so be careful.
    ;; Your init file should contain only one such instance.
    ;; If there is more than one, they won't work right.
-   ;;
-   ;; NOTE: `epg-gpg-program' was removed from this block by hand. Customize
-   ;; had recorded the MacGPG2 path unconditionally, and this function runs
-   ;; at the very END of startup -- so on non-macOS machines it overrode the
-   ;; guarded setting in ** 🔐 Security & Authentication ** and left
-   ;; `epg-gpg-program' pointing at a binary that does not exist there. That
-   ;; guarded form is the one source of truth now; leave this out. If
-   ;; Customize ever writes it back, delete it again rather than adding a
-   ;; second guard.
    '(package-selected-packages
      '(ace-link aggressive-indent anzu arduino-mode attrap auto-compile
                 auto-highlight-symbol auto-minor-mode auto-yasnippet
@@ -2006,14 +1998,14 @@ This function is called at the very end of Spacemacs initialization."
                 emoji-cheat-sheet-plus emr engine-mode esh-help
                 eshell-prompt-extras eshell-z evil-anzu evil-args
                 evil-cleverparens evil-escape evil-evilified-state evil-exchange
-                evil-goggles evil-iedit-state evil-indent-plus evil-lion
-                evil-lisp-state evil-matchit evil-mc evil-nerd-commenter
+                evil-ghostel evil-goggles evil-iedit-state evil-indent-plus
+                evil-lion evil-lisp-state evil-matchit evil-mc evil-nerd-commenter
                 evil-numbers evil-org evil-surround evil-textobj-line evil-tutor
                 evil-unimpaired evil-visual-mark-mode evil-visualstar
                 exec-path-from-shell expand-region eyebrowse fancy-battery
                 flycheck-clj-kondo flycheck-elsa flycheck-haskell flycheck-package
                 flycheck-pos-tip flyspell-correct-helm geiser gemini-mode gendoxy
-                gh-md git-link git-messenger git-modes git-timemachine
+                gh-md ghostel git-link git-messenger git-modes git-timemachine
                 gitignore-templates gnuplot go-fill-struct go-gen-test go-mode
                 godoctor golden-ratio google-c-style google-translate gptel
                 graphql-mode haskell-snippets helm-ag helm-c-yasnippet helm-cider
@@ -2026,14 +2018,14 @@ This function is called at the very end of Spacemacs initialization."
                 hungry-delete hybrid-mode impatient-mode indent-guide info+
                 inspector js-doc js2-refactor json-mode json-navigator
                 json-reformat jsonnet-mode key-chord keycast keychain-environment
-                launchctl link-hint live-py-mode livid-mode logcat lorem-ipsum
-                lsp-haskell lsp-origami lsp-ui macrostep markdown-toc matlab-mode
-                multi-line multi-term multi-vterm mwim nameless nodejs-repl
-                npm-mode nyan-mode open-junk-file org-cliplink org-contrib
-                org-download org-mime org-pomodoro org-present org-projectile
-                org-rich-yank org-superstar orgit-forge osx-clipboard
-                osx-dictionary osx-trash overseer page-break-lines paradox
-                password-generator pcre2el pip-requirements pipenv pippel
+                launchctl ligature link-hint live-py-mode livid-mode logcat
+                lorem-ipsum lsp-haskell lsp-origami lsp-ui macrostep markdown-toc
+                matlab-mode multi-line multi-term multi-vterm mwim nameless
+                nodejs-repl npm-mode nyan-mode open-junk-file org-cliplink
+                org-contrib org-download org-mime org-pomodoro org-present
+                org-projectile org-rich-yank org-superstar orgit-forge
+                osx-clipboard osx-dictionary osx-trash overseer page-break-lines
+                paradox password-generator pcre2el pip-requirements pipenv pippel
                 pkgbuild-mode poetry popwin prettier-js pug-mode py-isort pydoc
                 pyenv-mode pylookup pytest qml-mode quickrun rainbow-delimiters
                 rainbow-identifiers rainbow-mode restart-emacs
@@ -2054,5 +2046,5 @@ This function is called at the very end of Spacemacs initialization."
    ;; If you edit it by hand, you could mess it up, so be careful.
    ;; Your init file should contain only one such instance.
    ;; If there is more than one, they won't work right.
-   )
+   '(origami-fold-header-face ((t (:box (:line-width 1 :color "grey50"))))))
   )
