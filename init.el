@@ -1302,7 +1302,40 @@ SCHEDULED: %^t
   (add-hook 'org-mode-hook
             (lambda ()
               (add-hook 'before-save-hook 'org-align-all-tags nil 'local)
-              (auto-fill-mode 1)))
+              (auto-fill-mode 1)
+              ;; hide :PROPERTIES: drawers (LIM files carry one per block)
+              (org-tidy-mode 1)))
+
+  ;; lim-mode: hides #+LIM_* metadata lines and keeps drawers folded across
+  ;; daemon-triggered auto-reverts. Loaded straight from the LIM repo (not
+  ;; quelpa) so edits to lim-mode.el take effect without a package rebuild.
+  (add-to-list 'load-path "~/Repos/enveloped/LIM/LIM/editors/emacs")
+  (require 'lim-mode nil 'noerror)
+
+  (defun durant/enable-lim-mode-in-lim-docs ()
+    "Enable `lim-mode' in org buffers under the LIM workspace tree."
+    (when (and (featurep 'lim-mode)
+               buffer-file-name
+               (string-prefix-p (expand-file-name "~/lim_docs/")
+                                (expand-file-name buffer-file-name)))
+      (lim-mode 1)))
+  (add-hook 'org-mode-hook #'durant/enable-lim-mode-in-lim-docs)
+
+  (defun durant/lim-toggle-metadata-visibility ()
+    "Reveal or re-hide all LIM metadata in the current org buffer.
+Toggles `lim-mode' (#+LIM_ keyword lines) and `org-tidy-mode'
+(property drawers) together, keyed off lim-mode's current state."
+    (interactive)
+    (let ((reveal (bound-and-true-p lim-mode)))
+      (lim-mode (if reveal -1 1))
+      (org-tidy-mode (if reveal -1 1))
+      (message (if reveal "LIM metadata revealed" "LIM metadata hidden"))))
+
+  (spacemacs/declare-prefix "ol" "lim")
+  (spacemacs/set-leader-keys
+    "oll" #'durant/lim-toggle-metadata-visibility
+    "olm" #'lim-mode
+    "olp" #'org-tidy-mode)
 
   ;; ======================================================================
   ;; ** 🤖 LLM & AI Configuration **
