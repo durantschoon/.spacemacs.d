@@ -819,6 +819,10 @@ If you are unsure, try setting them in `dotspacemacs/user-config' first."
   (add-to-list 'load-path (expand-file-name "lisp" dotspacemacs-directory))
   (setq native-comp-async-report-warnings-errors 'silent)
 
+  ;; Pre-declare evil-collection-binding-overrides to prevent a void-variable
+  ;; error when dired-quick-sort configures itself before evil-collection loads.
+  (defvar evil-collection-binding-overrides nil)
+
   ;; Pre-empt origami's broken defface (daemon only).  Its spec interpolates
   ;; (face-attribute 'highlight :background) at LOAD time; under the daemon
   ;; there is no graphical frame yet, so that yields `unspecified', which is
@@ -1112,6 +1116,7 @@ Succeeds loudly or fails loudly -- never silently."
             ;; stale failures from a previous run
             (setq bds/experiment-failures nil)
             ;; ⬇ Put new or untested code here
+            (require 'drift) ;; NOTE: This eventually belongs in ** 📦 Package Configuration **
             ;; (empty -- claude-code-ide graduated to
             ;; ** 🤖 LLM & AI Configuration ** on 2026-07-19)
 
@@ -1898,6 +1903,24 @@ Does nothing on a text terminal, or before `highlight' resolves."
   ;; emacs-startup-hook. lisp/ is already on load-path (see above).
   (require 'defadvice-patch-advanced)
 
+  (with-eval-after-load 'company-statistics
+    (defun company-statistics--save ()
+      "Save statistics (Patched to include lexical-binding cookie)."
+      (with-temp-buffer
+        (set-buffer-multibyte nil)
+        (insert ";; -*- lexical-binding: t -*-\n")
+        (let (print-level print-length)
+          (encode-coding-string
+           (format
+            "%S"
+            `(setq
+              company-statistics--scores ,company-statistics--scores
+              company-statistics--log ,company-statistics--log
+              company-statistics--index ,company-statistics--index))
+           'utf-8 nil (current-buffer))
+          (let ((coding-system-for-write 'binary))
+            (write-region nil nil company-statistics-file))))))
+
   ;; Markdown mode configuration
   (with-eval-after-load 'markdown-mode
     (define-key markdown-mode-map (kbd "C-c m t") #'markdown-toc-generate-toc)
@@ -2015,6 +2038,7 @@ This function is called at the very end of Spacemacs initialization."
    ;; If you edit it by hand, you could mess it up, so be careful.
    ;; Your init file should contain only one such instance.
    ;; If there is more than one, they won't work right.
+   '(epg-gpg-program "/usr/local/MacGPG2/bin/gpg2")
    '(package-selected-packages
      '(ace-link aggressive-indent anzu arduino-mode attrap auto-compile
                 auto-highlight-symbol auto-minor-mode auto-yasnippet
@@ -2031,14 +2055,14 @@ This function is called at the very end of Spacemacs initialization."
                 emoji-cheat-sheet-plus emr engine-mode esh-help
                 eshell-prompt-extras eshell-z evil-anzu evil-args
                 evil-cleverparens evil-escape evil-evilified-state evil-exchange
-                evil-ghostel evil-goggles evil-iedit-state evil-indent-plus
-                evil-lion evil-lisp-state evil-matchit evil-mc evil-nerd-commenter
+                evil-goggles evil-iedit-state evil-indent-plus evil-lion
+                evil-lisp-state evil-matchit evil-mc evil-nerd-commenter
                 evil-numbers evil-org evil-surround evil-textobj-line evil-tutor
                 evil-unimpaired evil-visual-mark-mode evil-visualstar
                 exec-path-from-shell expand-region eyebrowse fancy-battery
                 flycheck-clj-kondo flycheck-elsa flycheck-haskell flycheck-package
                 flycheck-pos-tip flyspell-correct-helm geiser gemini-mode gendoxy
-                gh-md ghostel git-link git-messenger git-modes git-timemachine
+                gh-md git-link git-messenger git-modes git-timemachine
                 gitignore-templates gnuplot go-fill-struct go-gen-test go-mode
                 godoctor golden-ratio google-c-style google-translate gptel
                 graphql-mode haskell-snippets helm-ag helm-c-yasnippet helm-cider
