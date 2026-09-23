@@ -12,3 +12,4 @@
 
 # Claude Code session-local state
 /.claude/
+/lisp/drift.el
