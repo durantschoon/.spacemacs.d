@@ -1921,6 +1921,45 @@ Does nothing on a text terminal, or before `highlight' resolves."
           (let ((coding-system-for-write 'binary))
             (write-region nil nil company-statistics-file))))))
 
+  ;; persp-mode's lighter throttle timer keeps a closed-over list of frames.
+  ;; A frame deleted before the timer fires errors in `set-frame-parameter',
+  ;; and because the list is only cleared on success it errors forever after:
+  ;;   Error running timer: (wrong-type-argument frame-live-p #<dead frame ...>)
+  ;; Short-lived emacsclient frames (server enabled 2026-09-23) trigger this.
+  ;; Redefining the function here gives it fresh state and a dead-frame guard.
+  (with-eval-after-load 'persp-mode
+    (defun bds/persp-frame-lighter (frame)
+      "Return the persp mode-line lighter string for FRAME."
+      (let ((persp (cdr (persp-frame-window-persp-param-assq frame))))
+        (if persp
+            (format (propertize " #%.5s" 'face
+                                (cond ((persp-nil-p persp) 'persp-face-lighter-nil-persp)
+                                      ((persp-contain-buffer-p (current-buffer) persp)
+                                       'persp-face-lighter-default)
+                                      (t 'persp-face-lighter-buffer-not-in-persp)))
+                    (persp-name persp))
+          " #~")))
+
+    (let (update-lighter-throttle-timer frames-to-update)
+      (defun persp-update-frame-lighter (&optional f)
+        "Schedule a throttled lighter update for frame F (patched: skips dead frames)."
+        (unless f (setq f (selected-frame)))
+        (when (persp-frame-good-p f)
+          (cl-pushnew f frames-to-update)
+          (if (timerp update-lighter-throttle-timer)
+              (timer-set-time update-lighter-throttle-timer (time-add nil 1))
+            (setq update-lighter-throttle-timer
+                  (run-with-timer
+                   1 nil
+                   (lambda ()
+                     (unwind-protect
+                         (dolist (frame (cl-remove-if-not #'frame-live-p frames-to-update))
+                           (set-frame-parameter frame 'persp-lighter
+                                                (bds/persp-frame-lighter frame)))
+                       (setq frames-to-update nil)
+                       (force-mode-line-update)
+                       (setq update-lighter-throttle-timer nil))))))))))
+
   ;; Markdown mode configuration
   (with-eval-after-load 'markdown-mode
     (define-key markdown-mode-map (kbd "C-c m t") #'markdown-toc-generate-toc)
