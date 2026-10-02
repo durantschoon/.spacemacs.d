@@ -1117,6 +1117,9 @@ Succeeds loudly or fails loudly -- never silently."
             (setq bds/experiment-failures nil)
             ;; ⬇ Put new or untested code here
             (require 'drift) ;; NOTE: This eventually belongs in ** 📦 Package Configuration **
+            (setq drift-config-file "~/tmp/drift-sandbox/drift.toml")
+            (setq drift-repo-dir "~/Repos/enveloped/obsidian-drift/obsidian-drift")
+            (evil-set-initial-state 'drift-mode 'emacs)
             ;; (empty -- claude-code-ide graduated to
             ;; ** 🤖 LLM & AI Configuration ** on 2026-07-19)
 
@@ -1959,6 +1962,22 @@ Does nothing on a text terminal, or before `highlight' resolves."
                        (setq frames-to-update nil)
                        (force-mode-line-update)
                        (setq update-lighter-throttle-timer nil))))))))))
+
+  ;; The eyebrowse segment only checks `eyebrowse-mode', then reads the
+  ;; frame's eyebrowse slot and does (> slot 9) and (propertize tag ...).
+  ;; posframe child frames (company, which-key) never run `eyebrowse-init'
+  ;; because posframe binds `after-make-frame-functions' to nil, so their
+  ;; slot is nil and redisplay logs:
+  ;;   Error during redisplay: (eval (spaceline-ml-all-the-icons) t) signaled
+  ;;   (wrong-type-argument number-or-marker-p nil)
+  ;; Spaceline keeps a segment's :when on its toggle variable's plist and
+  ;; inlines it at compile time, so tighten the guard and recompile if the
+  ;; theme already exists (Spacemacs compiles it after user-config anyway).
+  (with-eval-after-load 'spaceline-all-the-icons-segments
+    (put 'spaceline-all-the-icons-eyebrowse-workspace-p :when
+         '(and (bound-and-true-p eyebrowse-mode) (eyebrowse--get 'current-slot)))
+    (when (fboundp 'spaceline-ml-all-the-icons)
+      (spaceline-compile "all-the-icons")))
 
   ;; Markdown mode configuration
   (with-eval-after-load 'markdown-mode
