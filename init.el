@@ -247,11 +247,29 @@ It should only modify the values of Spacemacs settings."
   ;; It used to be, in three separate places, and it hid genuine errors --
   ;; a config that fails loudly is the whole point of the Testing Zone.
   (setq warning-suppress-types
-        '((defadvice obsolete deprecated callf destructuring-bind
-                     define-minor-mode case invalid-face)))
+        '((files missing-lexbind-cookie)
+          (files)
+          (defadvice)
+          (obsolete)
+          (deprecated)
+          (callf)
+          (destructuring-bind)
+          (define-minor-mode)
+          (case)
+          (invalid-face)
+          (native-compiler)))
   (setq warning-suppress-log-types
-        '((defadvice obsolete deprecated callf destructuring-bind
-                     define-minor-mode case invalid-face)))
+        '((files missing-lexbind-cookie)
+          (files)
+          (defadvice)
+          (obsolete)
+          (deprecated)
+          (callf)
+          (destructuring-bind)
+          (define-minor-mode)
+          (case)
+          (invalid-face)
+          (native-compiler)))
   ;; Exclude the obsolete category rather than allow-listing one category:
   ;; `(cl-functions)' is a positive list, so it silently dropped every other
   ;; warning too, including ones worth reading.
@@ -1724,6 +1742,11 @@ Does nothing on a text terminal, or before `highlight' resolves."
           )))
 
   (add-hook 'after-save-hook 'my-after-save-actions)
+
+  ;; Clean up whitespace on save in programming modes
+  (add-hook 'prog-mode-hook
+            (lambda ()
+              (add-hook 'before-save-hook #'whitespace-cleanup nil t)))
 
   ;; ======================================================================
   ;; ** 🕸️ Web Development **
