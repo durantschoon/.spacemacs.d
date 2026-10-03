@@ -197,11 +197,8 @@ This function should only modify configuration layer settings."
                                       websocket
                                       transient
                                       web-server
-                                      ;; copilot off, trying to use cody instead
-                                      ;; (copilot :location (recipe
-                                      ;;                     :fetcher github
-                                      ;;                     :repo "copilot-emacs/copilot.el"
-                                      ;;                     :files ("*.el" "dist")))
+                                      ;; GitHub Copilot (from MELPA, with Next Edit Suggestions / NES support)
+                                      copilot
                                       editorconfig
                                       (emacs-cody :location local)
                                       exec-path-from-shell
@@ -1467,28 +1464,97 @@ Toggles `lim-mode' (#+LIM_ keyword lines) and `org-tidy-mode'
       "ocm" #'claude-code-ide-menu
       "ocs" #'claude-code-ide-send-prompt))
 
+  ;; GitHub Copilot with Next Edit Suggestions (NES) - Cursor-like experience
+  (use-package copilot
+    :defer t
+    :hook ((prog-mode . copilot-mode)
+           (prog-mode . copilot-nes-mode))
+    :init
+    ;; Disable company inline previews so they don't collide with Copilot overlays
+    (with-eval-after-load 'company
+      (delq 'company-preview-if-just-one-frontend company-frontends))
+    :config
+    (require 'copilot-nes)
+
+    ;; Cursor-like Tab:
+    ;; 1. If Next Edit Suggestion (NES) is pending:
+    ;;    - First Tab jumps to the edit location (if far away) so you can review the diff.
+    ;;    - Second Tab (or Tab when already there) applies the replacement/insertion/deletion.
+    ;; 2. If standard Copilot inline ghost-text completion is pending:
+    ;;    - Tab accepts the completion.
+    ;; 3. If Company popup is active:
+    ;;    - Tab completes the selected candidate.
+    ;; 4. Otherwise:
+    ;;    - Standard indentation / tab.
+    (defun my/copilot-tab-dwim ()
+      "Accept NES edit or Copilot completion if available, else standard Tab."
+      (interactive)
+      (cond
+       ;; 1. Next Edit Suggestion (NES)
+       ((and (bound-and-true-p copilot-nes-mode)
+             (bound-and-true-p copilot-nes--edit))
+        (copilot-nes-accept))
+       ;; 2. Inline ghost text completion
+       ((and (bound-and-true-p copilot-mode)
+             (copilot--overlay-visible))
+        (copilot-accept-completion))
+       ;; 3. Company candidate active
+       ((and (bound-and-true-p company-mode)
+             (bound-and-true-p company-candidates))
+        (company-complete-selection))
+       ;; 4. Fallback indentation
+       (t
+        (indent-for-tab-command))))
+
+    ;; Keybindings for Copilot completions
+    (define-key copilot-completion-map (kbd "<tab>") #'my/copilot-tab-dwim)
+    (define-key copilot-completion-map (kbd "TAB") #'my/copilot-tab-dwim)
+    (define-key copilot-completion-map (kbd "C-<tab>") #'copilot-accept-completion-by-word)
+    (define-key copilot-completion-map (kbd "C-TAB") #'copilot-accept-completion-by-word)
+
+    ;; In Evil states: ensure Tab works smoothly in both insert and normal states
+    (with-eval-after-load 'evil
+      ;; Insert state: DWIM tab
+      (evil-define-key 'insert 'global (kbd "<tab>") #'my/copilot-tab-dwim)
+      (evil-define-key 'insert 'global (kbd "TAB") #'my/copilot-tab-dwim)
+      ;; Normal state: if a NES edit is waiting, Tab will jump to / accept it
+      (evil-define-key 'normal 'global (kbd "<tab>")
+        '(menu-item "" copilot-nes-accept :filter (lambda (cmd) (when copilot-nes--edit cmd))))
+      (evil-define-key 'normal 'global (kbd "TAB")
+        '(menu-item "" copilot-nes-accept :filter (lambda (cmd) (when copilot-nes--edit cmd)))))
+
+    ;; Leader key bindings under SPC o a (ai / copilot)
+    (defalias 'copilot-nes-request #'copilot-nes--request)
+    (spacemacs/declare-prefix "oa" "copilot")
+    (spacemacs/set-leader-keys
+      "oac" #'copilot-complete
+      "oae" #'copilot-nes-mode
+      "oan" #'copilot-nes-request
+      "oar" #'copilot-nes-request
+      "oas" #'copilot-install-server
+      "oal" #'copilot-login
+      "oad" #'copilot-diagnose))
+
   ;; ======================================================================
   ;; ** 🌐 Web Browser Configuration **
   ;; ======================================================================
 
-  (setq browse-url-browser-function #'xwidget-webkit-browse-url)
-
-  (spacemacs/set-leader-keys "ox" 'xwidget-webkit-browse-url) ;; open with SPC o x
-
-  (defun my-xwidget-webkit-display-right (url &optional new-session)
-    "Open xwidget-webkit browser in a window split to the right."
-    (let ((new-window (split-window-right)))
-      (select-window new-window) ;; Switch to the right-hand window
-      ;; Create a new xwidget buffer and display the URL in it
-      (let ((xwidget-buffer (get-buffer-create "*xwidget-webkit*")))
-        (with-current-buffer xwidget-buffer
-          (xwidget-webkit-mode)) ;; Ensure the buffer is in xwidget-webkit-mode
-        (set-window-buffer new-window xwidget-buffer) ;; Attach buffer to the right window
-        (xwidget-webkit-browse-url url new-session)
-        (select-window new-window)))) ;; Ensure focus stays on the right window
-
-  ;; Set `browse-url-browser-function` to use the custom function
-  (setq browse-url-browser-function #'my-xwidget-webkit-display-right)
+  (if (featurep 'xwidget-internal)
+      (progn
+        (defun my-xwidget-webkit-display-right (url &optional new-session)
+          "Open xwidget-webkit browser in a window split to the right."
+          (let ((new-window (split-window-right)))
+            (select-window new-window) ;; Switch to the right-hand window
+            ;; Create a new xwidget buffer and display the URL in it
+            (let ((xwidget-buffer (get-buffer-create "*xwidget-webkit*")))
+              (with-current-buffer xwidget-buffer
+                (xwidget-webkit-mode)) ;; Ensure the buffer is in xwidget-webkit-mode
+              (set-window-buffer new-window xwidget-buffer) ;; Attach buffer to the right window
+              (xwidget-webkit-browse-url url new-session)
+              (select-window new-window)))) ;; Ensure focus stays on the right window
+        (setq browse-url-browser-function #'my-xwidget-webkit-display-right)
+        (spacemacs/set-leader-keys "ox" 'xwidget-webkit-browse-url))
+    (setq browse-url-browser-function #'browse-url-default-browser))
 
   ;; ======================================================================
   ;; ** 🎨 Theme & Appearance **
@@ -2420,12 +2486,12 @@ This function is called at the very end of Spacemacs initialization."
                 clj-refactor clojure-snippets cmm-mode code-cells code-review
                 color-identifiers-mode column-enforce-mode command-log-mode
                 company-c-headers company-cabal company-emoji company-quickhelp
-                company-statistics company-terraform company-web cpp-auto-include
-                csv-mode cython-mode dante dap-mode devdocs diff-hl diminish
-                dired-quick-sort disable-mouse disaster docker dockerfile-mode
-                dotenv-mode drag-stuff dumb-jump eat ebuild-mode edit-indirect
-                elisp-def elisp-demos elisp-slime-nav ellama emmet-mode
-                emoji-cheat-sheet-plus emr engine-mode esh-help
+                company-statistics company-terraform company-web copilot
+                cpp-auto-include csv-mode cython-mode dante dap-mode devdocs
+                diff-hl diminish dired-quick-sort disable-mouse disaster docker
+                dockerfile-mode dotenv-mode drag-stuff dumb-jump eat ebuild-mode
+                edit-indirect elisp-def elisp-demos elisp-slime-nav ellama
+                emmet-mode emoji-cheat-sheet-plus emr engine-mode esh-help
                 eshell-prompt-extras eshell-z evil-anzu evil-args
                 evil-cleverparens evil-escape evil-evilified-state evil-exchange
                 evil-goggles evil-iedit-state evil-indent-plus evil-lion
