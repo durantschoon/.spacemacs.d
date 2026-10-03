@@ -1779,6 +1779,316 @@ Does nothing on a text terminal, or before `highlight' resolves."
 
   (global-set-key (kbd "C-x |") 'toggle-window-split)
 
+  (require 'cl-lib)
+
+  (defun rotate-windows--center (window)
+    "Return the (center-x . center-y) coordinates of WINDOW."
+    (let ((edges (window-edges window)))
+      (cons (/ (+ (nth 0 edges) (nth 2 edges)) 2.0)
+            (/ (+ (nth 1 edges) (nth 3 edges)) 2.0))))
+
+  (defun rotate-windows--sort-clockwise (windows)
+    "Sort WINDOWS in clockwise order around their centroid."
+    (if (<= (length windows) 2)
+        ;; For 2 windows: sort top-to-bottom, then left-to-right
+        (sort (copy-sequence windows)
+              (lambda (w1 w2)
+                (let ((e1 (window-edges w1))
+                      (e2 (window-edges w2)))
+                  (if (= (nth 1 e1) (nth 1 e2))
+                      (< (nth 0 e1) (nth 0 e2))
+                    (< (nth 1 e1) (nth 1 e2))))))
+      (let* ((centers (mapcar (lambda (w) (cons w (rotate-windows--center w))) windows))
+             (avg-x (/ (apply '+ (mapcar (lambda (c) (car (cdr c))) centers))
+                       (float (length windows))))
+             (avg-y (/ (apply '+ (mapcar (lambda (c) (cdr (cdr c))) centers))
+                       (float (length windows))))
+             (all-same-y (let ((y0 (cdr (cdr (car centers)))))
+                           (cl-every (lambda (c) (< (abs (- (cdr (cdr c)) y0)) 0.5)) centers)))
+             (all-same-x (let ((x0 (car (cdr (car centers)))))
+                           (cl-every (lambda (c) (< (abs (- (car (cdr c)) x0)) 0.5)) centers))))
+        (cond
+         (all-same-y
+          ;; Collinear horizontal row: left to right is clockwise
+          (sort (copy-sequence windows) (lambda (w1 w2) (< (car (window-edges w1)) (car (window-edges w2))))))
+         (all-same-x
+          ;; Collinear vertical column: top to bottom is clockwise
+          (sort (copy-sequence windows) (lambda (w1 w2) (< (cadr (window-edges w1)) (cadr (window-edges w2))))))
+         (t
+          ;; Polar angle around centroid: atan2(dy, dx) ascending from -pi to pi (clockwise on screen)
+          (sort (copy-sequence windows)
+                (lambda (w1 w2)
+                  (let* ((c1 (cdr (assq w1 centers)))
+                         (c2 (cdr (assq w2 centers)))
+                         (a1 (atan (- (cdr c1) avg-y) (- (car c1) avg-x)))
+                         (a2 (atan (- (cdr c2) avg-y) (- (car c2) avg-x))))
+                    (< a1 a2)))))))))
+
+  (defun rotate-windows--two-windows (direction &optional count)
+    "Rotate 2 windows in DIRECTION (:clockwise or :counter-clockwise).
+Horizontal split becomes vertical and vertical becomes horizontal.
+Focus follows the active buffer to its new position."
+    (let* ((windows (cl-remove-if 'window-dedicated-p (window-list)))
+           (w1 (car windows))
+           (w2 (cadr windows))
+           (e1 (window-edges w1))
+           (e2 (window-edges w2))
+           (side-by-side (not (= (car e1) (car e2))))
+           (first-win (if side-by-side
+                          (if (< (car e1) (car e2)) w1 w2)
+                        (if (< (cadr e1) (cadr e2)) w1 w2)))
+           (second-win (if (eq first-win w1) w2 w1))
+           (cur-win (selected-window))
+           (cur-is-first (eq cur-win first-win))
+           (s1 (window-state-get first-win))
+           (s2 (window-state-get second-win))
+           (effective-steps (pcase direction
+                              (:clockwise (mod (or count 1) 4))
+                              (:counter-clockwise (mod (- (or count 1)) 4)))))
+      (if (= effective-steps 0)
+          (message "No rotation (count is multiple of 4)")
+        (if (/= (count-windows) 2)
+            ;; If there are other (dedicated) windows, preserve layout and swap states
+            (let ((step (mod effective-steps 2)))
+              (when (= step 1)
+                (window-state-put s2 first-win)
+                (window-state-put s1 second-win)
+                (select-window (if cur-is-first second-win first-win))))
+          (let (new-first-state new-second-state new-side-by-side)
+            (cond
+             (side-by-side
+              (pcase effective-steps
+                (1 (setq new-side-by-side nil
+                         new-first-state s1
+                         new-second-state s2))
+                (2 (setq new-side-by-side t
+                         new-first-state s2
+                         new-second-state s1))
+                (3 (setq new-side-by-side nil
+                         new-first-state s2
+                         new-second-state s1))))
+             (t ;; stacked
+              (pcase effective-steps
+                (1 (setq new-side-by-side t
+                         new-first-state s2
+                         new-second-state s1))
+                (2 (setq new-side-by-side nil
+                         new-first-state s2
+                         new-second-state s1))
+                (3 (setq new-side-by-side t
+                         new-first-state s1
+                         new-second-state s2)))))
+            (delete-other-windows first-win)
+            (let* ((new-w1 (selected-window))
+                   (new-w2 (if new-side-by-side
+                               (split-window-right)
+                             (split-window-below))))
+              (window-state-put new-first-state new-w1)
+              (window-state-put new-second-state new-w2)
+              (let ((s1-win (if (eq new-first-state s1) new-w1 new-w2))
+                    (s2-win (if (eq new-first-state s1) new-w2 new-w1)))
+                (select-window (if cur-is-first s1-win s2-win)))))))))
+
+  (defun rotate-windows--detect-3-window-layout (windows)
+    "Detect if WINDOWS form a 1-main + 2-sub layout.
+Returns (:layout-type w-main w-sub1 w-sub2) or nil."
+    (let* ((edges-list (mapcar 'window-edges windows))
+           (frame-l (apply 'min (mapcar 'car edges-list)))
+           (frame-t (apply 'min (mapcar 'cadr edges-list)))
+           (frame-r (apply 'max (mapcar 'caddr edges-list)))
+           (frame-b (apply 'max (mapcar 'cadddr edges-list))))
+      (cl-some
+       (lambda (w)
+         (let ((e (window-edges w))
+               (others (remove w windows)))
+           (cond
+            ;; main-left: (left | (top / bottom))
+            ((and (= (nth 0 e) frame-l)
+                  (= (nth 1 e) frame-t)
+                  (= (nth 3 e) frame-b)
+                  (< (nth 2 e) frame-r))
+             (let ((sub-t (if (< (nth 1 (window-edges (car others)))
+                                 (nth 1 (window-edges (cadr others))))
+                              (car others) (cadr others)))
+                   (sub-b (if (< (nth 1 (window-edges (car others)))
+                                 (nth 1 (window-edges (cadr others))))
+                              (cadr others) (car others))))
+               (list :main-left w sub-t sub-b)))
+            ;; main-right: ((top / bottom) | right)
+            ((and (= (nth 2 e) frame-r)
+                  (= (nth 1 e) frame-t)
+                  (= (nth 3 e) frame-b)
+                  (> (nth 0 e) frame-l))
+             (let ((sub-t (if (< (nth 1 (window-edges (car others)))
+                                 (nth 1 (window-edges (cadr others))))
+                              (car others) (cadr others)))
+                   (sub-b (if (< (nth 1 (window-edges (car others)))
+                                 (nth 1 (window-edges (cadr others))))
+                              (cadr others) (car others))))
+               (list :main-right w sub-t sub-b)))
+            ;; main-top: (top / (left | right))
+            ((and (= (nth 1 e) frame-t)
+                  (= (nth 0 e) frame-l)
+                  (= (nth 2 e) frame-r)
+                  (< (nth 3 e) frame-b))
+             (let ((sub-l (if (< (nth 0 (window-edges (car others)))
+                                 (nth 0 (window-edges (cadr others))))
+                              (car others) (cadr others)))
+                   (sub-r (if (< (nth 0 (window-edges (car others)))
+                                 (nth 0 (window-edges (cadr others))))
+                              (cadr others) (car others))))
+               (list :main-top w sub-l sub-r)))
+            ;; main-bottom: ((left | right) / bottom)
+            ((and (= (nth 3 e) frame-b)
+                  (= (nth 0 e) frame-l)
+                  (= (nth 2 e) frame-r)
+                  (> (nth 1 e) frame-t))
+             (let ((sub-l (if (< (nth 0 (window-edges (car others)))
+                                 (nth 0 (window-edges (cadr others))))
+                              (car others) (cadr others)))
+                   (sub-r (if (< (nth 0 (window-edges (car others)))
+                                 (nth 0 (window-edges (cadr others))))
+                              (cadr others) (car others))))
+               (list :main-bottom w sub-l sub-r))))))
+       windows)))
+
+  (defun rotate-windows--three-windows (direction &optional count)
+    "Rotate a 3-window layout (1 main + 2 sub-windows) in DIRECTION.
+(left | (top | bottom)) becomes (top | (left | right)) and so on.
+Focus follows the active buffer to its new position."
+    (let* ((windows (cl-remove-if 'window-dedicated-p (window-list)))
+           (layout-info (rotate-windows--detect-3-window-layout windows)))
+      (if (not layout-info)
+          (message "Layout is not a 1-main + 2-sub window configuration")
+        (let* ((layout-type (nth 0 layout-info))
+               (w-main (nth 1 layout-info))
+               (w-sub1 (nth 2 layout-info))
+               (w-sub2 (nth 3 layout-info))
+               (cur-win (selected-window))
+               (s-main (window-state-get w-main))
+               (s-sub1 (window-state-get w-sub1))
+               (s-sub2 (window-state-get w-sub2))
+               (cur-state (cond ((eq cur-win w-main) s-main)
+                                ((eq cur-win w-sub1) s-sub1)
+                                (t s-sub2)))
+               (steps (pcase direction
+                        (:clockwise (mod (or count 1) 4))
+                        (:counter-clockwise (mod (- (or count 1)) 4)))))
+          (if (= steps 0)
+              (message "No rotation (count is multiple of 4)")
+            (let ((curr-type layout-type)
+                  (curr-main s-main)
+                  (curr-s1 s-sub1)
+                  (curr-s2 s-sub2))
+              (dotimes (_ steps)
+                (let ((old-s1 curr-s1)
+                      (old-s2 curr-s2))
+                  (pcase curr-type
+                    (:main-left
+                     (setq curr-type :main-top
+                           curr-s1 old-s2
+                           curr-s2 old-s1))
+                    (:main-top
+                     (setq curr-type :main-right
+                           curr-s1 old-s1
+                           curr-s2 old-s2))
+                    (:main-right
+                     (setq curr-type :main-bottom
+                           curr-s1 old-s2
+                           curr-s2 old-s1))
+                    (:main-bottom
+                     (setq curr-type :main-left
+                           curr-s1 old-s1
+                           curr-s2 old-s2)))))
+              (delete-other-windows (car windows))
+              (let (target-main target-s1 target-s2)
+                (pcase curr-type
+                  (:main-left
+                   (setq target-main (selected-window))
+                   (let ((w-sub (split-window-right)))
+                     (select-window w-sub)
+                     (setq target-s1 w-sub)
+                     (setq target-s2 (split-window-below))))
+                  (:main-top
+                   (setq target-main (selected-window))
+                   (let ((w-sub (split-window-below)))
+                     (select-window w-sub)
+                     (setq target-s1 w-sub)
+                     (setq target-s2 (split-window-right))))
+                  (:main-right
+                   (let ((w-sub (selected-window))
+                         (w-m (split-window-right)))
+                     (setq target-main w-m)
+                     (select-window w-sub)
+                     (setq target-s1 w-sub)
+                     (setq target-s2 (split-window-below))))
+                  (:main-bottom
+                   (let ((w-sub (selected-window))
+                         (w-m (split-window-below)))
+                     (setq target-main w-m)
+                     (select-window w-sub)
+                     (setq target-s1 w-sub)
+                     (setq target-s2 (split-window-right)))))
+                (window-state-put curr-main target-main)
+                (window-state-put curr-s1 target-s1)
+                (window-state-put curr-s2 target-s2)
+                (let ((focus-win (cond ((eq cur-state curr-main) target-main)
+                                       ((eq cur-state curr-s1) target-s1)
+                                       (t target-s2))))
+                  (select-window focus-win)))))))))
+
+  (defun rotate-windows (direction &optional count)
+    "Rotate non-dedicated windows in DIRECTION (:clockwise or :counter-clockwise).
+COUNT specifies how many steps to rotate (default 1).
+When 2 windows are present, horizontal split becomes vertical and vertical becomes horizontal.
+When 3 windows form a 1-main + 2-sub layout, rotates the layout orientation:
+  (left | (top | bottom)) becomes (top | (left | right)) and so on.
+Cursor focus follows the active buffer to its new window position."
+    (let* ((windows (rotate-windows--sort-clockwise
+                     (cl-remove-if 'window-dedicated-p (window-list))))
+           (n (length windows)))
+      (cond
+       ((< n 2)
+        (message "Cannot rotate: need at least 2 windows"))
+       ((= n 2)
+        (rotate-windows--two-windows direction count))
+       ((and (= n 3)
+             (= (count-windows) 3)
+             (rotate-windows--detect-3-window-layout windows))
+        (rotate-windows--three-windows direction count))
+       (t
+        (let* ((step (pcase direction
+                       (:clockwise (mod (or count 1) n))
+                       (:counter-clockwise (mod (- (or count 1)) n))))
+               (states (mapcar 'window-state-get windows))
+               (cur-win (selected-window))
+               (cur-idx (cl-position cur-win windows)))
+          (if (= step 0)
+              (message "No rotation (count is multiple of window count)")
+            (dotimes (i n)
+              (let ((target-win (nth (mod (+ i step) n) windows))
+                    (state (nth i states)))
+                (window-state-put state target-win)))
+            ;; Follow active buffer to its new window position
+            (if cur-idx
+                (select-window (nth (mod (+ cur-idx step) n) windows))
+              (when (window-live-p cur-win)
+                (select-window cur-win)))))))))
+
+  (defun rotate-windows-counter-clockwise (&optional count)
+    "Rotate windows counter-clockwise (right-hand rule).
+With prefix COUNT (e.g. `C-u 2' or `C-u 3'), shift COUNT times.
+Cursor focus follows the active buffer to its new window position."
+    (interactive "p")
+    (rotate-windows :counter-clockwise (or count 1)))
+
+  (defun rotate-windows-clockwise (&optional count)
+    "Rotate windows clockwise (left-hand rule).
+With prefix COUNT (e.g. `C-u 2' or `C-u 3'), shift COUNT times.
+Cursor focus follows the active buffer to its new window position."
+    (interactive "p")
+    (rotate-windows :clockwise (or count 1)))
+
   ;; ======================================================================
   ;; ** ⌨️ Key Bindings & Shortcuts **
   ;; ======================================================================
@@ -1787,12 +2097,17 @@ Does nothing on a text terminal, or before `highlight' resolves."
     (key-chord-define-global "hh" 'win-swap-horizontal)
     (key-chord-define-global "vv" 'win-swap-vertical)
     (key-chord-define-global "ww" 'toggle-window-split)
+    (key-chord-define-global ",," 'rotate-windows-counter-clockwise) ; right-hand rule (CCW)
+    (key-chord-define-global ",." 'rotate-windows-clockwise)         ; left-hand rule (CW)
     (key-chord-define-global "jj" 'avy-goto-char)   ; type the character rapidly
     (key-chord-define-global "jk" 'avy-goto-char-2) ; type the first 2 characters rapidly
     (key-chord-define-global "jl" 'avy-goto-line)
     (key-chord-define-global "jw" 'avy-goto-word-1) ; type 1st char for beginnings of words
     )
   (key-chord-mode 1)
+
+  (global-set-key (kbd "C-c ,") 'rotate-windows-counter-clockwise)
+  (global-set-key (kbd "C-c .") 'rotate-windows-clockwise)
 
   ;;; key-bindings I immediately miss
   (global-set-key (kbd "M-s s") 'helm-swoop)
