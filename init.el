@@ -1133,7 +1133,7 @@ Succeeds loudly or fails loudly -- never silently."
             ;; ⬇ Put new or untested code here
             (require 'drift) ;; NOTE: This eventually belongs in ** 📦 Package Configuration **
             (setq drift-config-file "~/tmp/drift-sandbox/drift.toml")
-            (setq drift-repo-dir "~/Repos/enveloped/obsidian-drift/obsidian-drift")
+            (setq drift-repo-dir "~/Repos/enveloped/eobsidian-drift/obsidian-drift")
             (evil-set-initial-state 'drift-mode 'emacs)
             ;; (empty -- claude-code-ide graduated to
             ;; ** 🤖 LLM & AI Configuration ** on 2026-07-19)
