@@ -2595,7 +2595,8 @@ This function is called at the very end of Spacemacs initialization."
                 unicode-fonts vala-mode vala-snippets valign vi-tilde-fringe
                 visual-regexp visual-regexp-steroids volatile-highlights vundo
                 web-beautify web-mode web-server websocket winum wolfram-mode
-                writeroom-mode ws-butler yaml-mode yasnippet-snippets)))
+                writeroom-mode ws-butler yaml-mode yasnippet-snippets))
+   '(safe-local-variable-directories '("/Users/durant/Repos/fctech/fctech-cpp-0001/")))
   (custom-set-faces
    ;; custom-set-faces was added by Custom.
    ;; If you edit it by hand, you could mess it up, so be careful.
