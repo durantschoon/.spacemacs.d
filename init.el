@@ -2383,6 +2383,42 @@ Cursor focus follows the active buffer to its new window position."
     (when (fboundp 'spaceline-ml-all-the-icons)
       (spaceline-compile "all-the-icons")))
 
+  ;; The git-status segment's diff-hl path predates diff-hl's 2025 rewrite:
+  ;; it reduces over `diff-hl-changes' expecting (LINE LEN TYPE) hunks, but
+  ;; that now returns ((:reference . X) (:working . X)) where X may even be an
+  ;; async diff buffer, so the reducer does arithmetic on nil and redisplay logs
+  ;; the same (wrong-type-argument number-or-marker-p nil) as above.  It also
+  ;; ran `git diff' on every mode-line redraw.  Count diff-hl's own hunk
+  ;; overlays instead: already computed, no subprocess, format-independent.
+  (defun bds/diff-hl-line-stats ()
+    "Return (ADDED REMOVED MODIFIED) line counts from diff-hl hunk overlays.
+A deletion hunk has no lines left in the buffer, so it counts as 1."
+    (save-restriction
+      (widen)
+      (cl-reduce
+       (lambda (acc ovl)
+         (let ((lines (max 1 (count-lines (overlay-start ovl) (overlay-end ovl)))))
+           (pcase (overlay-get ovl 'diff-hl-hunk-type)
+             ('insert (list (+ (nth 0 acc) lines) (nth 1 acc) (nth 2 acc)))
+             ('delete (list (nth 0 acc) (1+ (nth 1 acc)) (nth 2 acc)))
+             ('change (list (nth 0 acc) (nth 1 acc) (+ (nth 2 acc) lines)))
+             (_ acc))))
+       (seq-filter (lambda (ovl) (overlay-get ovl 'diff-hl-hunk))
+                   (overlays-in (point-min) (point-max)))
+       :initial-value '(0 0 0))))
+
+  (defun bds/spaceline-git-statistics-advice (orig-fn)
+    "Use `bds/diff-hl-line-stats' when diff-hl is the active gutter, else ORIG-FN."
+    (if (and (bound-and-true-p diff-hl-mode)
+             (not (bound-and-true-p git-gutter-mode))
+             (not (bound-and-true-p git-gutter+-diffinfos)))
+        (bds/diff-hl-line-stats)
+      (funcall orig-fn)))
+
+  (with-eval-after-load 'spaceline-all-the-icons-segments
+    (advice-add 'spaceline-all-the-icons--git-statistics
+                :around #'bds/spaceline-git-statistics-advice))
+
   ;; Markdown mode configuration
   (with-eval-after-load 'markdown-mode
     (define-key markdown-mode-map (kbd "C-c m t") #'markdown-toc-generate-toc)
