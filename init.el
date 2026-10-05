@@ -12,6 +12,11 @@
   :type 'symbol
   :group 'bds)
 
+(defcustom bds/compact-font-hosts '("geeeks")
+  "Hostnames that prefer a smaller default font height (120 instead of 130)."
+  :type '(repeat string)
+  :group 'bds)
+
 (defun dotspacemacs/layers ()
   "Layer configuration:
 This function should only modify configuration layer settings."
@@ -473,11 +478,17 @@ It should only modify the values of Spacemacs settings."
    ;; fixed-pitch faces. The `:size' can be specified as
    ;; a non-negative integer (pixel size), or a floating-point (point size).
    ;; Point size is recommended, because it's device independent. (default 10.0)
-   dotspacemacs-default-font '("Cascadia Code NF"
-                               :height 130
-                               :weight normal
-                               :width normal
-                               :powerline-scale 1.1)
+   dotspacemacs-default-font
+   `("Cascadia Code NF"
+     :height ,(let ((host (system-name))
+                    (short-host (car (split-string (system-name) "\\."))))
+                (if (or (member host bds/compact-font-hosts)
+                        (member short-host bds/compact-font-hosts))
+                    120
+                  130))
+     :weight normal
+     :width normal
+     :powerline-scale 1.1)
 
    ;; Default icons font, it can be `all-the-icons' or `nerd-icons'.
    dotspacemacs-default-icons-font 'all-the-icons
