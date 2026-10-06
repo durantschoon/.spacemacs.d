@@ -1596,9 +1596,13 @@ Toggles `lim-mode' (#+LIM_ keyword lines) and `org-tidy-mode'
               (set-window-buffer new-window xwidget-buffer) ;; Attach buffer to the right window
               (xwidget-webkit-browse-url url new-session)
               (select-window new-window)))) ;; Ensure focus stays on the right window
-        (setq browse-url-browser-function #'my-xwidget-webkit-display-right)
-        (spacemacs/set-leader-keys "ox" 'xwidget-webkit-browse-url))
+        (setq browse-url-browser-function #'my-xwidget-webkit-display-right))
     (setq browse-url-browser-function #'browse-url-default-browser))
+
+  ;; Open a URL on any system: `browse-url' dispatches to whichever
+  ;; `browse-url-browser-function' was chosen above (embedded xwidget pane
+  ;; when available, otherwise the system's default browser).
+  (spacemacs/set-leader-keys "ow" #'browse-url)
 
   ;; ======================================================================
   ;; ** 🎨 Theme & Appearance **
