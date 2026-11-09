@@ -208,6 +208,14 @@ This function should only modify configuration layer settings."
                                       (emacs-cody :location local)
                                       exec-path-from-shell
                                       expand-region
+                                      ;; Ghostel terminal (libghostty-vt). From
+                                      ;; MELPA, like copilot above -- NOT a
+                                      ;; recipe/package-vc/local install, which
+                                      ;; would hit the eager macro-expansion
+                                      ;; recursion documented for claude-code-ide.
+                                      ;; MELPA resolves its deps; the native
+                                      ;; module auto-downloads on first use.
+                                      ghostel
                                       helm-rg
                                       jsonnet-mode
                                       jsonrpc
@@ -1266,15 +1274,75 @@ Is emacs-guix in the home profile, and is this the Guix-installed Emacs?"))
   ;; ** 💻 Shell & Terminal Configuration **
   ;; ======================================================================
 
-  (defun my/shell-reminder-use-vterm ()
-    "Reminder to use vterm instead of shell, then runs vterm."
+  (defun my/shell-reminder-use-ghostel ()
+    "Reminder to use ghostel instead of shell, then runs ghostel."
     (interactive)
-    (message "⚠️ You're trying to use `M-x shell`. Giving you vterm instead, `M-x vterm`, for better performance.")
-    (vterm))
+    (message "⚠️ You're trying to use `M-x shell`. Giving you ghostel instead, `M-x ghostel`, for better performance.")
+    (ghostel))
 
-  (advice-add 'shell :override #'my/shell-reminder-use-vterm)
+  (advice-add 'shell :override #'my/shell-reminder-use-ghostel)
 
   (push '("*shell*" :height 10 :position bottom) popwin:special-display-config)
+
+  ;; Ghostel is the default terminal (libghostty-vt engine, same two-layer
+  ;; design as vterm/eat but a more modern VT engine). Installed from MELPA via
+  ;; `dotspacemacs-additional-packages'; the prebuilt native module downloads
+  ;; automatically on first `M-x ghostel'. vterm stays installed as a fallback.
+  (use-package ghostel
+    :commands (ghostel ghostel-project ghostel-other)
+    :config
+    ;; Keep C-d deleting forward in Emacs rather than sending EOF, mirroring the
+    ;; old vterm C-d tweak. Use C-c C-d when you actually want to send EOF.
+    (define-key ghostel-semi-char-mode-map (kbd "C-d") #'delete-forward-char))
+
+  ;; SPC ' toggles a Ghostel terminal in a bottom popup -- the Spacemacs
+  ;; shell-pop slot, re-pointed from the shell layer's default to ghostel.
+  ;; Ghostel is not a valid `shell-default-shell' value, so `SPC '' can't open
+  ;; it natively; this reuses the most recent Ghostel buffer (creating one on
+  ;; first use) and sizes the window to the shell layer's `shell-default-height'.
+  (defun my/ghostel--buffer-window ()
+    "Return a visible window showing a Ghostel buffer, or nil."
+    (seq-find (lambda (w)
+                (with-current-buffer (window-buffer w)
+                  (derived-mode-p 'ghostel-mode)))
+              (window-list)))
+
+  (defun my/ghostel--buffer ()
+    "Return the most recent Ghostel buffer, creating one if none exist.
+Creation runs inside `save-window-excursion' so `ghostel's own display
+does not disturb the window layout -- `my/ghostel-pop' places the buffer."
+    (or (seq-find (lambda (b)
+                    (with-current-buffer b (derived-mode-p 'ghostel-mode)))
+                  (buffer-list))
+        (save-window-excursion
+          (call-interactively #'ghostel)
+          (current-buffer))))
+
+  (defun my/ghostel-pop ()
+    "Toggle a Ghostel terminal popup at the bottom, shell-pop style.
+Hide it when it is the selected window, jump to it when it is visible
+elsewhere, otherwise pop it up `shell-default-height' lines tall."
+    (interactive)
+    (let ((win (my/ghostel--buffer-window)))
+      (cond
+       ((and win (eq win (selected-window)))
+        (if (one-window-p) (bury-buffer) (delete-window win)))
+       (win (select-window win))
+       (t (select-window
+           (display-buffer
+            (my/ghostel--buffer)
+            `((display-buffer-reuse-window display-buffer-at-bottom)
+              (window-height . ,(if (boundp 'shell-default-height)
+                                    shell-default-height 30)))))))))
+
+  (spacemacs/set-leader-keys "'" #'my/ghostel-pop)
+
+  ;; Launch keys. SPC o is the user prefix (next to SPC o c for claude-code),
+  ;; so SPC o t opens a fresh terminal; SPC p t opens one rooted at the current
+  ;; project (via `ghostel-project'), sitting with the other SPC p project keys.
+  (spacemacs/set-leader-keys
+    "ot" #'ghostel
+    "pt" #'ghostel-project)
 
   ;; do not allow vterm to rebind C-d (I still want to delete forward)
   (with-eval-after-load 'vterm
@@ -1474,9 +1542,12 @@ Toggles `lim-mode' (#+LIM_ keyword lines) and `org-tidy-mode'
     (unless (file-executable-p claude-code-ide-cli-path)
       (message "⚠️ claude-code-ide: CLI not executable at %s"
                claude-code-ide-cli-path))
-    ;; eat, not vterm: less redraw flicker in the Claude buffer.
-    ;; vterm stays the default everywhere else (see Shell section).
-    (setq claude-code-ide-terminal-backend 'eat)
+    ;; ghostel: the libghostty-vt engine renders Claude's spinner reflow
+    ;; without the redraw flicker eat exhibited here, and matches the default
+    ;; terminal set in the Shell section. The eat-latency tuning below is kept
+    ;; for when the backend is switched back to eat; it no-ops while eat is
+    ;; unloaded (wrapped in `with-eval-after-load').
+    (setq claude-code-ide-terminal-backend 'ghostel)
     ;; Sets CLAUDE_CODE_NO_FLICKER=1 in the CLI's launch environment, which
     ;; switches Claude to its flicker-free renderer. Necessary but not
     ;; sufficient: the remaining jitter is eat's, not Claude's -- the same
