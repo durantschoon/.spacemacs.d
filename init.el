@@ -2371,14 +2371,16 @@ Cursor focus follows the active buffer to its new window position."
     (define-key prog-mode-map (kbd "s-<double-mouse-1>") 'hs-toggle-hiding))
 
   (with-eval-after-load 'smerge-mode
-    ;; s- is super, aka Option on darwin
-    (define-key prog-mode-map (kbd "s-<up>") 'smerge-keep-upper)    ;; aka keep mine
-    (define-key prog-mode-map (kbd "s-<down>") 'smerge-keep-lower)) ;; aka keep other
+    ;; M-s- is Meta+Super (Alt+Super on Linux, Command+Option on darwin).
+    ;; Bound on smerge-mode-map so M-s-<up>/<down> only overrides global
+    ;; adjust-date-on-line when smerge-mode is actually active in the buffer.
+    (define-key smerge-mode-map (kbd "M-s-<up>") 'smerge-keep-upper)    ;; aka keep mine
+    (define-key smerge-mode-map (kbd "M-s-<down>") 'smerge-keep-lower)) ;; aka keep other
 
   (with-eval-after-load 'magit
-    ;; s- is super, aka Option on darwin
-    (define-key magit-hunk-section-map (kbd "s-<up>") 'magit-smerge-keep-upper)    ;; aka keep mine
-    (define-key magit-hunk-section-map (kbd "s-<down>") 'magit-smerge-keep-lower)) ;; aka keep other
+    ;; M-s- is Meta+Super (Alt+Super on Linux, Command+Option on darwin)
+    (define-key magit-hunk-section-map (kbd "M-s-<up>") 'magit-smerge-keep-upper)    ;; aka keep mine
+    (define-key magit-hunk-section-map (kbd "M-s-<down>") 'magit-smerge-keep-lower)) ;; aka keep other
 
   ;; ======================================================================
   ;; ** 📂 Project Management **
@@ -2398,8 +2400,8 @@ Cursor focus follows the active buffer to its new window position."
   ;; Load date utilities
   (load-file (expand-file-name "lisp/date-utils.el" dotspacemacs-directory))
 
-  (global-set-key (kbd "s-<up>") (lambda () (interactive) (adjust-date-on-line 1)))
-  (global-set-key (kbd "s-<down>") (lambda () (interactive) (adjust-date-on-line -1)))
+  (global-set-key (kbd "M-s-<up>") (lambda () (interactive) (adjust-date-on-line 1)))
+  (global-set-key (kbd "M-s-<down>") (lambda () (interactive) (adjust-date-on-line -1)))
 
   (defun my-zap-to-char ()
     "Kill up to the ARG'th occurence of CHAR, and leave CHAR. If
@@ -2423,8 +2425,8 @@ Cursor focus follows the active buffer to its new window position."
 
   ;; -- Load Dropbox Paper utilities --------------------------------------
   ;; Main benefits are:
-  ;; s-<up>   (Alt) change date later
-  ;; s-<down> (Alt) change date earlier
+  ;; M-s-<up>   (Meta+Super) change date later
+  ;; M-s-<down> (Meta+Super) change date earlier
   (load-file (expand-file-name "lisp/dropbox-paper-utils.el" dotspacemacs-directory))
 
   (defun convert-dp-to-md ()
@@ -2566,10 +2568,10 @@ A deletion hunk has no lines left in the buffer, so it counts as 1."
 
   (use-package buffer-move
     :ensure t
-    :bind (("<C-s-up>"    . buf-move-up) ; Control-super-up
+    :bind (("<C-s-up>"    . buf-move-up) ; Control-super-up (matches EWM)
            ("<C-s-down>"  . buf-move-down)
-           ("<C-s-left>"  . buf-move-left)
-           ("<C-s-right>" . buf-move-right)))
+           ("<M-s-left>"  . buf-move-left) ; Meta-super-left (C-s-left is ewm-frame-move-left)
+           ("<M-s-right>" . buf-move-right)))
 
   (use-package expand-region
     :ensure t
@@ -2584,7 +2586,7 @@ A deletion hunk has no lines left in the buffer, so it counts as 1."
            ("C-<"         . mc/mark-previous-like-this)
            ("C-!"         . mc/mark-next-symbol-like-this)
            ("s-r"         . mc/mark-all-in-region)
-           ("s-d"         . mc/mark-all-dwim)))
+           ("s-m"         . mc/mark-all-dwim)))
 
   (use-package visual-regexp-steroids
     :ensure t
