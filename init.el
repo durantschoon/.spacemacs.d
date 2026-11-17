@@ -2663,6 +2663,100 @@ A deletion hunk has no lines left in the buffer, so it counts as 1."
             (message (concat "loading " init-file))
             (load init-file)))))
 
+  ;; ======================================================================
+  ;; ** 🪟 EWM (Emacs Wayland Manager) & Pinentry **
+  ;; ======================================================================
+
+  ;; Start Emacs pinentry server when available so gpg-agent / ssh-add can
+  ;; prompt in the minibuffer (especially under EWM where gnome-shell's
+  ;; SystemPrompter is absent).
+  ;; Disable `pinentry-popup-prompt-window': its `save-window-excursion' calls
+  ;; `(quit-window)' on the *currently selected* window (not the *Pinentry*
+  ;; split), which tries to bury/delete the active buffer and triggers
+  ;; `(error "Selecting deleted buffer")'.
+  (setq pinentry-popup-prompt-window nil)
+  (when (fboundp 'pinentry-start)
+    (ignore-errors (pinentry-start t)))
+
+  (defun bds/gpg-warm-cache ()
+    "Warm gpg-agent passphrase cache (signing + SSH) via Emacs pinentry."
+    (interactive)
+    (setq pinentry-popup-prompt-window nil)
+    (when (fboundp 'pinentry-start)
+      (ignore-errors (pinentry-start t)))
+    (message "🔑 Warming GPG cache (enter passphrase in minibuffer if prompted)...")
+    (let ((proc (start-process-shell-command
+                 "gpg-warm-cache" nil
+                 "INSIDE_EMACS=30.2 gpg --clearsign </dev/null >/dev/null 2>&1 && INSIDE_EMACS=30.2 ssh -T -o BatchMode=no -o ConnectTimeout=5 git@github.com >/dev/null 2>&1; exit 0")))
+      (set-process-sentinel
+       proc
+       (lambda (_p _event)
+         (let ((cached (string-match-p
+                        " 1 "
+                        (shell-command-to-string "gpg-connect-agent 'keyinfo --list' /bye 2>/dev/null"))))
+           (if cached
+               (message "✅ GPG/SSH key cache warmed (valid for 16h).")
+             (message "⚠️ GPG cache still cold (passphrase cancelled or failed).")))))))
+
+  (spacemacs/set-leader-keys "og" #'bds/gpg-warm-cache)
+
+  (with-eval-after-load 'ewm
+    ;; 1. Display scaling on Framework 13 (2880x1920 @ 120Hz -> 1.2x scale)
+    (setopt ewm-output-config
+            '(("eDP-1" :scale 1.2)))
+
+    ;; 2. Intercept Spacemacs holy-mode leader (M-m) even when a Wayland
+    ;;    surface has focus, alongside C-x, C-u, C-h, M-x.
+    (setopt ewm-intercept-prefixes
+            '(?\C-x ?\C-u ?\C-h ?\M-x ?\M-m
+              (?\s-f :fullscreen)
+              ("s-S-<left>" :fullscreen) ("s-S-<right>" :fullscreen)
+              ("<MonBrightnessUp>" :fullscreen) ("<MonBrightnessDown>" :fullscreen)
+              ("<AudioRaiseVolume>" :fullscreen) ("<AudioLowerVolume>" :fullscreen)
+              ("<AudioMute>" :fullscreen) ("<AudioMicMute>" :fullscreen)
+              ("<Print>" :fullscreen)))
+
+    ;; 3. Hardware Brightness & Volume keys without requiring brightnessctl/wpctl:
+    ;;    - Brightness uses elogind's SetBrightness D-Bus method (unprivileged)
+    ;;    - Audio uses PulseAudio/PipeWire's pactl
+    (defun bds/ewm-adjust-brightness (delta-pct)
+      "Adjust amdgpu_bl0 backlight by DELTA-PCT percent via elogind D-Bus."
+      (interactive "nDelta percent: ")
+      (let* ((dir "/sys/class/backlight/amdgpu_bl0/")
+             (read-num (lambda (f)
+                         (string-to-number
+                          (with-temp-buffer
+                            (insert-file-contents (expand-file-name f dir))
+                            (buffer-string)))))
+             (cur (funcall read-num "brightness"))
+             (max (funcall read-num "max_brightness"))
+             (step (round (* max (/ (float delta-pct) 100.0))))
+             (target (max 1 (min max (+ cur step))))
+             (pct (round (* 100.0 (/ (float target) max)))))
+        (start-process "ewm-brightness" nil
+                       "busctl" "--system" "call"
+                       "org.freedesktop.login1"
+                       "/org/freedesktop/login1/session/auto"
+                       "org.freedesktop.login1.Session"
+                       "SetBrightness" "ssu"
+                       "backlight" "amdgpu_bl0" (number-to-string target))
+        (message "Brightness: %d%%" pct)))
+
+    (define-key ewm-mode-map (kbd "<MonBrightnessUp>")
+                (lambda () (interactive) (bds/ewm-adjust-brightness 5)))
+    (define-key ewm-mode-map (kbd "<MonBrightnessDown>")
+                (lambda () (interactive) (bds/ewm-adjust-brightness -5)))
+    (define-key ewm-mode-map (kbd "<AudioRaiseVolume>")
+                (ewm--cmd "pactl" "set-sink-volume" "@DEFAULT_SINK@" "+5%"))
+    (define-key ewm-mode-map (kbd "<AudioLowerVolume>")
+                (ewm--cmd "pactl" "set-sink-volume" "@DEFAULT_SINK@" "-5%"))
+    (define-key ewm-mode-map (kbd "<AudioMute>")
+                (ewm--cmd "pactl" "set-sink-mute" "@DEFAULT_SINK@" "toggle"))
+    (define-key ewm-mode-map (kbd "<AudioMicMute>")
+                (ewm--cmd "pactl" "set-source-mute" "@DEFAULT_SOURCE@" "toggle"))
+    (when (bound-and-true-p ewm--module-mode)
+      (ewm--send-intercept-keys)))
+
   ;; END
   )
 (defun dotspacemacs/emacs-custom-settings ()
