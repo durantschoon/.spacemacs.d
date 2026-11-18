@@ -1475,6 +1475,83 @@ Toggles `lim-mode' (#+LIM_ keyword lines) and `org-tidy-mode'
   ;; `dotspacemacs-additional-packages' with a string :location. See the
   ;; comment there for why it is not an ELPA recipe and why the location
   ;; must be a string rather than the symbol `local'.
+
+  ;; Guards for the --dangerously-skip-permissions flag set in the
+  ;; use-package below. Easy to forget it is on, costly when forgotten:
+  ;; every session launched from Emacs runs tools -- edits, shell, network --
+  ;; without asking. Two guards, both derived from the live value of
+  ;; `claude-code-ide-cli-extra-flags' so neither can drift from the setq:
+  ;; a yes-or-no gate on the first launch of each Emacs session, and a
+  ;; permanent header line in every bypassing Claude buffer. Wired up with
+  ;; advice in :config.
+  (defconst durant/claude-bypass-flag "--dangerously-skip-permissions"
+    "CLI flag that disables Claude Code's per-tool permission prompts.")
+
+  (defvar durant/claude-bypass-acknowledged nil
+    "Non-nil once the bypass warning was acknowledged this Emacs session.
+Toggling the flag clears it, so the gate asks again.")
+
+  (defun durant/claude-bypass-active-p ()
+    "Return non-nil if new Claude sessions will skip permission prompts."
+    (and (boundp 'claude-code-ide-cli-extra-flags)
+         (stringp claude-code-ide-cli-extra-flags)
+         (string-match-p (regexp-quote durant/claude-bypass-flag)
+                         claude-code-ide-cli-extra-flags)
+         t))
+
+  (defun durant/claude-bypass-toggle ()
+    "Toggle Claude Code's permission bypass for the next new session.
+Takes effect from the next launch onwards -- the flag is read at launch,
+so already-running instances keep whatever mode they started in.  To
+change it permanently, edit the `claude-code-ide-cli-extra-flags' setq
+in ~/.spacemacs.d/init.el."
+    (interactive)
+    (setq claude-code-ide-cli-extra-flags
+          (if (durant/claude-bypass-active-p)
+              (string-trim
+               (replace-regexp-in-string (regexp-quote durant/claude-bypass-flag) ""
+                                         claude-code-ide-cli-extra-flags))
+            (string-trim (concat claude-code-ide-cli-extra-flags
+                                 " " durant/claude-bypass-flag)))
+          durant/claude-bypass-acknowledged nil)
+    (message "Claude Code: FOR NEXT NEW SESSION -- %s (running instances unchanged; flags: %S)"
+             (if (durant/claude-bypass-active-p)
+                 "BYPASS all permission prompts"
+               "ask permission per tool")
+             claude-code-ide-cli-extra-flags))
+
+  (defun durant/claude-bypass-confirm (&rest _)
+    "Require one acknowledgement per session before launching in bypass mode."
+    (when (and (durant/claude-bypass-active-p)
+               (not durant/claude-bypass-acknowledged))
+      (unless (yes-or-no-p
+               (concat
+                (propertize "DANGER MODE" 'face 'error)
+                ": Claude will run every tool -- edits, shell, network --\n"
+                "without asking, in " (abbreviate-file-name default-directory) "\n"
+                "  this session:  SPC o c d  (durant/claude-bypass-toggle)\n"
+                "  one launch:    SPC o c m -> x  (set extra CLI flags)\n"
+                "  permanently:   drop the setq in ~/.spacemacs.d/init.el\n"
+                "Start Claude with permissions bypassed? "))
+        (user-error "Cancelled; still in bypass mode -- SPC o c d turns it off"))
+      (setq durant/claude-bypass-acknowledged t)))
+
+  (defun durant/claude-bypass-header (buffer-and-process)
+    "Add a bypass-mode header line to the buffer in BUFFER-AND-PROCESS.
+Used as `:filter-return' advice, so it must return its argument: the
+\(BUFFER . PROCESS) cons `claude-code-ide--create-terminal-session'
+hands back to the session builder."
+    (when (durant/claude-bypass-active-p)
+      (let ((buffer (car-safe buffer-and-process)))
+        (when (buffer-live-p buffer)
+          (with-current-buffer buffer
+            (setq header-line-format
+                  (list (propertize " ⚠ PERMISSIONS BYPASSED "
+                                    'face '(:inherit error :inverse-video t))
+                        (propertize "  no tool prompts -- SPC o c d to restore them"
+                                    'face 'shadow)))))))
+    buffer-and-process)
+
   (use-package claude-code-ide
     :config
     ;; `claude-code-ide-cli-path' is handed to `call-process', which spawns
@@ -1515,6 +1592,14 @@ Toggles `lim-mode' (#+LIM_ keyword lines) and `org-tidy-mode'
     ;; output is smooth in iTerm2 but flickers in eat, so the culprit is
     ;; eat's redraw rate faithfully painting every spinner frame.
     (setq claude-code-ide-no-flicker t)
+    ;; Appended to every launch command (SPC o c c, resume, continue), so
+    ;; sessions started from Emacs never stop to ask about tool use. Safe
+    ;; enough here because these sessions always run against a git checkout I
+    ;; control; skip this in any throwaway or untrusted directory. Guarded by
+    ;; the acknowledgement gate and header line defined above -- SPC o c d
+    ;; turns it off for the session, SPC o c m -> x for one launch. Both only
+    ;; last until restart, since this setq runs on every startup.
+    (setq claude-code-ide-cli-extra-flags durant/claude-bypass-flag)
     ;; eat repaints up to 1/eat-maximum-latency times a second (default
     ;; 0.033 ~= 30fps). Slowing it to ~10fps coalesces the intermediate
     ;; spinner frames so the reflow never reaches the screen. eat owns these
@@ -1529,6 +1614,13 @@ Toggles `lim-mode' (#+LIM_ keyword lines) and `org-tidy-mode'
     (with-eval-after-load 'eat
       (setq eat-minimum-latency 0.02
             eat-maximum-latency 0.1))
+    ;; `--start-session' is the single funnel for claude-code-ide, -resume and
+    ;; -continue, so one gate covers all three. The header line is attached
+    ;; where the terminal buffer is born, before the session struct is built.
+    (advice-add 'claude-code-ide--start-session :before
+                #'durant/claude-bypass-confirm)
+    (advice-add 'claude-code-ide--create-terminal-session :filter-return
+                #'durant/claude-bypass-header)
     ;; Exposes xref/imenu/project as MCP tools to Claude
     (claude-code-ide-emacs-tools-setup)
     ;; SPC o is the prefix Spacemacs reserves for user bindings;
@@ -1538,7 +1630,8 @@ Toggles `lim-mode' (#+LIM_ keyword lines) and `org-tidy-mode'
       "occ" #'claude-code-ide
       "ocr" #'claude-code-ide-resume
       "ocm" #'claude-code-ide-menu
-      "ocs" #'claude-code-ide-send-prompt))
+      "ocs" #'claude-code-ide-send-prompt
+      "ocd" #'durant/claude-bypass-toggle))
 
   ;; GitHub Copilot with Next Edit Suggestions (NES) - Cursor-like experience
   (use-package copilot
