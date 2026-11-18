@@ -208,14 +208,6 @@ This function should only modify configuration layer settings."
                                       (emacs-cody :location local)
                                       exec-path-from-shell
                                       expand-region
-                                      ;; Ghostel terminal (libghostty-vt). From
-                                      ;; MELPA, like copilot above -- NOT a
-                                      ;; recipe/package-vc/local install, which
-                                      ;; would hit the eager macro-expansion
-                                      ;; recursion documented for claude-code-ide.
-                                      ;; MELPA resolves its deps; the native
-                                      ;; module auto-downloads on first use.
-                                      ghostel
                                       helm-rg
                                       jsonnet-mode
                                       jsonrpc
@@ -1285,9 +1277,11 @@ Is emacs-guix in the home profile, and is this the Guix-installed Emacs?"))
   (push '("*shell*" :height 10 :position bottom) popwin:special-display-config)
 
   ;; Ghostel is the default terminal (libghostty-vt engine, same two-layer
-  ;; design as vterm/eat but a more modern VT engine). Installed from MELPA via
-  ;; `dotspacemacs-additional-packages'; the prebuilt native module downloads
-  ;; automatically on first `M-x ghostel'. vterm stays installed as a fallback.
+  ;; design as vterm/eat but a more modern VT engine). The shell layer declares
+  ;; and installs it from MELPA under `shell-enable-ghostel-support' (on by
+  ;; default), so no `dotspacemacs-additional-packages' entry is needed; the
+  ;; prebuilt native module downloads automatically on first `M-x ghostel'.
+  ;; vterm stays installed as a fallback.
   (use-package ghostel
     :commands (ghostel ghostel-project ghostel-other)
     :config
@@ -1295,47 +1289,14 @@ Is emacs-guix in the home profile, and is this the Guix-installed Emacs?"))
     ;; old vterm C-d tweak. Use C-c C-d when you actually want to send EOF.
     (define-key ghostel-semi-char-mode-map (kbd "C-d") #'delete-forward-char))
 
-  ;; SPC ' toggles a Ghostel terminal in a bottom popup -- the Spacemacs
-  ;; shell-pop slot, re-pointed from the shell layer's default to ghostel.
-  ;; Ghostel is not a valid `shell-default-shell' value, so `SPC '' can't open
-  ;; it natively; this reuses the most recent Ghostel buffer (creating one on
-  ;; first use) and sizes the window to the shell layer's `shell-default-height'.
-  (defun my/ghostel--buffer-window ()
-    "Return a visible window showing a Ghostel buffer, or nil."
-    (seq-find (lambda (w)
-                (with-current-buffer (window-buffer w)
-                  (derived-mode-p 'ghostel-mode)))
-              (window-list)))
-
-  (defun my/ghostel--buffer ()
-    "Return the most recent Ghostel buffer, creating one if none exist.
-Creation runs inside `save-window-excursion' so `ghostel's own display
-does not disturb the window layout -- `my/ghostel-pop' places the buffer."
-    (or (seq-find (lambda (b)
-                    (with-current-buffer b (derived-mode-p 'ghostel-mode)))
-                  (buffer-list))
-        (save-window-excursion
-          (call-interactively #'ghostel)
-          (current-buffer))))
-
-  (defun my/ghostel-pop ()
-    "Toggle a Ghostel terminal popup at the bottom, shell-pop style.
-Hide it when it is the selected window, jump to it when it is visible
-elsewhere, otherwise pop it up `shell-default-height' lines tall."
-    (interactive)
-    (let ((win (my/ghostel--buffer-window)))
-      (cond
-       ((and win (eq win (selected-window)))
-        (if (one-window-p) (bury-buffer) (delete-window win)))
-       (win (select-window win))
-       (t (select-window
-           (display-buffer
-            (my/ghostel--buffer)
-            `((display-buffer-reuse-window display-buffer-at-bottom)
-              (window-height . ,(if (boundp 'shell-default-height)
-                                    shell-default-height 30)))))))))
-
-  (spacemacs/set-leader-keys "'" #'my/ghostel-pop)
+  ;; SPC ' toggles a Ghostel terminal in a bottom popup.
+  ;; `ghostel' is not a valid `shell-default-shell' value, so the shell layer's
+  ;; own `spacemacs/shell-pop-ghostel' takes the shell-pop slot instead -- it is
+  ;; built by `make-shell-pop-command' when `shell-enable-ghostel-support' is on
+  ;; (the default), honours `shell-default-height'/`shell-default-position', and
+  ;; opens extra terminals with a numeric prefix (C-u opens in the current
+  ;; window). Also reachable at its stock key, SPC a t s g.
+  (spacemacs/set-leader-keys "'" #'spacemacs/shell-pop-ghostel)
 
   ;; Launch keys. SPC o is the user prefix (next to SPC o c for claude-code),
   ;; so SPC o t opens a fresh terminal; SPC p t opens one rooted at the current
